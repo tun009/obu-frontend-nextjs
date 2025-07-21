@@ -113,7 +113,9 @@ export function VehicleMap() {
         <div className="grid gap-4 md:grid-cols-3">
           {/* Google Map */}
           <div className="md:col-span-2">
-            <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "YOUR_API_KEY_HERE"}>
+            {/* NOTE: avoid inlining environment variables in client bundle.
+                 If you must, move the key to a server component and pass it via prop. */}
+            <LoadScript googleMapsApiKey="">
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={center}

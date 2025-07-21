@@ -299,7 +299,9 @@ export default function MapPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "YOUR_API_KEY_HERE"}>
+            {/* Providing blank string prevents exposing env vars in client bundle.
+            Pass key through a server component/server action if required. */}
+            <LoadScript googleMapsApiKey="">
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={selectedVehicle ? { lat: selectedVehicle.lat, lng: selectedVehicle.lng } : center}
