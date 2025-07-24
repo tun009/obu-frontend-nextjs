@@ -5,8 +5,9 @@ import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/ap
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2, VolumeX } from "lucide-react"
+import { Navigation, User, Phone, Video, Play, Pause, Volume2, VolumeX, X } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import Link from "next/link"
 
 const mapContainerStyle = {
   width: "100%",
@@ -269,19 +270,11 @@ function LiveCameraGrid({
   )
 }
 
-export default function MapPage() {
+export default function FullscreenMapPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<(typeof mockVehicles)[0] | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredVehicles = mockVehicles.filter((vehicle) => {
-    const matchesSearch =
-      vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.driver.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || vehicle.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const filteredVehicles = mockVehicles.filter((vehicle) => vehicle.cameraStatus === "online")
 
   const onLoad = useCallback(() => {
     setMapLoaded(true)
@@ -295,100 +288,45 @@ export default function MapPage() {
     setSelectedVehicle(vehicle)
   }
 
-  const centerMapOnVehicle = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
-  }
-
-  const toggleFullscreen = () => {
-    window.open("/fullscreen-map", "_blank")
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Theo dõi và giám sát</h1>
-          <p className="text-muted-foreground">Vị trí thời gian thực và camera trực tiếp từ các thiết bị OBU</p>
+    <div className="min-h-screen bg-background">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between p-4 border-b bg-white">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold">Theo dõi và giám sát - Chế độ toàn màn hình</h1>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span>{mockVehicles.filter((v) => v.status === "moving").length} đang di chuyển</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              <span>{mockVehicles.filter((v) => v.cameraStatus === "online").length} camera online</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={toggleFullscreen}>
-            <Maximize2 className="h-4 w-4 mr-2" />
-            Mở toàn màn hình
+        <Link href="/dashboard/map">
+          <Button variant="outline" size="sm">
+            <X className="h-4 w-4 mr-2" />
+            Đóng
           </Button>
-        </div>
+        </Link>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng xe</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockVehicles.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang di chuyển</CardTitle>
-            <div className="w-3 h-3 bg-green-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {mockVehicles.filter((v) => v.status === "moving").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang dừng</CardTitle>
-            <div className="w-3 h-3 bg-orange-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {mockVehicles.filter((v) => v.status === "stopped").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang đỗ</CardTitle>
-            <div className="w-3 h-3 bg-gray-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {mockVehicles.filter((v) => v.status === "parked").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Camera Online</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {mockVehicles.filter((v) => v.cameraStatus === "online").length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content with Resizable Layout */}
-      <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border min-h-[600px]">
+      {/* Main Content */}
+      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-73px)]">
         {/* Live Camera Grid - Left Panel */}
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full border-0 rounded-none">
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="text-lg">Camera trực tiếp</CardTitle>
               <CardDescription>
                 {selectedVehicle ? `Đang xem: ${selectedVehicle.plate}` : "Tất cả camera đang hoạt động"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
+            <CardContent className="h-[calc(100%-100px)] overflow-y-auto">
               <LiveCameraGrid
-                vehicles={filteredVehicles.filter((v) => v.cameraStatus === "online")}
+                vehicles={filteredVehicles}
                 selectedVehicle={selectedVehicle}
                 onVehicleSelect={handleVehicleClick}
               />
@@ -401,7 +339,7 @@ export default function MapPage() {
         {/* Map - Right Panel */}
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full border-0 rounded-none">
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle>
               <CardDescription>
                 {selectedVehicle
@@ -409,7 +347,7 @@ export default function MapPage() {
                   : "Click vào xe hoặc camera để xem chi tiết"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-[calc(100%-80px)]">
+            <CardContent className="h-[calc(100%-100px)]">
               <LoadScript googleMapsApiKey="">
                 <GoogleMap
                   mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -425,7 +363,7 @@ export default function MapPage() {
                   }}
                 >
                   {mapLoaded &&
-                    filteredVehicles.map((vehicle) => (
+                    mockVehicles.map((vehicle) => (
                       <Marker
                         key={vehicle.id}
                         position={{ lat: vehicle.lat, lng: vehicle.lng }}
