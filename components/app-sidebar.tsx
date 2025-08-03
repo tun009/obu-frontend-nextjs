@@ -50,8 +50,9 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
-  const handleLogout = () => {
-    router.push("/")
+  const handleLogout = async () => {
+    // Logout will be handled by Header component
+    // This is kept for compatibility but not used
   }
 
   return (

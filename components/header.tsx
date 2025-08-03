@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Search, User } from "lucide-react"
+import { Bell, Search, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -13,8 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { useAuthContext } from "@/components/providers/auth-provider"
 
 export function Header() {
+  const { user, logout } = useAuthContext()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
   return (
     <header className="border-b bg-white px-6 py-3">
       <div className="flex items-center justify-between">
@@ -39,12 +49,17 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Admin User</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                User
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Hồ sơ</DropdownMenuItem>
               <DropdownMenuItem>Cài đặt</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Đăng xuất</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Đăng xuất
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
