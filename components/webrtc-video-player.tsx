@@ -56,7 +56,6 @@ export function WebRTCVideoPlayer({
     videoRef,
     getStreamDuration
   } = useWebRTCStream();
-  console.log(isStreaming,"isStreaming")
   // Auto start if requested
   React.useEffect(() => {
     if (autoStart && streamState === 'idle') {
