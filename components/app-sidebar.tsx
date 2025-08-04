@@ -1,6 +1,6 @@
 "use client"
 
-import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, MapPin } from "lucide-react"
+import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, Radio } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -40,9 +40,9 @@ const menuItems = [
     icon: Smartphone,
   },
   {
-    title: "Bản đồ",
+    title: "Live",
     url: "/dashboard/map",
-    icon: MapPin,
+    icon: Radio,
   },
 ]
 
@@ -71,7 +71,6 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu chính</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (

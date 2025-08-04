@@ -5,109 +5,32 @@ import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/ap
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2, VolumeX } from "lucide-react"
+import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2, VolumeX, RefreshCw, AlertCircle } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { useMapData, MapDevice } from "@/hooks/use-map-data"
+import { toast } from "sonner"
 
 const mapContainerStyle = {
   width: "100%",
   height: "600px",
 }
 
-const center = {
-  lat: 21.0285,
+const defaultCenter = {
+  lat: 21.0285, // Default center - Hanoi
   lng: 105.8542,
 }
-
-const mockVehicles = [
-  {
-    id: 1,
-    plate: "29A-12345",
-    lat: 21.0285,
-    lng: 105.8542,
-    status: "moving",
-    driver: "Nguyễn Văn A",
-    phone: "0901234567",
-    speed: 45,
-    lastUpdate: "2 phút trước",
-    fuel: 75,
-    temperature: 85,
-    cameraStatus: "online",
-    streamUrl: "stream1",
-  },
-  {
-    id: 2,
-    plate: "30B-67890",
-    lat: 21.0245,
-    lng: 105.8412,
-    status: "stopped",
-    driver: "Trần Văn B",
-    phone: "0907654321",
-    speed: 0,
-    lastUpdate: "1 phút trước",
-    fuel: 45,
-    temperature: 78,
-    cameraStatus: "online",
-    streamUrl: "stream2",
-  },
-  {
-    id: 3,
-    plate: "31C-11111",
-    lat: 21.0195,
-    lng: 105.8352,
-    status: "moving",
-    driver: "Lê Văn C",
-    phone: "0903456789",
-    speed: 32,
-    lastUpdate: "30 giây trước",
-    fuel: 90,
-    temperature: 82,
-    cameraStatus: "offline",
-    streamUrl: "stream3",
-  },
-  {
-    id: 4,
-    plate: "32D-22222",
-    lat: 21.0335,
-    lng: 105.8482,
-    status: "parked",
-    driver: "Phạm Văn D",
-    phone: "0909876543",
-    speed: 0,
-    lastUpdate: "5 phút trước",
-    fuel: 60,
-    temperature: 75,
-    cameraStatus: "online",
-    streamUrl: "stream4",
-  },
-  {
-    id: 5,
-    plate: "33E-33333",
-    lat: 21.0155,
-    lng: 105.8622,
-    status: "moving",
-    driver: "Hoàng Văn E",
-    phone: "0905555555",
-    speed: 55,
-    lastUpdate: "1 phút trước",
-    fuel: 85,
-    temperature: 88,
-    cameraStatus: "online",
-    streamUrl: "stream5",
-  },
-]
 
 const getCarIcon = (status: string) => {
   const carSvg = `
     <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(16,16)">
         <g transform="rotate(0)">
-          <path d="M-12,-6 L-12,-2 L-8,-2 L-8,2 L-6,2 L-6,6 L6,6 L6,2 L8,2 L8,-2 L12,-2 L12,-6 Z" 
-                fill="${status === "moving" ? "#22c55e" : status === "stopped" ? "#f59e0b" : "#6b7280"}" 
-                stroke="#ffffff" 
-                strokeWidth="1"/>
-          <circle cx="-6" cy="4" r="2" fill="#333"/>
-          <circle cx="6" cy="4" r="2" fill="#333"/>
-          <rect x="-10" y="-4" width="20" height="6" fill="${status === "moving" ? "#16a34a" : status === "stopped" ? "#ea580c" : "#4b5563"}" rx="1"/>
+          <circle cx="0" cy="0" r="8"
+                fill="${status === "online" ? "#22c55e" : status === "no_gps" ? "#f59e0b" : "#ef4444"}"
+                stroke="#ffffff"
+                strokeWidth="2"/>
+          <circle cx="0" cy="0" r="4" fill="#ffffff"/>
+          <text x="0" y="2" text-anchor="middle" fill="${status === "online" ? "#22c55e" : status === "no_gps" ? "#f59e0b" : "#ef4444"}" font-size="8" font-weight="bold">GPS</text>
         </g>
       </g>
     </svg>
@@ -115,19 +38,19 @@ const getCarIcon = (status: string) => {
 
   return {
     url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(carSvg)}`,
-    scaledSize: { width: 32, height: 32 },
-    anchor: { x: 16, y: 16 },
+    scaledSize: new window.google.maps.Size(32, 32),
+    anchor: new window.google.maps.Point(16, 16),
   }
 }
 
-function LiveCameraGrid({
-  vehicles,
-  selectedVehicle,
-  onVehicleSelect,
+function DeviceGrid({
+  devices,
+  selectedDevice,
+  onDeviceSelect,
 }: {
-  vehicles: typeof mockVehicles
-  selectedVehicle: (typeof mockVehicles)[0] | null
-  onVehicleSelect: (vehicle: (typeof mockVehicles)[0]) => void
+  devices: MapDevice[]
+  selectedDevice: MapDevice | null
+  onDeviceSelect: (device: MapDevice) => void
 }) {
   const [mutedStreams, setMutedStreams] = useState<Set<number>>(new Set())
   const [playingStreams, setPlayingStreams] = useState<Set<number>>(new Set([1, 2, 4, 5]))
@@ -154,112 +77,102 @@ function LiveCameraGrid({
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {vehicles.map((vehicle) => (
+      {devices.map((device) => (
         <Card
-          key={vehicle.id}
+          key={device.id}
           className={`cursor-pointer transition-all hover:shadow-md ${
-            selectedVehicle?.id === vehicle.id ? "ring-2 ring-blue-500" : ""
+            selectedDevice?.id === device.id ? "ring-2 ring-blue-500" : ""
           }`}
-          onClick={() => onVehicleSelect(vehicle)}
+          onClick={() => onDeviceSelect(device)}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    vehicle.status === "moving"
+                    device.status === "online"
                       ? "bg-green-500"
-                      : vehicle.status === "stopped"
+                      : device.status === "no_gps"
                         ? "bg-orange-500"
-                        : "bg-gray-500"
+                        : "bg-red-500"
                   }`}
                 />
-                <CardTitle className="text-sm">{vehicle.plate}</CardTitle>
+                <CardTitle className="text-sm">{device.imei}</CardTitle>
               </div>
-              <Badge variant={vehicle.cameraStatus === "online" ? "default" : "secondary"} className="text-xs">
-                {vehicle.cameraStatus === "online" ? "LIVE" : "OFFLINE"}
+              <Badge variant={device.status === "online" ? "default" : "secondary"} className="text-xs">
+                {device.status === "online" ? "GPS" : device.status === "no_gps" ? "NO GPS" : "OFFLINE"}
               </Badge>
             </div>
-            <CardDescription className="text-xs">{vehicle.driver}</CardDescription>
+            <CardDescription className="text-xs">{device.vehicle?.plate_number || 'Chưa gắn xe'}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3">
-              {vehicle.cameraStatus === "online" ? (
+              {device.status === "online" && device.latitude && device.longitude ? (
                 <>
-                  {/* Mock live video feed */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-gray-900">
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="w-full h-full bg-[url('/placeholder.svg?height=200&width=300&text=Live+Feed')] bg-cover bg-center"></div>
-                    </div>
-                    {playingStreams.has(vehicle.id) ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-white text-xs font-mono bg-black/50 px-2 py-1 rounded">
-                          🔴 LIVE - {vehicle.plate}
+                  {/* GPS Location Display */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-blue-900 to-gray-900">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <MapPin className="h-8 w-8 mx-auto mb-2" />
+                        <div className="text-xs font-mono bg-black/50 px-2 py-1 rounded mb-1">
+                          📍 GPS ACTIVE
+                        </div>
+                        <div className="text-xs">
+                          {device.latitude?.toFixed(6)}, {device.longitude?.toFixed(6)}
                         </div>
                       </div>
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-white/70 text-xs">Stream Paused</div>
-                      </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Video controls */}
+                  {/* Device info overlay */}
                   <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          togglePlay(vehicle.id)
-                        }}
-                      >
-                        {playingStreams.has(vehicle.id) ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleMute(vehicle.id)
-                        }}
-                      >
-                        {mutedStreams.has(vehicle.id) ? (
-                          <VolumeX className="h-3 w-3" />
-                        ) : (
-                          <Volume2 className="h-3 w-3" />
-                        )}
-                      </Button>
+                    <div className="text-white text-xs font-mono bg-black/50 px-1 rounded">
+                      {device.speed || 0} km/h
                     </div>
-                    <div className="text-white text-xs font-mono bg-black/50 px-1 rounded">{vehicle.speed} km/h</div>
+                    <div className="text-white text-xs font-mono bg-black/50 px-1 rounded">
+                      {device.battery_percent || 0}%
+                    </div>
                   </div>
                 </>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
                   <div className="text-center text-gray-400">
-                    <Video className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <div className="text-xs">Camera Offline</div>
+                    <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div className="text-xs">
+                      {device.error ? device.error :
+                       device.status === "no_gps" ? 'No GPS Signal' :
+                       'Device Offline'}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Vehicle info */}
+            {/* Device info */}
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tốc độ:</span>
-                <span className="font-medium">{vehicle.speed} km/h</span>
+                <span className="text-muted-foreground">IMEI:</span>
+                <span className="font-medium font-mono">{device.imei}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Nhiên liệu:</span>
-                <span className="font-medium">{vehicle.fuel}%</span>
+                <span className="text-muted-foreground">Tốc độ:</span>
+                <span className="font-medium">{device.speed || 0} km/h</span>
               </div>
+              {device.battery_percent !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pin:</span>
+                  <span className="font-medium">{device.battery_percent}%</span>
+                </div>
+              )}
+              {device.temperature !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Nhiệt độ:</span>
+                  <span className="font-medium">{device.temperature}°C</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Cập nhật:</span>
-                <span className="font-medium">{vehicle.lastUpdate}</span>
+                <span className="font-medium">{device.last_update || 'Click để tải GPS'}</span>
               </div>
             </div>
           </CardContent>
@@ -270,47 +183,101 @@ function LiveCameraGrid({
 }
 
 export default function MapPage() {
-  const [selectedVehicle, setSelectedVehicle] = useState<(typeof mockVehicles)[0] | null>(null)
+  const { devices, loading, error, refreshData, selectedDevice, setSelectedDevice } = useMapData()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [map, setMap] = useState<google.maps.Map | null>(null)
 
-  const filteredVehicles = mockVehicles.filter((vehicle) => {
+  const filteredDevices = devices.filter((device) => {
     const matchesSearch =
-      vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.driver.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || vehicle.status === statusFilter
+      device.imei.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (device.vehicle?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || device.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
-  const onLoad = useCallback(() => {
+  // Calculate map center - use first device with GPS, fallback to default
+  const mapCenter = (() => {
+    const firstDeviceWithGPS = filteredDevices.find(device =>
+      device.latitude !== undefined && device.longitude !== undefined
+    );
+
+    if (firstDeviceWithGPS) {
+      return {
+        lat: firstDeviceWithGPS.latitude!,
+        lng: firstDeviceWithGPS.longitude!
+      };
+    }
+
+    return defaultCenter;
+  })()
+
+  const onLoad = useCallback((map: google.maps.Map) => {
     setMapLoaded(true)
+    setMap(map)
   }, [])
 
-  const handleMarkerClick = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
+  const handleMarkerClick = (device: MapDevice) => {
+    setSelectedDevice(device)
   }
 
-  const handleVehicleClick = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
+  const handleDeviceClick = (device: MapDevice) => {
+    // Select the device to show InfoWindow
+    setSelectedDevice(device)
+
+    // Center map to device location
+    if (map && device.latitude && device.longitude) {
+      map.panTo({ lat: device.latitude, lng: device.longitude })
+      map.setZoom(15)
+    } 
   }
 
-  const centerMapOnVehicle = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
+  const handleRefresh = async () => {
+    toast.promise(refreshData(), {
+      loading: 'Đang tải danh sách thiết bị...',
+      success: 'Danh sách thiết bị đã được cập nhật',
+      error: 'Lỗi khi tải danh sách thiết bị'
+    })
   }
+
+  // No auto-centering - only center when user clicks device
 
   const toggleFullscreen = () => {
     window.open("/fullscreen-map", "_blank")
+  }
+
+  if (loading && devices.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Đang tải thiết bị và dữ liệu GPS...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Theo dõi và giám sát</h1>
-          <p className="text-muted-foreground">Vị trí thời gian thực và camera trực tiếp từ các thiết bị OBU</p>
+          <h1 className="text-3xl font-bold tracking-tight">Theo dõi thiết bị OBU</h1>
+          <p className="text-muted-foreground">Click vào thiết bị để tải dữ liệu GPS và hiển thị vị trí trên bản đồ</p>
+          {error && (
+            <div className="flex items-center gap-2 mt-2 text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </Button>
           <Button variant="outline" onClick={toggleFullscreen}>
             <Maximize2 className="h-4 w-4 mr-2" />
             Mở toàn màn hình
@@ -322,54 +289,54 @@ export default function MapPage() {
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng xe</CardTitle>
+            <CardTitle className="text-sm font-medium">Tổng thiết bị</CardTitle>
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockVehicles.length}</div>
+            <div className="text-2xl font-bold">{devices.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang di chuyển</CardTitle>
+            <CardTitle className="text-sm font-medium">GPS Online</CardTitle>
             <div className="w-3 h-3 bg-green-500 rounded-full" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {mockVehicles.filter((v) => v.status === "moving").length}
+              {devices.filter((d) => d.status === "online").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang dừng</CardTitle>
+            <CardTitle className="text-sm font-medium">No GPS</CardTitle>
             <div className="w-3 h-3 bg-orange-500 rounded-full" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {mockVehicles.filter((v) => v.status === "stopped").length}
+              {devices.filter((d) => d.status === "no_gps").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang đỗ</CardTitle>
-            <div className="w-3 h-3 bg-gray-500 rounded-full" />
+            <CardTitle className="text-sm font-medium">Offline</CardTitle>
+            <div className="w-3 h-3 bg-red-500 rounded-full" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {mockVehicles.filter((v) => v.status === "parked").length}
+            <div className="text-2xl font-bold text-red-600">
+              {devices.filter((d) => d.status === "offline").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Camera Online</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Có GPS Data</CardTitle>
+            <Navigation className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {mockVehicles.filter((v) => v.cameraStatus === "online").length}
+              {devices.filter((d) => d.latitude && d.longitude).length}
             </div>
           </CardContent>
         </Card>
@@ -381,17 +348,26 @@ export default function MapPage() {
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full border-0 rounded-none">
             <CardHeader>
-              <CardTitle className="text-lg">Camera trực tiếp</CardTitle>
+              <CardTitle className="text-lg">Danh sách thiết bị</CardTitle>
               <CardDescription>
-                {selectedVehicle ? `Đang xem: ${selectedVehicle.plate}` : "Tất cả camera đang hoạt động"}
+                {selectedDevice ? `Đang xem: ${selectedDevice.imei}` : "Click vào thiết bị hoặc marker để xem chi tiết"}
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
-              <LiveCameraGrid
-                vehicles={filteredVehicles.filter((v) => v.cameraStatus === "online")}
-                selectedVehicle={selectedVehicle}
-                onVehicleSelect={handleVehicleClick}
-              />
+              {filteredDevices.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Không có thiết bị nào</p>
+                  </div>
+                </div>
+              ) : (
+                <DeviceGrid
+                  devices={filteredDevices}
+                  selectedDevice={selectedDevice}
+                  onDeviceSelect={handleDeviceClick}
+                />
+              )}
             </CardContent>
           </Card>
         </ResizablePanel>
@@ -404,17 +380,17 @@ export default function MapPage() {
             <CardHeader>
               <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle>
               <CardDescription>
-                {selectedVehicle
-                  ? `Đang xem: ${selectedVehicle.plate} - ${selectedVehicle.driver}`
-                  : "Click vào xe hoặc camera để xem chi tiết"}
+                {selectedDevice
+                  ? `Đang xem: ${selectedDevice.imei} - ${selectedDevice.vehicle?.plate_number || 'Chưa gắn xe'}`
+                  : "Click vào thiết bị để xem vị trí GPS"}
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[calc(100%-80px)]">
-              <LoadScript googleMapsApiKey="">
+              <LoadScript googleMapsApiKey="AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao">
                 <GoogleMap
                   mapContainerStyle={{ width: "100%", height: "100%" }}
-                  center={selectedVehicle ? { lat: selectedVehicle.lat, lng: selectedVehicle.lng } : center}
-                  zoom={selectedVehicle ? 15 : 13}
+                  center={mapCenter}
+                  zoom={13}
                   onLoad={onLoad}
                   options={{
                     zoomControl: true,
@@ -424,78 +400,105 @@ export default function MapPage() {
                     mapTypeId: "roadmap",
                   }}
                 >
+                  {/* Hiển thị tất cả devices có GPS data */}
                   {mapLoaded &&
-                    filteredVehicles.map((vehicle) => (
-                      <Marker
-                        key={vehicle.id}
-                        position={{ lat: vehicle.lat, lng: vehicle.lng }}
-                        icon={getCarIcon(vehicle.status)}
-                        onClick={() => handleMarkerClick(vehicle)}
-                        title={`${vehicle.plate} - ${vehicle.driver}`}
-                      />
-                    ))}
-                  {selectedVehicle && (
+                    filteredDevices
+                      .filter(device => device.latitude && device.longitude)
+                      .map((device) => (
+                        <Marker
+                          key={device.id}
+                          position={{ lat: device.latitude!, lng: device.longitude! }}
+                          icon={getCarIcon(device.status)}
+                          onClick={() => handleMarkerClick(device)}
+                          title={`${device.imei} - ${device.vehicle?.plate_number || 'Chưa gắn xe'}`}
+                        />
+                      ))}
+
+                  {/* InfoWindow cho selected device */}
+                  {selectedDevice && selectedDevice.latitude && selectedDevice.longitude && (
                     <InfoWindow
-                      position={{ lat: selectedVehicle.lat, lng: selectedVehicle.lng }}
-                      onCloseClick={() => setSelectedVehicle(null)}
+                      position={{ lat: selectedDevice.latitude, lng: selectedDevice.longitude }}
+                      onCloseClick={() => setSelectedDevice(null)}
                     >
                       <div className="p-3 min-w-[280px]">
                         <div className="font-semibold text-lg mb-3 flex items-center gap-2">
-                          {selectedVehicle.plate}
+                          {selectedDevice.imei}
                           <Badge
                             variant={
-                              selectedVehicle.status === "moving"
+                              selectedDevice.status === "online"
                                 ? "default"
-                                : selectedVehicle.status === "stopped"
+                                : selectedDevice.status === "no_gps"
                                   ? "secondary"
-                                  : "outline"
+                                  : "destructive"
                             }
                           >
-                            {selectedVehicle.status === "moving"
-                              ? "Đang di chuyển"
-                              : selectedVehicle.status === "stopped"
-                                ? "Dừng"
-                                : "Đỗ"}
-                          </Badge>
-                          <Badge
-                            variant={selectedVehicle.cameraStatus === "online" ? "default" : "secondary"}
-                            className="text-xs"
-                          >
-                            {selectedVehicle.cameraStatus === "online" ? "LIVE" : "OFFLINE"}
+                            {selectedDevice.status === "online"
+                              ? "GPS Online"
+                              : selectedDevice.status === "no_gps"
+                                ? "No GPS"
+                                : "Offline"}
                           </Badge>
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">{selectedVehicle.driver}</span>
+                            <MapPin className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium">IMEI: {selectedDevice.imei}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-green-600" />
-                            <span>{selectedVehicle.phone}</span>
-                          </div>
+                          {selectedDevice.vehicle?.plate_number && (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-green-600" />
+                              <span>Xe: {selectedDevice.vehicle.plate_number}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
                             <Navigation className="h-4 w-4 text-purple-600" />
-                            <span>{selectedVehicle.speed} km/h</span>
+                            <span>Tốc độ: {selectedDevice.speed || 0} km/h</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-orange-600" />
+                            <span className="font-mono text-xs">
+                              {selectedDevice.latitude?.toFixed(6)}, {selectedDevice.longitude?.toFixed(6)}
+                            </span>
                           </div>
                           <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t">
-                            <div>
-                              <div className="text-xs text-gray-500">Nhiên liệu</div>
-                              <div className="font-semibold">{selectedVehicle.fuel}%</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-gray-500">Nhiệt độ</div>
-                              <div className="font-semibold">{selectedVehicle.temperature}°C</div>
-                            </div>
+                            {selectedDevice.battery_percent !== undefined && (
+                              <div>
+                                <div className="text-xs text-gray-500">Pin</div>
+                                <div className="font-semibold">{selectedDevice.battery_percent}%</div>
+                              </div>
+                            )}
+                            {selectedDevice.temperature !== undefined && (
+                              <div>
+                                <div className="text-xs text-gray-500">Nhiệt độ</div>
+                                <div className="font-semibold">{selectedDevice.temperature}°C</div>
+                              </div>
+                            )}
                           </div>
                           <div className="text-xs text-gray-500 mt-3 pt-2 border-t">
-                            Cập nhật: {selectedVehicle.lastUpdate}
+                            Cập nhật: {selectedDevice.last_update || 'Chưa có dữ liệu'}
                           </div>
+                          {selectedDevice.error && (
+                            <div className="text-xs text-red-500 mt-2 pt-2 border-t">
+                              Lỗi: {selectedDevice.error}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </InfoWindow>
                   )}
                 </GoogleMap>
               </LoadScript>
+
+              {/* Overlay message khi chưa có GPS data */}
+              {/* {filteredDevices.filter(d => d.latitude && d.longitude).length === 0 && (
+                <div className="absolute inset-4 flex items-center justify-center bg-white/90 rounded-lg">
+                  <div className="text-center text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-medium">Chưa có thiết bị nào có dữ liệu GPS</p>
+                    <p className="text-sm mt-2">Click vào thiết bị bên trái để tải dữ liệu GPS</p>
+                  </div>
+                </div>
+              )} */}
             </CardContent>
           </Card>
         </ResizablePanel>

@@ -14,6 +14,7 @@ import {
   UpdateDeviceRequest,
   PaginationParams,
   PaginatedResponse,
+  DeviceRealtimeResponse,
 } from '../types/api';
 
 class ApiService {
@@ -144,20 +145,20 @@ class ApiService {
     }
   }
 
-  async refreshToken(): Promise<ApiResponse<{ access_token: string }>> {
+  async refreshToken(): Promise<{ access_token: string }> {
     const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
-    
+
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
     try {
-      const response = await this.api.post<ApiResponse<{ access_token: string }>>('/auth/refresh', {
+      const response = await this.api.post<{ access_token: string }>('/auth/refresh', {
         refresh_token: refreshToken,
       });
 
-      if (response.data.success && response.data.data) {
-        this.setToken(response.data.data.access_token);
+      if (response.data && response.data.access_token) {
+        this.setToken(response.data.access_token);
       }
 
       return response.data;
@@ -169,37 +170,37 @@ class ApiService {
 
 
 
-  // Generic CRUD methods
-  private async get<T>(url: string, params?: any): Promise<ApiResponse<T>> {
+  // Generic CRUD methods - FastAPI returns data directly, no wrapper
+  private async get<T>(url: string, params?: any): Promise<T> {
     try {
-      const response = await this.api.get<ApiResponse<T>>(url, { params });
+      const response = await this.api.get<T>(url, { params });
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 
-  private async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+  private async post<T>(url: string, data?: any): Promise<T> {
     try {
-      const response = await this.api.post<ApiResponse<T>>(url, data);
+      const response = await this.api.post<T>(url, data);
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 
-  private async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+  private async put<T>(url: string, data?: any): Promise<T> {
     try {
-      const response = await this.api.put<ApiResponse<T>>(url, data);
+      const response = await this.api.put<T>(url, data);
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 
-  private async delete<T>(url: string): Promise<ApiResponse<T>> {
+  private async delete<T>(url: string): Promise<T> {
     try {
-      const response = await this.api.delete<ApiResponse<T>>(url);
+      const response = await this.api.delete<T>(url);
       return response.data;
     } catch (error) {
       throw error;
@@ -207,66 +208,71 @@ class ApiService {
   }
 
   // Vehicle methods
-  async getVehicles(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Vehicle>>> {
+  async getVehicles(params?: PaginationParams): Promise<PaginatedResponse<Vehicle>> {
     return this.get<PaginatedResponse<Vehicle>>('/vehicles', params);
   }
 
-  async getVehicle(id: number): Promise<ApiResponse<Vehicle>> {
+  async getVehicle(id: string): Promise<Vehicle> {
     return this.get<Vehicle>(`/vehicles/${id}`);
   }
 
-  async createVehicle(data: CreateVehicleRequest): Promise<ApiResponse<Vehicle>> {
+  async createVehicle(data: CreateVehicleRequest): Promise<Vehicle> {
     return this.post<Vehicle>('/vehicles', data);
   }
 
-  async updateVehicle(id: number, data: UpdateVehicleRequest): Promise<ApiResponse<Vehicle>> {
+  async updateVehicle(id: string, data: UpdateVehicleRequest): Promise<Vehicle> {
     return this.put<Vehicle>(`/vehicles/${id}`, data);
   }
 
-  async deleteVehicle(id: number): Promise<ApiResponse<void>> {
+  async deleteVehicle(id: string): Promise<void> {
     return this.delete<void>(`/vehicles/${id}`);
   }
 
   // Driver methods
-  async getDrivers(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Driver>>> {
+  async getDrivers(params?: PaginationParams): Promise<PaginatedResponse<Driver>> {
     return this.get<PaginatedResponse<Driver>>('/drivers', params);
   }
 
-  async getDriver(id: number): Promise<ApiResponse<Driver>> {
+  async getDriver(id: string): Promise<Driver> {
     return this.get<Driver>(`/drivers/${id}`);
   }
 
-  async createDriver(data: CreateDriverRequest): Promise<ApiResponse<Driver>> {
+  async createDriver(data: CreateDriverRequest): Promise<Driver> {
     return this.post<Driver>('/drivers', data);
   }
 
-  async updateDriver(id: number, data: UpdateDriverRequest): Promise<ApiResponse<Driver>> {
+  async updateDriver(id: string, data: UpdateDriverRequest): Promise<Driver> {
     return this.put<Driver>(`/drivers/${id}`, data);
   }
 
-  async deleteDriver(id: number): Promise<ApiResponse<void>> {
+  async deleteDriver(id: string): Promise<void> {
     return this.delete<void>(`/drivers/${id}`);
   }
 
   // Device methods
-  async getDevices(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Device>>> {
+  async getDevices(params?: PaginationParams): Promise<PaginatedResponse<Device>> {
     return this.get<PaginatedResponse<Device>>('/devices', params);
   }
 
-  async getDevice(id: number): Promise<ApiResponse<Device>> {
+  async getDevice(id: string): Promise<Device> {
     return this.get<Device>(`/devices/${id}`);
   }
 
-  async createDevice(data: CreateDeviceRequest): Promise<ApiResponse<Device>> {
+  async createDevice(data: CreateDeviceRequest): Promise<Device> {
     return this.post<Device>('/devices', data);
   }
 
-  async updateDevice(id: number, data: UpdateDeviceRequest): Promise<ApiResponse<Device>> {
+  async updateDevice(id: string, data: UpdateDeviceRequest): Promise<Device> {
     return this.put<Device>(`/devices/${id}`, data);
   }
 
-  async deleteDevice(id: number): Promise<ApiResponse<void>> {
+  async deleteDevice(id: string): Promise<void> {
     return this.delete<void>(`/devices/${id}`);
+  }
+
+  // Device realtime methods
+  async getDeviceRealtime(deviceId: string): Promise<DeviceRealtimeResponse> {
+    return this.get<DeviceRealtimeResponse>(`/devices/${deviceId}/realtime`);
   }
 
   // Utility methods
