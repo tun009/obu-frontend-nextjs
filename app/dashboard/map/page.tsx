@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api"
+import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
+import { useGoogleMaps } from "@/components/providers/google-maps-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2, VolumeX, RefreshCw, AlertCircle } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { useMapData, MapDevice } from "@/hooks/use-map-data"
+import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
 import { toast } from "sonner"
 
 const mapContainerStyle = {
@@ -184,6 +186,7 @@ function DeviceGrid({
 
 export default function MapPage() {
   const { devices, loading, error, refreshData, selectedDevice, setSelectedDevice } = useMapData()
+  const { isLoaded } = useGoogleMaps()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -386,7 +389,7 @@ export default function MapPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[calc(100%-80px)]">
-              <LoadScript googleMapsApiKey="AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao">
+              {isLoaded ? (
                 <GoogleMap
                   mapContainerStyle={{ width: "100%", height: "100%" }}
                   center={mapCenter}
@@ -414,13 +417,18 @@ export default function MapPage() {
                         />
                       ))}
 
-                  {/* InfoWindow cho selected device */}
+                  {/* InfoWindow cho selected device với WebRTC Video */}
                   {selectedDevice && selectedDevice.latitude && selectedDevice.longitude && (
                     <InfoWindow
                       position={{ lat: selectedDevice.latitude, lng: selectedDevice.longitude }}
                       onCloseClick={() => setSelectedDevice(null)}
+                      options={{
+                        maxWidth: 400,
+                        pixelOffset: new window.google.maps.Size(0, -10)
+                      }}
                     >
-                      <div className="p-3 min-w-[280px]">
+                      <div className="p-3 min-w-[350px]">
+                        {/* Header */}
                         <div className="font-semibold text-lg mb-3 flex items-center gap-2">
                           {selectedDevice.imei}
                           <Badge
@@ -439,6 +447,20 @@ export default function MapPage() {
                                 : "Offline"}
                           </Badge>
                         </div>
+
+                        {/* WebRTC Video Player */}
+                        <div className="mb-4">
+                          <WebRTCVideoPlayer
+                            deviceId={selectedDevice.imei}
+                            deviceName={selectedDevice.vehicle?.plate_number || selectedDevice.imei}
+                            className="w-full h-48"
+                            onStreamStart={() => console.log('Stream started for', selectedDevice.imei)}
+                            onStreamStop={() => console.log('Stream stopped for', selectedDevice.imei)}
+                            onError={(error) => console.error('Stream error:', error)}
+                          />
+                        </div>
+
+                        {/* Device Info */}
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-blue-600" />
@@ -460,6 +482,8 @@ export default function MapPage() {
                               {selectedDevice.latitude?.toFixed(6)}, {selectedDevice.longitude?.toFixed(6)}
                             </span>
                           </div>
+
+                          {/* Stats Grid */}
                           <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t">
                             {selectedDevice.battery_percent !== undefined && (
                               <div>
@@ -474,9 +498,7 @@ export default function MapPage() {
                               </div>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500 mt-3 pt-2 border-t">
-                            Cập nhật: {selectedDevice.last_update || 'Chưa có dữ liệu'}
-                          </div>
+
                           {selectedDevice.error && (
                             <div className="text-xs text-red-500 mt-2 pt-2 border-t">
                               Lỗi: {selectedDevice.error}
@@ -487,7 +509,14 @@ export default function MapPage() {
                     </InfoWindow>
                   )}
                 </GoogleMap>
-              </LoadScript>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
+                    <p>Loading Google Maps...</p>
+                  </div>
+                </div>
+              )}
 
               {/* Overlay message khi chưa có GPS data */}
               {/* {filteredDevices.filter(d => d.latitude && d.longitude).length === 0 && (

@@ -22,7 +22,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
-    return fallback || <LoadingFallback />;
+    return fallback ;
   }
 
   if (!isAuthenticated) {

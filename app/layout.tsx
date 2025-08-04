@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { GoogleMapsProvider } from '@/components/providers/google-maps-provider'
 import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
@@ -17,10 +18,12 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <GoogleMapsProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </GoogleMapsProvider>
       </body>
     </html>
   )
