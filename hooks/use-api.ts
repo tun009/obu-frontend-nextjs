@@ -297,3 +297,81 @@ export function useDevices() {
     error: listApi.error || createApi.error || updateApi.error || deleteApi.error,
   };
 }
+
+export function useJourneySessions() {
+  const listApi = useApi();
+  const createApi = useApi({
+    showSuccessToast: true,
+    successMessage: 'Tạo ca làm việc thành công',
+  });
+  const updateApi = useApi({
+    showSuccessToast: true,
+    successMessage: 'Cập nhật ca làm việc thành công',
+  });
+  const deleteApi = useApi({
+    showSuccessToast: true,
+    successMessage: 'Xóa ca làm việc thành công',
+  });
+  const activateApi = useApi({
+    showSuccessToast: true,
+    successMessage: 'Kích hoạt ca làm việc thành công',
+  });
+  const completeApi = useApi({
+    showSuccessToast: true,
+    successMessage: 'Hoàn thành ca làm việc thành công',
+  });
+
+  const getJourneySessions = useCallback(
+    async (params?: any) => {
+      return listApi.execute(() => apiService.getJourneySessions(params));
+    },
+    [listApi]
+  );
+
+  const createJourneySession = useCallback(
+    async (data: any) => {
+      return createApi.execute(() => apiService.createJourneySession(data));
+    },
+    [createApi]
+  );
+
+  const updateJourneySession = useCallback(
+    async (id: number, data: any) => {
+      return updateApi.execute(() => apiService.updateJourneySession(id, data));
+    },
+    [updateApi]
+  );
+
+  const deleteJourneySession = useCallback(
+    async (id: number) => {
+      return deleteApi.execute(() => apiService.deleteJourneySession(id));
+    },
+    [deleteApi]
+  );
+
+  const activateJourneySession = useCallback(
+    async (id: number) => {
+      return activateApi.execute(() => apiService.activateJourneySession(id));
+    },
+    [activateApi]
+  );
+
+  const completeJourneySession = useCallback(
+    async (id: number) => {
+      return completeApi.execute(() => apiService.completeJourneySession(id));
+    },
+    [completeApi]
+  );
+
+  return {
+    journeySessions: listApi.data,
+    getJourneySessions,
+    createJourneySession,
+    updateJourneySession,
+    deleteJourneySession,
+    activateJourneySession,
+    completeJourneySession,
+    loading: listApi.loading || createApi.loading || updateApi.loading || deleteApi.loading || activateApi.loading || completeApi.loading,
+    error: listApi.error || createApi.error || updateApi.error || deleteApi.error || activateApi.error || completeApi.error,
+  };
+}

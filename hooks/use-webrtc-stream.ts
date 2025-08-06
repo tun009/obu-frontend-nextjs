@@ -33,19 +33,7 @@ export function useWebRTCStream(): UseWebRTCStreamReturn {
         }
       });
 
-      serviceRef.current.onError((errorMessage) => {
-        setError(errorMessage);
-        setStreamState('error');
-        
-        if (streamInfo) {
-          setStreamInfo(prev => prev ? {
-            ...prev,
-            state: 'error',
-            error: errorMessage,
-            lastActivity: Date.now()
-          } : null);
-        }
-      });
+      // Error handling is now done via toast notifications in the service
 
       serviceRef.current.onStream((stream) => {
         console.log('Stream received in hook:', stream);

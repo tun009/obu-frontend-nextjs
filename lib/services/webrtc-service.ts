@@ -1,4 +1,5 @@
 import mqtt, { MqttClient } from 'mqtt';
+import { toast } from 'sonner';
 import { WEBRTC_CONFIG, generateSessionId, generateMessageId } from '@/lib/constants/webrtc';
 import type { 
   WebRTCMessage, 
@@ -20,7 +21,6 @@ export class WebRTCStreamService implements WebRTCService {
   // Event handlers
   private onStreamHandler: ((stream: MediaStream) => void) | null = null;
   private onStateChangeHandler: ((state: string) => void) | null = null;
-  private onErrorHandler: ((error: string) => void) | null = null;
 
   constructor() {
     this.setupEventHandlers();
@@ -54,7 +54,7 @@ export class WebRTCStreamService implements WebRTCService {
       await this.connectMQTT();
       
     } catch (error) {
-      this.onErrorHandler?.(`Connection failed: ${error}`);
+      toast.error(`Kết nối thất bại: ${error}`);
       throw error;
     }
   }
@@ -148,9 +148,7 @@ export class WebRTCStreamService implements WebRTCService {
     this.onStateChangeHandler = handler;
   }
 
-  onError(handler: (error: string) => void): void {
-    this.onErrorHandler = handler;
-  }
+
 
   // Private Methods
   private async connectMQTT(): Promise<void> {
@@ -246,7 +244,7 @@ export class WebRTCStreamService implements WebRTCService {
       }
     } catch (error) {
       console.error('❌ Error handling MQTT message:', error);
-      this.onErrorHandler?.(`Message handling error: ${error}`);
+      toast.error(`Lỗi xử lý tin nhắn: ${error}`);
     }
   }
 
@@ -271,11 +269,11 @@ export class WebRTCStreamService implements WebRTCService {
         }, 2000);
       } else {
         console.log('❌ Max retries reached, device is permanently busy');
-        this.onErrorHandler?.('Device is busy and cannot be freed after multiple attempts');
+        toast.error('Thiết bị đang bận và không thể giải phóng sau nhiều lần thử');
       }
     } else {
       console.log('❓ Unknown device status:', payload.data.status);
-      this.onErrorHandler?.(`Unknown device status: ${payload.data.status}`);
+      toast.error(`Trạng thái thiết bị không xác định: ${payload.data.status}`);
     }
   }
 
@@ -379,7 +377,7 @@ export class WebRTCStreamService implements WebRTCService {
       
     } catch (error) {
       console.error('Error handling offer:', error);
-      this.onErrorHandler?.(`WebRTC setup failed: ${error}`);
+      toast.error(`Thiết lập WebRTC thất bại: ${error}`);
     }
   }
 

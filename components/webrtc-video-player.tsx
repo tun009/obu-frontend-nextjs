@@ -12,7 +12,6 @@ interface WebRTCVideoPlayerProps {
   autoStart?: boolean;
   onStreamStart?: () => void;
   onStreamStop?: () => void;
-  onError?: (error: string) => void;
 }
 
 const getStateColor = (state: StreamState): string => {
@@ -41,8 +40,7 @@ export function WebRTCVideoPlayer({
   className = '',
   autoStart = false,
   onStreamStart,
-  onStreamStop,
-  onError
+  onStreamStop
 }: WebRTCVideoPlayerProps) {
   const {
     streamState,
@@ -81,11 +79,7 @@ export function WebRTCVideoPlayer({
     }
   }, [isStreaming, onStreamStop]);
 
-  React.useEffect(() => {
-    if (error && onError) {
-      onError(error);
-    }
-  }, [error, onError]);
+  // Error handling is now done via toast notifications in the service
 
   const handleStartStream = async () => {
     try {

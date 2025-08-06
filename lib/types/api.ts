@@ -114,11 +114,10 @@ export interface PaginationParams {
 // FastCRUD PaginatedListResponse structure
 export interface PaginatedResponse<T> {
   data: T[];
-  total_count: number;
-  has_more: boolean;
+  total: number;
   page: number;
   items_per_page: number;
-  total_pages: number;
+  pages: number;
 }
 
 // Device Realtime Types
@@ -260,6 +259,37 @@ export interface MapVehicle {
   // Error state
   error?: string;
 }
+
+// Journey Session Types
+export interface JourneySession {
+  id: number;
+  vehicle_id: string;
+  driver_id: string;
+  start_time: string;
+  end_time: string;
+  total_distance_km?: number;
+  notes?: string;
+  status: 'pending' | 'active' | 'completed';
+  activated_at?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface JourneySessionWithDetails extends JourneySession {
+  vehicle_plate_number: string;
+  driver_name: string;
+  device_imei?: string;
+}
+
+export interface CreateJourneySessionRequest {
+  vehicle_id: string;
+  driver_id: string;
+  start_time: string;
+  end_time: string;
+  notes?: string;
+}
+
+export interface UpdateJourneySessionRequest extends Partial<CreateJourneySessionRequest> {}
 
 // Error Types
 export interface ApiError {

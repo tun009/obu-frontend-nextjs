@@ -456,7 +456,6 @@ export default function MapPage() {
                             className="w-full h-48"
                             onStreamStart={() => console.log('Stream started for', selectedDevice.imei)}
                             onStreamStop={() => console.log('Stream stopped for', selectedDevice.imei)}
-                            onError={(error) => console.error('Stream error:', error)}
                           />
                         </div>
 
