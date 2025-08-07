@@ -105,7 +105,7 @@ function DeviceGrid({
                 {device.status === "online" ? "GPS" : device.status === "no_gps" ? "NO GPS" : "OFFLINE"}
               </Badge>
             </div>
-            <CardDescription className="text-xs">{device.vehicle?.plate_number || 'Chưa gắn xe'}</CardDescription>
+            <CardDescription className="text-xs">{device?.plate_number || 'Chưa gắn xe'}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3">
@@ -181,7 +181,7 @@ function DeviceGrid({
 }
 
 export default function MapPage() {
-  const { devices, loading, error, refreshData, selectedDevice, setSelectedDevice } = useMapData()
+  const { devices, loading, error, selectedDevice, setSelectedDevice } = useMapData()
   const { isLoaded } = useGoogleMaps()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -191,7 +191,7 @@ export default function MapPage() {
   const filteredDevices = devices.filter((device) => {
     const matchesSearch =
       device.imei.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (device.vehicle?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (device?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || device.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -232,13 +232,6 @@ export default function MapPage() {
     } 
   }
 
-  const handleRefresh = async () => {
-    toast.promise(refreshData(), {
-      loading: 'Đang tải danh sách thiết bị...',
-      success: 'Danh sách thiết bị đã được cập nhật',
-      error: 'Lỗi khi tải danh sách thiết bị'
-    })
-  }
 
   // No auto-centering - only center when user clicks device
 
@@ -267,10 +260,6 @@ export default function MapPage() {
           <p className="text-muted-foreground">Click vào thiết bị để tải dữ liệu GPS và hiển thị vị trí trên bản đồ</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
-          </Button>
           <Button variant="outline" onClick={toggleFullscreen}>
             <Maximize2 className="h-4 w-4 mr-2" />
             Mở toàn màn hình
@@ -374,7 +363,7 @@ export default function MapPage() {
               <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle>
               <CardDescription>
                 {selectedDevice
-                  ? `Đang xem: ${selectedDevice.imei} - ${selectedDevice.vehicle?.plate_number || 'Chưa gắn xe'}`
+                  ? `Đang xem: ${selectedDevice.imei} - ${selectedDevice?.plate_number || 'Chưa gắn xe'}`
                   : "Click vào thiết bị để xem vị trí GPS"}
               </CardDescription>
             </CardHeader>
@@ -403,7 +392,7 @@ export default function MapPage() {
                           position={{ lat: device.latitude!, lng: device.longitude! }}
                           icon={getCarIcon(device.status)}
                           onClick={() => handleMarkerClick(device)}
-                          title={`${device.imei} - ${device.vehicle?.plate_number || 'Chưa gắn xe'}`}
+                          title={`${device.imei} - ${device?.plate_number || 'Chưa gắn xe'}`}
                         />
                       ))}
 
@@ -442,7 +431,7 @@ export default function MapPage() {
                         <div className="mb-4">
                           <WebRTCVideoPlayer
                             deviceId={selectedDevice.imei}
-                            deviceName={selectedDevice.vehicle?.plate_number || selectedDevice.imei}
+                            deviceName={selectedDevice?.plate_number || selectedDevice.imei}
                             className="w-full h-48"
                             onStreamStart={() => console.log('Stream started for', selectedDevice.imei)}
                             onStreamStop={() => console.log('Stream stopped for', selectedDevice.imei)}
@@ -455,10 +444,10 @@ export default function MapPage() {
                             <MapPin className="h-4 w-4 text-blue-600" />
                             <span className="font-medium">IMEI: {selectedDevice.imei}</span>
                           </div>
-                          {selectedDevice.vehicle?.plate_number && (
+                          {selectedDevice?.plate_number && (
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-green-600" />
-                              <span>Xe: {selectedDevice.vehicle.plate_number}</span>
+                              <span>Xe: {selectedDevice.plate_number}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-2">

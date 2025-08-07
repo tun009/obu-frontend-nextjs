@@ -20,15 +20,15 @@ export interface MapDevice extends Device {
   error?: string;
   // Realtime data (full response)
   realtimeData?: DeviceRealtimeResponse;
+  plate_number?: string
 }
 
 interface UseMapDataReturn {
   devices: MapDevice[];
   loading: boolean;
   error: string | null;
-  refreshData: () => Promise<void>;
   selectedDevice: MapDevice | null;
-  setSelectedDevice: (device: MapDevice | null) => void;
+  setSelectedDevice: (device: MapDevice | null) => void
 }
 
 export function useMapData(): UseMapDataReturn {
@@ -37,8 +37,9 @@ export function useMapData(): UseMapDataReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const initializedRef = useRef(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingRef = useRef(false);
 
-  // Helper function to determine device status based on GPS data
   const determineDeviceStatus = (gpsInfo: any): 'online' | 'offline' | 'no_gps' => {
     if (!gpsInfo) {
       return 'offline';
@@ -140,68 +141,106 @@ export function useMapData(): UseMapDataReturn {
     }
   }, []);
 
-  // No longer need fetchDeviceRealtime - GPS data comes with devices API
 
-  // No longer need loadDeviceRealtime - GPS data comes with initial API call
+  const silentRefreshData = useCallback(async (): Promise<void> => {
+    if (isPollingRef.current) {
+      return;
+    }
 
-  // Main data refresh function - load devices with realtime data
+    isPollingRef.current = true;
+
+    try {
+      const devicesData = await fetchDevices();
+
+      const mapDevices = devicesData.map(device => convertToMapDevice(device));
+      setDevices(mapDevices);
+
+    } catch (error: any) {
+      console.warn('Silent polling error (ignored):', error.message || error);
+    } finally {
+      isPollingRef.current = false;
+    }
+  }, [fetchDevices]);
+
   const refreshData = useCallback(async (): Promise<void> => {
-    console.log('refreshData called - loading devices with realtime data');
     setLoading(true);
     setError(null);
 
     try {
-      // Fetch all devices (now includes realtime data from API)
       const devicesData = await fetchDevices();
       console.log('Fetched devices:', devicesData.length);
 
-      // Convert to MapDevice using realtime data from API response
       const mapDevices = devicesData.map(device => convertToMapDevice(device));
 
-      // Filter devices that have GPS data
-      const devicesWithGPS = mapDevices.filter(device =>
-        device.latitude !== undefined && device.longitude !== undefined
-      );
-
-      console.log('Processed map devices:', mapDevices.length);
-      console.log('Devices with GPS data:', devicesWithGPS.length);
-
       setDevices(mapDevices);
-
-      // Auto-focus map to first device with GPS data (but don't select it)
-      if (devicesWithGPS.length > 0) {
-        // Set first device as map center reference (not selected)
-        const firstDevice = devicesWithGPS[0];
-        // We'll use this in the map component to set initial center
-        console.log('First device with GPS for map center:', firstDevice.imei, firstDevice.latitude, firstDevice.longitude);
-      }
 
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to load devices';
       console.error('refreshData error:', error);
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [fetchDevices]);
 
-  // Initial data load - prevent double call in React StrictMode
   useEffect(() => {
     if (!initializedRef.current) {
       initializedRef.current = true;
-      refreshData();
-    }
-  }, [refreshData]);
 
-  // No auto-refresh - user manually clicks on devices to load realtime data
+      refreshData().then(() => {
+        pollingIntervalRef.current = setInterval(() => {
+          silentRefreshData();
+        }, 10000); // Poll every 10 seconds
+      }).catch((error) => {
+        console.error('Initial data load failed:', error);
+        // Still start polling even if initial load fails
+        pollingIntervalRef.current = setInterval(() => {
+          silentRefreshData();
+        }, 10000);
+      });
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        console.log('Polling stopped - component unmounted');
+      }
+    };
+  }, [refreshData, silentRefreshData]);
+
+  // Optional: Pause polling when tab is not active (performance optimization)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is not active - pause polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+          console.log('Polling paused - tab not active');
+        }
+      } else {
+        // Tab is active - resume polling if not already running
+        if (!pollingIntervalRef.current && initializedRef.current) {
+          pollingIntervalRef.current = setInterval(() => {
+            silentRefreshData();
+          }, 10000);
+          console.log('Polling resumed - tab active');
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [silentRefreshData]);
 
   return {
     devices,
     loading,
     error,
-    refreshData,
     selectedDevice,
-    setSelectedDevice
-  };
+    setSelectedDevice  };
 }
