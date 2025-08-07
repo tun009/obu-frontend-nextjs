@@ -1,6 +1,6 @@
 "use client"
 
-import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, Radio, Clock } from "lucide-react"
+import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, Radio, Calendar } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -42,7 +42,7 @@ const menuItems = [
   {
     title: "Ca làm việc",
     url: "/dashboard/journey-sessions",
-    icon: Clock,
+    icon: Calendar,
   },
   {
     title: "Live",

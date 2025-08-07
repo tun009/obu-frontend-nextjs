@@ -127,7 +127,7 @@ export function useMapData(): UseMapDataReturn {
   // Fetch all devices
   const fetchDevices = useCallback(async (): Promise<Device[]> => {
     try {
-      const response = await apiService.getDevices({ items_per_page: 100 }); // Get all devices
+      const response = await apiService.getDevices({page:1, items_per_page: 100 }); // Get all devices
       console.log('getDevices response:', response);
 
       if (response && response.data) {

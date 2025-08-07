@@ -3,9 +3,6 @@ import {
   ApiResponse,
   ApiError,
   LoginRequest,
-  Vehicle,
-  CreateVehicleRequest,
-  UpdateVehicleRequest,
   Driver,
   CreateDriverRequest,
   UpdateDriverRequest,
@@ -171,7 +168,7 @@ class ApiService {
 
 
   // Generic CRUD methods - FastAPI returns data directly, no wrapper
-  private async get<T>(url: string, params?: any): Promise<T> {
+  public async get<T>(url: string, params?: any): Promise<T> {
     try {
       const response = await this.api.get<T>(url, { params });
       return response.data;
@@ -180,7 +177,7 @@ class ApiService {
     }
   }
 
-  private async post<T>(url: string, data?: any): Promise<T> {
+  public async post<T>(url: string, data?: any): Promise<T> {
     try {
       const response = await this.api.post<T>(url, data);
       return response.data;
@@ -189,7 +186,7 @@ class ApiService {
     }
   }
 
-  private async put<T>(url: string, data?: any): Promise<T> {
+  public async put<T>(url: string, data?: any): Promise<T> {
     try {
       const response = await this.api.put<T>(url, data);
       return response.data;
@@ -198,7 +195,16 @@ class ApiService {
     }
   }
 
-  private async delete<T>(url: string): Promise<T> {
+  public async patch<T>(url: string, data?: any): Promise<T> {
+    try {
+      const response = await this.api.patch<T>(url, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async delete<T>(url: string): Promise<T> {
     try {
       const response = await this.api.delete<T>(url);
       return response.data;
@@ -207,26 +213,7 @@ class ApiService {
     }
   }
 
-  // Vehicle methods
-  async getVehicles(params?: PaginationParams): Promise<PaginatedResponse<Vehicle>> {
-    return this.get<PaginatedResponse<Vehicle>>('/vehicles', params);
-  }
 
-  async getVehicle(id: string): Promise<Vehicle> {
-    return this.get<Vehicle>(`/vehicles/${id}`);
-  }
-
-  async createVehicle(data: CreateVehicleRequest): Promise<Vehicle> {
-    return this.post<Vehicle>('/vehicles', data);
-  }
-
-  async updateVehicle(id: string, data: UpdateVehicleRequest): Promise<Vehicle> {
-    return this.put<Vehicle>(`/vehicles/${id}`, data);
-  }
-
-  async deleteVehicle(id: string): Promise<void> {
-    return this.delete<void>(`/vehicles/${id}`);
-  }
 
   // Driver methods
   async getDrivers(params?: PaginationParams): Promise<PaginatedResponse<Driver>> {
@@ -251,7 +238,7 @@ class ApiService {
 
   // Device methods
   async getDevices(params?: PaginationParams): Promise<PaginatedResponse<Device>> {
-    return this.get<PaginatedResponse<Device>>('/devices', params);
+    return this.get<PaginatedResponse<Device>>('/journey-sessions/active/realtime', params);
   }
 
   async getDevice(id: string): Promise<Device> {

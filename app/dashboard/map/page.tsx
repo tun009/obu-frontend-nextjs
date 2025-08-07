@@ -172,10 +172,6 @@ function DeviceGrid({
                   <span className="font-medium">{device.temperature}°C</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Cập nhật:</span>
-                <span className="font-medium">{device.last_update || 'Click để tải GPS'}</span>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -269,12 +265,6 @@ export default function MapPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Theo dõi thiết bị OBU</h1>
           <p className="text-muted-foreground">Click vào thiết bị để tải dữ liệu GPS và hiển thị vị trí trên bản đồ</p>
-          {error && (
-            <div className="flex items-center gap-2 mt-2 text-red-600">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>

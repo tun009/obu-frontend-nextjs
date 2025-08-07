@@ -166,14 +166,14 @@ export function useVehicles() {
   );
 
   const updateVehicle = useCallback(
-    async (id: number, data: any) => {
+    async (id: string, data: any) => {
       return updateApi.execute(() => apiService.updateVehicle(id, data));
     },
     [updateApi]
   );
 
   const deleteVehicle = useCallback(
-    async (id: number) => {
+    async (id: string) => {
       return deleteApi.execute(() => apiService.deleteVehicle(id));
     },
     [deleteApi]

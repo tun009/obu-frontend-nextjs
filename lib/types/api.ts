@@ -91,6 +91,7 @@ export interface Device {
   vehicle_id?: string; // UUID
   installed_at: string;
   vehicle?: Vehicle;
+  vehicle_plate_number?: string;
 }
 
 export interface CreateDeviceRequest {
