@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
 import { useGoogleMaps } from "@/components/providers/google-maps-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -188,6 +188,59 @@ export default function MapPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [map, setMap] = useState<google.maps.Map | null>(null)
 
+  // Ref để lưu mapCenter cố định - chỉ set 1 lần duy nhất
+  const fixedMapCenterRef = useRef<{lat: number, lng: number} | null>(null)
+
+  // Function tính toán center bao quát tất cả thiết bị
+  const calculateBoundsCenter = (devicesWithGPS: MapDevice[]) => {
+    if (devicesWithGPS.length === 0) {
+      return defaultCenter;
+    }
+
+    if (devicesWithGPS.length === 1) {
+      return {
+        lat: devicesWithGPS[0].latitude!,
+        lng: devicesWithGPS[0].longitude!
+      };
+    }
+
+    // Tính toán bounds của tất cả thiết bị
+    const latitudes = devicesWithGPS.map(d => d.latitude!);
+    const longitudes = devicesWithGPS.map(d => d.longitude!);
+
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+
+    // Center của bounds
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+
+    console.log('📍 Calculated bounds center:', {
+      center: { lat: centerLat, lng: centerLng },
+      bounds: { minLat, maxLat, minLng, maxLng },
+      devicesCount: devicesWithGPS.length
+    });
+
+    return { lat: centerLat, lng: centerLng };
+  };
+
+  // Set mapCenter cố định chỉ 1 lần khi có thiết bị với GPS
+  useEffect(() => {
+    if (!fixedMapCenterRef.current && devices.length > 0) {
+      const devicesWithGPS = devices.filter(device =>
+        device.latitude !== undefined && device.longitude !== undefined
+      );
+
+      if (devicesWithGPS.length > 0) {
+        const boundsCenter = calculateBoundsCenter(devicesWithGPS);
+        fixedMapCenterRef.current = boundsCenter;
+        console.log('🎯 Fixed map center set:', boundsCenter);
+      }
+    }
+  }, [devices]);
+
   const filteredDevices = devices.filter((device) => {
     const matchesSearch =
       device.imei.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -196,21 +249,8 @@ export default function MapPage() {
     return matchesSearch && matchesStatus
   })
 
-  // Calculate map center - use first device with GPS, fallback to default
-  const mapCenter = (() => {
-    const firstDeviceWithGPS = filteredDevices.find(device =>
-      device.latitude !== undefined && device.longitude !== undefined
-    );
-
-    if (firstDeviceWithGPS) {
-      return {
-        lat: firstDeviceWithGPS.latitude!,
-        lng: firstDeviceWithGPS.longitude!
-      };
-    }
-
-    return defaultCenter;
-  })()
+  // Sử dụng mapCenter cố định đã được set 1 lần, fallback to default
+  const mapCenter = fixedMapCenterRef.current || defaultCenter;
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMapLoaded(true)
