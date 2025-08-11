@@ -5,29 +5,37 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, Loader2 } from "lucide-react"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+import { Loader2 } from "lucide-react"
+import { DateTimePicker } from "@/components/ui/datetime-picker"
 import { toast } from "sonner"
 import apiService from "@/lib/services/api"
 import type { Vehicle, Driver, CreateJourneySessionRequest, JourneySessionWithDetails } from "@/lib/types/api"
 
-const formSchema = z.object({
+const createFormSchema = (isEditing: boolean = false) => z.object({
   vehicle_id: z.string().min(1, "Vui lòng chọn xe"),
   driver_id: z.string().min(1, "Vui lòng chọn tài xế"),
   start_time: z.date({
     required_error: "Vui lòng chọn thời gian bắt đầu",
+  }).refine((date) => {
+    if (isEditing) return true // Cho phép edit session trong quá khứ
+    const now = new Date()
+    return date >= now
+  }, {
+    message: "Thời gian bắt đầu không được ở quá khứ",
   }),
   end_time: z.date({
     required_error: "Vui lòng chọn thời gian kết thúc",
+  }).refine((date) => {
+    if (isEditing) return true // Cho phép edit session trong quá khứ
+    const now = new Date()
+    return date >= now
+  }, {
+    message: "Thời gian kết thúc không được ở quá khứ",
   }),
   notes: z.string().optional(),
 }).refine((data) => data.end_time > data.start_time, {
@@ -48,6 +56,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
   const [loadingData, setLoadingData] = useState(true)
 
   const isEditing = !!session
+  const formSchema = createFormSchema(isEditing)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -106,7 +115,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
       onSuccess?.()
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Có lỗi xảy ra'
-      toast.error(errorMessage)
+      toast.error(errorMessage)      
     } finally {
       setLoading(false)
     }
@@ -196,51 +205,16 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Thời gian bắt đầu</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP HH:mm", { locale: vi })
-                            ) : (
-                              <span>Chọn thời gian bắt đầu</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                          }
-                          initialFocus
-                        />
-                        <div className="p-3 border-t">
-                          <Input
-                            type="time"
-                            value={field.value ? format(field.value, "HH:mm") : ""}
-                            onChange={(e) => {
-                              if (field.value && e.target.value) {
-                                const [hours, minutes] = e.target.value.split(':')
-                                const newDate = new Date(field.value)
-                                newDate.setHours(parseInt(hours), parseInt(minutes))
-                                field.onChange(newDate)
-                              }
-                            }}
-                          />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <DateTimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Chọn thời gian bắt đầu"
+                        format24Hour={true}
+                        disablePastDates={!isEditing}
+                        maxDate={form.watch("end_time")}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -253,51 +227,16 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Thời gian kết thúc</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP HH:mm", { locale: vi })
-                            ) : (
-                              <span>Chọn thời gian kết thúc</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                          }
-                          initialFocus
-                        />
-                        <div className="p-3 border-t">
-                          <Input
-                            type="time"
-                            value={field.value ? format(field.value, "HH:mm") : ""}
-                            onChange={(e) => {
-                              if (field.value && e.target.value) {
-                                const [hours, minutes] = e.target.value.split(':')
-                                const newDate = new Date(field.value)
-                                newDate.setHours(parseInt(hours), parseInt(minutes))
-                                field.onChange(newDate)
-                              }
-                            }}
-                          />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <DateTimePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Chọn thời gian kết thúc"
+                        format24Hour={true}
+                        disablePastDates={!isEditing}
+                        minDate={form.watch("start_time")}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

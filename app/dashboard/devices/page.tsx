@@ -41,8 +41,7 @@ export default function DevicesPage() {
   const [formData, setFormData] = useState<CreateDeviceRequest>({
     imei: "",
     serial_number: "",
-    firmware_version: "",
-    vehicle_id: ""
+    firmware_version: ""
   })
 
   const fetchDevices = async (page = 1, pageSize = 10, search = searchTerm) => {
@@ -100,15 +99,14 @@ export default function DevicesPage() {
       setFormData({
         imei: "",
         serial_number: "",
-        firmware_version: "",
-        vehicle_id: ""
+        firmware_version: ""
       })
       fetchDevices(pagination.current, pagination.pageSize, searchTerm)
     } catch (error: any) {
       if (error?.response?.status === 400) {
         const detail = error?.response?.data?.detail
-        if (detail?.includes('IMEI')) {
-          toast.error('IMEI đã tồn tại')
+        if (detail?.includes('Device No')) {
+          toast.error('Device No đã tồn tại')
         } else if (detail?.includes('Serial number')) {
           toast.error('Số serial đã tồn tại')
         } else if (detail?.includes('Vehicle')) {
@@ -135,15 +133,15 @@ export default function DevicesPage() {
       setFormData({
         imei: "",
         serial_number: "",
-        firmware_version: "",
-        vehicle_id: ""
+        firmware_version: ""
+
       })
       fetchDevices(pagination.current, pagination.pageSize, searchTerm)
     } catch (error: any) {
       if (error?.response?.status === 400) {
         const detail = error?.response?.data?.detail
-        if (detail?.includes('IMEI')) {
-          toast.error('IMEI đã tồn tại')
+        if (detail?.includes('Device No')) {
+          toast.error('Device No đã tồn tại')
         } else if (detail?.includes('Serial number')) {
           toast.error('Số serial đã tồn tại')
         } else {
@@ -228,7 +226,7 @@ export default function DevicesPage() {
       imei: "",
       serial_number: "",
       firmware_version: "",
-      vehicle_id: ""
+      
     })
     setShowCreateDialog(true)
   }
@@ -238,7 +236,7 @@ export default function DevicesPage() {
       imei: device.imei,
       serial_number: device.serial_number || "",
       firmware_version: device.firmware_version || "",
-      vehicle_id: device.vehicle_id || ""
+     
     })
     setEditDevice(device)
   }
@@ -331,7 +329,7 @@ export default function DevicesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Tìm kiếm theo IMEI, Serial..."
+                placeholder="Tìm kiếm theo Device No, Serial..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -348,7 +346,7 @@ export default function DevicesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>IMEI</TableHead>
+                  <TableHead>Device No</TableHead>
                   <TableHead>Serial Number</TableHead>
                   <TableHead>Firmware</TableHead>
                   <TableHead>Xe được gán</TableHead>
@@ -481,7 +479,7 @@ export default function DevicesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="imei">IMEI *</Label>
+              <Label htmlFor="imei">Device No *</Label>
               <Input
                 id="imei"
                 placeholder="OBU-001234"
@@ -534,7 +532,7 @@ export default function DevicesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_imei">IMEI *</Label>
+              <Label htmlFor="edit_imei">Device No *</Label>
               <Input
                 id="edit_imei"
                 placeholder="OBU-001234"
@@ -631,7 +629,7 @@ export default function DevicesPage() {
               Bạn có chắc chắn muốn hủy gán thiết bị này khỏi xe không?
               <br />
               <br />
-              <strong>IMEI:</strong> {unassignDevice?.imei}
+              <strong>Device No:</strong> {unassignDevice?.imei}
               <br />
               <strong>Serial Number:</strong> {unassignDevice?.serial_number || 'Không có'}
               <br />
@@ -663,7 +661,7 @@ export default function DevicesPage() {
               Bạn có chắc chắn muốn xóa thiết bị này không? Hành động này không thể hoàn tác.
               <br />
               <br />
-              <strong>IMEI:</strong> {deleteDevice?.imei}
+              <strong>Device No:</strong> {deleteDevice?.imei}
               <br />
               <strong>Serial Number:</strong> {deleteDevice?.serial_number || 'Không có'}
               <br />
