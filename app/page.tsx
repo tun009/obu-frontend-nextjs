@@ -91,7 +91,7 @@ export default function LoginPage() {
               Đăng nhập
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">Demo: admin / 123456</div>
+          <div className="mt-4 text-center text-sm text-muted-foreground">Demo: admin / admin</div>
         </CardContent>
       </Card>
     </div>
