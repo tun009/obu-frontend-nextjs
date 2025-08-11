@@ -243,7 +243,7 @@ export default function MapPage() {
 
   const filteredDevices = devices.filter((device) => {
     const matchesSearch =
-      device.imei.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device?.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (device?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || device.status === statusFilter
     return matchesSearch && matchesStatus

@@ -222,7 +222,6 @@ export default function VehiclesPage() {
                   <TableHead>Loại xe</TableHead>
                   <TableHead>Tải trọng</TableHead>
                   <TableHead>Hạn đăng ký</TableHead>
-                  <TableHead>Thiết bị</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
@@ -249,13 +248,6 @@ export default function VehiclesPage() {
                       <TableCell>{vehicle.type || '-'}</TableCell>
                       <TableCell>{vehicle.load_capacity_kg ? `${vehicle.load_capacity_kg} kg` : '-'}</TableCell>
                       <TableCell>{formatDate(vehicle.registration_expiry)}</TableCell>
-                      <TableCell>
-                        {vehicle.device ? (
-                          <Badge variant="outline">{vehicle.device.imei}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">Chưa gán</span>
-                        )}
-                      </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

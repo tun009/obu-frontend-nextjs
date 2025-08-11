@@ -23,19 +23,25 @@ const createFormSchema = (isEditing: boolean = false) => z.object({
     required_error: "Vui lòng chọn thời gian bắt đầu",
   }).refine((date) => {
     if (isEditing) return true // Cho phép edit session trong quá khứ
-    const now = new Date()
-    return date >= now
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset về đầu ngày để chỉ so sánh ngày
+    const selectedDate = new Date(date)
+    selectedDate.setHours(0, 0, 0, 0) // Reset về đầu ngày
+    return selectedDate >= today
   }, {
-    message: "Thời gian bắt đầu không được ở quá khứ",
+    message: "Không được chọn ngày trong quá khứ",
   }),
   end_time: z.date({
     required_error: "Vui lòng chọn thời gian kết thúc",
   }).refine((date) => {
     if (isEditing) return true // Cho phép edit session trong quá khứ
-    const now = new Date()
-    return date >= now
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset về đầu ngày để chỉ so sánh ngày
+    const selectedDate = new Date(date)
+    selectedDate.setHours(0, 0, 0, 0) // Reset về đầu ngày
+    return selectedDate >= today
   }, {
-    message: "Thời gian kết thúc không được ở quá khứ",
+    message: "Không được chọn ngày trong quá khứ",
   }),
   notes: z.string().optional(),
 }).refine((data) => data.end_time > data.start_time, {
