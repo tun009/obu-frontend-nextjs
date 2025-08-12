@@ -262,18 +262,14 @@ export default function MapPage() {
   }
 
   const handleDeviceClick = (device: MapDevice) => {
-    // Select the device to show InfoWindow
     setSelectedDevice(device)
 
-    // Center map to device location
     if (map && device.latitude && device.longitude) {
       map.panTo({ lat: device.latitude, lng: device.longitude })
       map.setZoom(15)
     } 
   }
 
-
-  // No auto-centering - only center when user clicks device
 
   const toggleFullscreen = () => {
     window.open("/fullscreen-map", "_blank")

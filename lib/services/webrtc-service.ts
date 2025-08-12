@@ -269,11 +269,11 @@ export class WebRTCStreamService implements WebRTCService {
         }, 2000);
       } else {
         console.log('❌ Max retries reached, device is permanently busy');
-        toast.error('Thiết bị đang bận và không thể giải phóng sau nhiều lần thử');
+        // toast.error('Thiết bị đang bận và không thể giải phóng sau nhiều lần thử');
       }
     } else {
       console.log('❓ Unknown device status:', payload.data.status);
-      toast.error(`Trạng thái thiết bị không xác định: ${payload.data.status}`);
+      // toast.error(`Trạng thái thiết bị không xác định: ${payload.data.status}`);
     }
   }
 

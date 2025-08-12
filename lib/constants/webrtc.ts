@@ -5,7 +5,7 @@ export const WEBRTC_CONFIG = {
     HOST: "ws://zxs-cs.netbodycamera.com:8083/mqtt",
     USERNAME: "dev1",
     PASSWORD: "dev1",
-    SESSION_ID: "abcdefg", // Fixed sessionId like in original example
+    SESSION_ID: "abcdefg23", // Fixed sessionId like in original example
   },
 
   // ICE Servers Configuration
@@ -13,8 +13,8 @@ export const WEBRTC_CONFIG = {
     { urls: "stun:120.26.124.232:3478" },
     {
       urls: 'turn:120.26.124.232:3478',
-      username: 's3j5bt4m',
-      credential: '0cqocukblg7zo76h',
+      username: 'b6yz4hcw',
+      credential: 'q0h4x7zr5wekny17',
       credentialType: 'password'
     }
   ],
