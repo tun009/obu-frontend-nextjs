@@ -114,7 +114,7 @@ export function useMapData(): UseMapDataReturn {
       // GPS coordinates (converted to decimal degrees)
       latitude: latitude,
       longitude: longitude,
-      speed: gpsInfo?.speed ? Math.round(gpsInfo.speed * 3.6) : 0, // Convert m/s to km/h
+      speed: gpsInfo?.speed,
       direction: gpsInfo?.direction,
       status: error ? 'offline' : determineDeviceStatus(gpsInfo),
       battery_percent: batteryInfo?.bat_percent,
