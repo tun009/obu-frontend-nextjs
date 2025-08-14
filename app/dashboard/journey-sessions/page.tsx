@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Plus, MoreHorizontal, Play, Square, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, MoreHorizontal, Play, Square, Edit, Trash2, ChevronLeft, ChevronRight, MapPin } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 import journeySessionsAPI from "@/lib/services/journey-sessions-api"
 import type { JourneySessionWithDetails } from "@/lib/types/api"
 
@@ -23,6 +24,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
   onEditClick?: (session: JourneySessionWithDetails) => void
   refreshTrigger?: number
 }) {
+  const router = useRouter()
   const [sessions, setSessions] = useState<JourneySessionWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -171,9 +173,8 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                   <TableHead>Tài xế</TableHead>
                   <TableHead>Thời gian</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead className="text-right">Quãng đường</TableHead>
                   <TableHead>Ghi chú</TableHead>
-                  <TableHead className="text-right w-20">Thao tác</TableHead>
+                  <TableHead className="text-right w-40">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -217,9 +218,6 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(session.status)}</TableCell>
-                      <TableCell className="text-right">
-                        {session.total_distance_km ? `${session.total_distance_km} km` : '-'}
-                      </TableCell>
                       <TableCell className="max-w-32 truncate">
                         {session.notes || '-'}
                       </TableCell>
@@ -245,6 +243,12 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                               <DropdownMenuItem onClick={() => handleEndSession(session)}>
                                 <Square className="mr-2 h-4 w-4" />
                                 Kết thúc
+                              </DropdownMenuItem>
+                            )}
+                            {(session.status === 'active' || session.status === 'completed') && (
+                              <DropdownMenuItem onClick={() => router.push(`/dashboard/journey-sessions/${session.id}`)}>
+                                <MapPin className="mr-2 h-4 w-4" />
+                                Xem hành trình
                               </DropdownMenuItem>
                             )}
                             {session.status !== 'active' && (

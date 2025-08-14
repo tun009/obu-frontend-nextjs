@@ -292,6 +292,28 @@ export interface CreateJourneySessionRequest {
 
 export interface UpdateJourneySessionRequest extends Partial<CreateJourneySessionRequest> {}
 
+// Journey Session History Types
+export interface JourneySessionHistoryPoint {
+  id: number;
+  collected_at: string;
+  latitude: number;
+  gps_longitude: number;
+  gps_speed: number;
+  gps_valid: number;
+  gps_enable: number;
+  bat_percent: number;
+}
+
+export interface JourneySessionHistoryResponse {
+  data: JourneySessionHistoryPoint[];
+  plate_number: string;
+  driver_name: string;
+  imei: string;
+  id: number;
+  start_time: string;
+  end_time: string;
+}
+
 // Error Types
 export interface ApiError {
   message: string;

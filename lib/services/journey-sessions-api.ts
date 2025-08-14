@@ -1,10 +1,11 @@
 import apiService from './api';
-import type { 
-  JourneySession, 
-  JourneySessionWithDetails, 
-  CreateJourneySessionRequest, 
+import type {
+  JourneySession,
+  JourneySessionWithDetails,
+  CreateJourneySessionRequest,
   UpdateJourneySessionRequest,
-  PaginatedResponse 
+  PaginatedResponse,
+  JourneySessionHistoryResponse
 } from '@/lib/types/api';
 
 export interface JourneySessionsListParams {
@@ -74,6 +75,11 @@ class JourneySessionsAPI {
   // Get journey session status
   async getJourneySessionStatus(id: number): Promise<JourneySessionStatusResponse> {
     return apiService.get<JourneySessionStatusResponse>(`${this.basePath}/${id}/status`);
+  }
+
+  // Get journey session history
+  async getJourneySessionHistory(id: number): Promise<JourneySessionHistoryResponse> {
+    return apiService.get<JourneySessionHistoryResponse>(`${this.basePath}/${id}/history`);
   }
 }
 

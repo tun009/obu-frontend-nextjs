@@ -81,7 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Login error:', error);
       // Show error toast if not already shown
       if (!error.message || !error.message.includes('Đăng nhập thất bại')) {
-        toast.error(error.message || 'Có lỗi xảy ra khi đăng nhập');
+        toast.error(error?.details?.detail || 'Có lỗi xảy ra khi đăng nhập');
       }
       throw error;
     } finally {

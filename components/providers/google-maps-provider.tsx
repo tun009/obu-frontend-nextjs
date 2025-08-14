@@ -17,7 +17,7 @@ interface GoogleMapsProviderProps {
   children: React.ReactNode;
 }
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao";
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? "AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao";
 
 export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
   return (
