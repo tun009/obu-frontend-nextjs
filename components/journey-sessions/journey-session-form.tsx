@@ -120,7 +120,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
 
       onSuccess?.()
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Có lỗi xảy ra'
+      const errorMessage = error?.details?.detail || 'Có lỗi xảy ra'
       toast.error(errorMessage)      
     } finally {
       setLoading(false)
