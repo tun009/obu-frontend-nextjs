@@ -272,7 +272,6 @@ export default function MapPage() {
 
 
   const toggleFullscreen = () => {
-    window.open("/fullscreen-map", "_blank")
   }
 
   if (loading && devices.length === 0) {
