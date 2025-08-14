@@ -93,7 +93,8 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
     const fetchHistory = async () => {
       try {
         setLoading(true)
-        const response = await journeySessionsAPI.getJourneySessionHistory(journeyId)
+        let response = await journeySessionsAPI.getJourneySessionHistory(journeyId)
+        response.data = response.data.filter((item: JourneySessionHistoryPoint) => item.gps_valid === 1)
         setHistoryData(response)
       } catch (error: any) {
         toast.error('Không thể tải lịch sử hành trình')
