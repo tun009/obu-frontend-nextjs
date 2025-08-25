@@ -10,11 +10,11 @@ export const WEBRTC_CONFIG = {
 
   // ICE Servers Configuration
   ICE_SERVERS: [
-    { urls: "stun:120.26.124.232:3478" },
+    { urls: "stun:34.124.183.8:3478" },
     {
-      urls: 'turn:120.26.124.232:3478',
-      username: 'b6yz4hcw',
-      credential: 'q0h4x7zr5wekny17',
+      urls: 'turn:34.124.183.8:3478',
+      username: 'dev1',
+      credential: 'dev1',
       credentialType: 'password'
     }
   ],

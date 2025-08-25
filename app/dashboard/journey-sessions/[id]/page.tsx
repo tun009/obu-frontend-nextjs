@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import journeySessionsAPI from "@/lib/services/journey-sessions-api"
 import type { JourneySessionHistoryResponse, JourneySessionHistoryPoint } from "@/lib/types/api"
 import Link from "next/link"
+import { convertGpsCoordinates } from "@/lib/utils"
 
 const mapContainerStyle = {
   width: "100%",
@@ -76,6 +77,7 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
   const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [mapLoaded, setMapLoaded] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -157,6 +159,7 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
   }
 
   const onLoad = useCallback((map: google.maps.Map) => {
+    setMapLoaded(true)
     setMap(map)
   }, [])
 
@@ -186,7 +189,15 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
     // Pan map to selected point
     if (map && historyData?.data[index]) {
       const point = historyData.data[index]
-      map.panTo({ lat: point.latitude, lng: point.gps_longitude })
+      const convertedCoords = convertGpsCoordinates({
+        latitude: point.latitude,
+        latitude_degree: point.latitude_degree,
+        longitude: point.longitude,
+        longitude_degree: point.longitude_degree
+      })
+      if (convertedCoords) {
+        map.panTo(convertedCoords)
+      }
     }
   }
 
@@ -233,10 +244,14 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
   }
 
   const currentPoint = historyData.data[currentIndex]
-  const pathCoordinates = historyData.data.slice(0, currentIndex + 1).map(point => ({
-    lat: point.latitude,
-    lng: point.gps_longitude
-  }))
+  const pathCoordinates = historyData.data.slice(0, currentIndex + 1)
+    .map(point => convertGpsCoordinates({
+      latitude: point.latitude,
+      latitude_degree: point.latitude_degree,
+      longitude: point.longitude,
+      longitude_degree: point.longitude_degree
+    }))
+    .filter(coords => coords !== undefined) as { lat: number; lng: number }[]
 
   return (
     <div className="h-[calc(100vh-115px)] flex flex-col overflow-scroll">
@@ -365,7 +380,15 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
                                 </div>
                                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {point.latitude.toFixed(6)}, {point.gps_longitude.toFixed(6)}
+                                  {(() => {
+                                    const coords = convertGpsCoordinates({
+                                      latitude: point.latitude,
+                                      latitude_degree: point.latitude_degree,
+                                      longitude: point.longitude,
+                                      longitude_degree: point.longitude_degree
+                                    })
+                                    return coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : 'Invalid GPS'
+                                  })()}
                                 </div>
                               </div>
                             </div>
@@ -409,7 +432,12 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
                 {isLoaded ? (
                   <GoogleMap
                     mapContainerStyle={mapContainerStyle}
-                    center={currentPoint ? { lat: currentPoint.latitude, lng: currentPoint.gps_longitude } : defaultCenter}
+                    center={currentPoint ? (convertGpsCoordinates({
+                      latitude: currentPoint.latitude,
+                      latitude_degree: currentPoint.latitude_degree,
+                      longitude: currentPoint.longitude,
+                      longitude_degree: currentPoint.longitude_degree
+                    }) || defaultCenter) : defaultCenter}
                     zoom={15}
                     onLoad={onLoad}
                     options={{
@@ -433,21 +461,35 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
                     )}
 
                     {/* Current Position Marker */}
-                    {currentPoint && (
-                      <Marker
-                        position={{ lat: currentPoint.latitude, lng: currentPoint.gps_longitude }}
-                        icon={getCarIcon(true)}
-                        title={`${historyData.plate_number} - ${format(new Date(currentPoint.collected_at), "HH:mm:ss", { locale: vi })}`}
-                      />
-                    )}
+                    {mapLoaded && currentPoint && (() => {
+                      const convertedCoords = convertGpsCoordinates({
+                        latitude: currentPoint.latitude,
+                        latitude_degree: currentPoint.latitude_degree,
+                        longitude: currentPoint.longitude,
+                        longitude_degree: currentPoint.longitude_degree
+                      });
+
+                      return convertedCoords ? (
+                        <Marker
+                          position={convertedCoords}
+                          icon={getCarIcon(true)}
+                          title={`${historyData.plate_number} - ${format(new Date(currentPoint.collected_at), "HH:mm:ss", { locale: vi })}`}
+                        />
+                      ) : null;
+                    })()}
 
                     {/* Start Point */}
-                    {historyData.data.length > 0 && (
-                      <Marker
-                        position={{
-                          lat: historyData.data[0].latitude,
-                          lng: historyData.data[0].gps_longitude
-                        }}
+                    {historyData.data.length > 0 && (() => {
+                      const startCoords = convertGpsCoordinates({
+                        latitude: historyData.data[0].latitude,
+                        latitude_degree: historyData.data[0].latitude_degree,
+                        longitude: historyData.data[0].longitude,
+                        longitude_degree: historyData.data[0].longitude_degree
+                      });
+
+                      return startCoords ? (
+                        <Marker
+                          position={startCoords}
                         icon={{
                           url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
                             <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -460,15 +502,22 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
                         }}
                         title="Điểm bắt đầu"
                       />
-                    )}
+                      ) : null;
+                    })()}
 
                     {/* End Point */}
-                    {historyData.data.length > 1 && (
-                      <Marker
-                        position={{
-                          lat: historyData.data[historyData.data.length - 1].latitude,
-                          lng: historyData.data[historyData.data.length - 1].gps_longitude
-                        }}
+                    {historyData.data.length > 1 && (() => {
+                      const endPoint = historyData.data[historyData.data.length - 1];
+                      const endCoords = convertGpsCoordinates({
+                        latitude: endPoint.latitude,
+                        latitude_degree: endPoint.latitude_degree,
+                        longitude: endPoint.longitude,
+                        longitude_degree: endPoint.longitude_degree
+                      });
+
+                      return endCoords ? (
+                        <Marker
+                          position={endCoords}
                         icon={{
                           url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
                             <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -481,7 +530,8 @@ export default function JourneyHistoryPage({ }: JourneyHistoryPageProps) {
                         }}
                         title="Điểm kết thúc"
                       />
-                    )}
+                      ) : null;
+                    })()}
                   </GoogleMap>
                 ) : (
                   <div className="flex items-center justify-center h-full">

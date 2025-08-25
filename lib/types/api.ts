@@ -297,7 +297,9 @@ export interface JourneySessionHistoryPoint {
   id: number;
   collected_at: string;
   latitude: number;
-  gps_longitude: number;
+  latitude_degree: number;
+  longitude: number;
+  longitude_degree: number;
   gps_speed: number;
   gps_valid: number;
   gps_enable: number;
