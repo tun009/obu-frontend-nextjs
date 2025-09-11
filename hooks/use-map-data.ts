@@ -20,7 +20,8 @@ export interface MapDevice extends Device {
   error?: string;
   // Realtime data (full response)
   realtimeData?: DeviceRealtimeResponse;
-  plate_number?: string
+  plate_number?: string;
+  thumbnail_url?: string;
 }
 
 interface UseMapDataReturn {
@@ -121,7 +122,8 @@ export function useMapData(): UseMapDataReturn {
       temperature: systemInfo?.temperature,
       last_update: realtimeData?.timestamp ? formatLastUpdate(realtimeData.timestamp) : undefined,
       error: error,
-      realtimeData: realtimeData || { data: realtime } as any
+      realtimeData: realtimeData || { data: realtime } as any,
+      thumbnail_url: device.thumbnail_url
     };
   };
 
@@ -129,8 +131,6 @@ export function useMapData(): UseMapDataReturn {
   const fetchDevices = useCallback(async (): Promise<Device[]> => {
     try {
       const response = await apiService.getDevices({page:1, items_per_page: 100 }); // Get all devices
-      console.log('getDevices response:', response);
-
       if (response && response.data) {
         return response.data;
       }
@@ -190,13 +190,13 @@ export function useMapData(): UseMapDataReturn {
       refreshData().then(() => {
         pollingIntervalRef.current = setInterval(() => {
           silentRefreshData();
-        }, 10000); // Poll every 10 seconds
+        }, 5000); // Poll every 10 seconds
       }).catch((error) => {
         console.error('Initial data load failed:', error);
         // Still start polling even if initial load fails
         pollingIntervalRef.current = setInterval(() => {
           silentRefreshData();
-        }, 10000);
+        }, 5000);
       });
     }
 
@@ -224,7 +224,7 @@ export function useMapData(): UseMapDataReturn {
         if (!pollingIntervalRef.current && initializedRef.current) {
           pollingIntervalRef.current = setInterval(() => {
             silentRefreshData();
-          }, 10000);
+          }, 5000);
           console.log('Polling resumed - tab active');
         }
       }

@@ -28,7 +28,7 @@ class JourneySessionsAPI {
   // Get paginated list of journey sessions
   async getJourneySessions(params: JourneySessionsListParams = {}): Promise<PaginatedResponse<JourneySessionWithDetails>> {
     const searchParams = new URLSearchParams();
-    
+
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.items_per_page) searchParams.append('items_per_page', params.items_per_page.toString());
     if (params.status_filter) searchParams.append('status_filter', params.status_filter);
@@ -80,6 +80,11 @@ class JourneySessionsAPI {
   // Get journey session history
   async getJourneySessionHistory(id: number): Promise<JourneySessionHistoryResponse> {
     return apiService.get<JourneySessionHistoryResponse>(`${this.basePath}/${id}/history`);
+  }
+
+  // Get journey playlist for frontend player
+  async getJourneyPlaylist(id: number): Promise<any[]> {
+    return apiService.get<any[]>(`${this.basePath}/${id}/media`);
   }
 }
 

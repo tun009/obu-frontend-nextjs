@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
@@ -10,6 +11,7 @@ import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { useMapData, MapDevice } from "@/hooks/use-map-data"
 import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
+import { WebRTCProvider } from "@/contexts/webrtc-provider"
 import { toast } from "sonner"
 
 const mapContainerStyle = {
@@ -54,40 +56,18 @@ function DeviceGrid({
   selectedDevice: MapDevice | null
   onDeviceSelect: (device: MapDevice) => void
 }) {
-  const [mutedStreams, setMutedStreams] = useState<Set<number>>(new Set())
-  const [playingStreams, setPlayingStreams] = useState<Set<number>>(new Set([1, 2, 4, 5]))
-
-  const toggleMute = (vehicleId: number) => {
-    const newMuted = new Set(mutedStreams)
-    if (newMuted.has(vehicleId)) {
-      newMuted.delete(vehicleId)
-    } else {
-      newMuted.add(vehicleId)
-    }
-    setMutedStreams(newMuted)
-  }
-
-  const togglePlay = (vehicleId: number) => {
-    const newPlaying = new Set(playingStreams)
-    if (newPlaying.has(vehicleId)) {
-      newPlaying.delete(vehicleId)
-    } else {
-      newPlaying.add(vehicleId)
-    }
-    setPlayingStreams(newPlaying)
-  }
+  const [playingDeviceIds, setPlayingDeviceIds] = useState(new Set<string | number>())
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
       {devices.map((device) => (
         <Card
           key={device.id}
-          className={`cursor-pointer transition-all hover:shadow-md ${
+          className={`transition-all hover:shadow-md ${
             selectedDevice?.id === device.id ? "ring-2 ring-blue-500" : ""
           }`}
-          onClick={() => onDeviceSelect(device)}
         >
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 cursor-pointer" onClick={() => onDeviceSelect(device)}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
@@ -101,56 +81,72 @@ function DeviceGrid({
                 />
                 <CardTitle className="text-sm">{device.imei}</CardTitle>
               </div>
-              <Badge variant={device.status === "online" ? "default" : "secondary"} className="text-xs">
-                {device.status === "online" ? "GPS" : device.status === "no_gps" ? "NO GPS" : "OFFLINE"}
-              </Badge>
+              <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Phone className="h-4 w-4 text-green-500" />
+              </Button>
             </div>
             <CardDescription className="text-xs">{device?.plate_number || 'Chưa gắn xe'}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3">
-              {device.status === "online" && device.latitude && device.longitude ? (
+            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3 group">
+              {playingDeviceIds.has(device.id) ? (
+                <WebRTCVideoPlayer
+                  deviceId={device.imei}
+                  deviceName={device.plate_number || device.imei}
+                  onStreamStop={() => {
+                    setPlayingDeviceIds(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(device.id);
+                      return newSet;
+                    });
+                  }}
+                />
+              ) : (
                 <>
-                  {/* GPS Location Display */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-blue-900 to-gray-900">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <MapPin className="h-8 w-8 mx-auto mb-2" />
-                        <div className="text-xs font-mono bg-black/50 px-2 py-1 rounded mb-1">
-                          📍 GPS ACTIVE
+                  {device.status === "online" && device.latitude && device.longitude ? (
+                    <div onClick={() => setPlayingDeviceIds(prev => new Set(prev).add(device.id))} className="cursor-pointer w-full h-full">
+                      {device.thumbnail_url ? (
+                        <img
+                          src={device.thumbnail_url}
+                          alt={`Thumbnail for ${device.imei}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-green-900 via-blue-900 to-gray-900 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <MapPin className="h-8 w-8 mx-auto mb-2" />
+                            <div className="text-xs font-mono bg-black/50 px-2 py-1 rounded mb-1">
+                              📍 GPS ACTIVE
+                            </div>
+                          </div>
                         </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Image
+                          src="/images/video-play.png"
+                          alt="Play Video"
+                          width={48}
+                          height={48}
+                          className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                      <div className="text-center text-gray-400">
+                        <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <div className="text-xs">
-                          {device.latitude?.toFixed(6)}, {device.longitude?.toFixed(6)}
+                          {device.error ? device.error :
+                           device.status === "no_gps" ? 'No GPS Signal' :
+                           'Device Offline'}
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Device info overlay */}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                    <div className="text-white text-xs font-mono bg-black/50 px-1 rounded">
-                      {device.speed || 0} km/h
-                    </div>
-                    <div className="text-white text-xs font-mono bg-black/50 px-1 rounded">
-                      {device.battery_percent || 0}%
-                    </div>
-                  </div>
+                  )}
                 </>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                  <div className="text-center text-gray-400">
-                    <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <div className="text-xs">
-                      {device.error ? device.error :
-                       device.status === "no_gps" ? 'No GPS Signal' :
-                       'Device Offline'}
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
 
-            {/* Device info */}
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">IMEI:</span>
@@ -267,7 +263,7 @@ export default function MapPage() {
     if (map && device.latitude && device.longitude) {
       map.panTo({ lat: device.latitude, lng: device.longitude })
       map.setZoom(15)
-    } 
+    }
   }
 
 
@@ -289,7 +285,7 @@ export default function MapPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Theo dõi thiết bị OBU</h1>
           <p className="text-muted-foreground">Click vào thiết bị để tải dữ liệu GPS và hiển thị vị trí trên bản đồ</p>
@@ -300,10 +296,10 @@ export default function MapPage() {
             Mở toàn màn hình
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
+      {/* <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng thiết bị</CardTitle>
@@ -357,10 +353,11 @@ export default function MapPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Main Content with Resizable Layout */}
-      <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border min-h-[600px]">
+      <WebRTCProvider>
+        <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border min-h-[800px]">
         {/* Live Camera Grid - Left Panel */}
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full border-0 rounded-none">
@@ -370,7 +367,7 @@ export default function MapPage() {
                 {selectedDevice ? `Đang xem: ${selectedDevice.imei}` : "Click vào thiết bị hoặc marker để xem chi tiết"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
+            <CardContent className="h-[calc(100vh - 120px)] overflow-y-auto">
               {filteredDevices.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-muted-foreground">
@@ -462,16 +459,7 @@ export default function MapPage() {
                           </Badge>
                         </div>
 
-                        {/* WebRTC Video Player */}
-                        <div className="mb-4">
-                          <WebRTCVideoPlayer
-                            deviceId={selectedDevice.imei}
-                            deviceName={selectedDevice?.plate_number || selectedDevice.imei}
-                            className="w-full h-48"
-                            onStreamStart={() => console.log('Stream started for', selectedDevice.imei)}
-                            onStreamStop={() => console.log('Stream stopped for', selectedDevice.imei)}
-                          />
-                        </div>
+
 
                         {/* Device Info */}
                         <div className="space-y-2 text-sm">
@@ -544,7 +532,8 @@ export default function MapPage() {
             </CardContent>
           </Card>
         </ResizablePanel>
-      </ResizablePanelGroup>
+        </ResizablePanelGroup>
+      </WebRTCProvider>
     </div>
   )
 }

@@ -1,144 +1,55 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
-import { WebRTCStreamService } from '@/lib/services/webrtc-service';
-import type { UseWebRTCStreamReturn, StreamState, StreamInfo } from '@/lib/types/webrtc';
+import { useRef, useCallback, useEffect } from 'react';
+import { useWebRTCState, useWebRTCActions } from '@/contexts/webrtc-provider';
+import type { UseWebRTCStreamReturn } from '@/lib/types/webrtc';
 
-export function useWebRTCStream(): UseWebRTCStreamReturn {
-  const serviceRef = useRef<WebRTCStreamService | null>(null);
+export function useWebRTCStream(deviceId: string): UseWebRTCStreamReturn {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [streamState, setStreamState] = useState<StreamState>('idle');
-  const [streamInfo, setStreamInfo] = useState<StreamInfo | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const connectionStartTime = useRef<number>(0);
+  const streamData = useWebRTCState(deviceId);
+  const { startStream, stopStream } = useWebRTCActions();
 
-  // Initialize service
-  useEffect(() => {
-    if (!serviceRef.current) {
-      serviceRef.current = new WebRTCStreamService();
-      
-      // Setup event handlers
-      serviceRef.current.onStateChange((state) => {
-        setStreamState(state as StreamState);
-        
-        if (state === 'connecting') {
-          connectionStartTime.current = Date.now();
-        }
-        
-        if (streamInfo) {
-          setStreamInfo(prev => prev ? {
-            ...prev,
-            state: state as StreamState,
-            lastActivity: Date.now(),
-            connectionTime: state === 'streaming' ? Date.now() - connectionStartTime.current : prev.connectionTime
-          } : null);
-        }
-      });
-
-      // Error handling is now done via toast notifications in the service
-
-      serviceRef.current.onStream((stream) => {
-        console.log('Stream received in hook:', stream);
-        // Video element is handled by the service
-      });
+  const handleStartStream = useCallback(async () => {
+    if (videoRef.current) {
+      await startStream(deviceId, videoRef);
     }
+  }, [startStream, deviceId]);
 
+  const handleStopStream = useCallback(() => {
+    stopStream(deviceId);
+  }, [stopStream, deviceId]);
+
+  const retry = useCallback(() => {
+    handleStopStream();
+    setTimeout(() => {
+      handleStartStream();
+    }, 500);
+  }, [handleStartStream, handleStopStream]);
+
+  useEffect(() => {
+    handleStartStream();
     return () => {
-      // Cleanup on unmount
-      if (serviceRef.current) {
-        serviceRef.current.disconnect();
-      }
+      handleStopStream();
     };
-  }, [streamInfo]);
+  }, [handleStartStream, handleStopStream]);
 
-  // Update video element reference
-  useEffect(() => {
-    if (serviceRef.current && videoRef.current) {
-      serviceRef.current.setVideoElement(videoRef.current);
-    }
-  }, []);
+  const streamState = streamData?.state ?? 'idle';
+  const streamInfo = streamData?.info ?? null;
+  const error = streamData?.error ?? null;
 
-  const startStream = useCallback(async (deviceId: string): Promise<void> => {
-    if (!serviceRef.current) {
-      throw new Error('WebRTC service not initialized');
-    }
-    try {
-      setError(null);
-      setStreamState('connecting');
-      
-      // Create stream info
-      const newStreamInfo: StreamInfo = {
-        deviceId,
-        state: 'connecting',
-        lastActivity: Date.now()
-      };
-      setStreamInfo(newStreamInfo);
-
-      await serviceRef.current.connect(deviceId);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setError(errorMessage);
-      setStreamState('error');
-      
-      if (streamInfo) {
-        setStreamInfo(prev => prev ? {
-          ...prev,
-          state: 'error',
-          error: errorMessage,
-          lastActivity: Date.now()
-        } : null);
-      }
-      
-      throw error;
-    }
-  }, [streamInfo]);
-
-  const stopStream = useCallback((): void => {
-    if (serviceRef.current) {
-      serviceRef.current.disconnect();
-    }
-
-    // Reset to idle state (not disconnected)
-    setStreamState('idle');
-    setStreamInfo(null);
-    setError(null);
-    connectionStartTime.current = 0;
-  }, []);
-
-  const retry = useCallback((): void => {
-    if (streamInfo?.deviceId) {
-      stopStream();
-      setTimeout(() => {
-        startStream(streamInfo.deviceId);
-      }, 1000);
-    }
-  }, [streamInfo?.deviceId, startStream, stopStream]);
-
-  const getStreamDuration = useCallback((): number => {
-    if (!streamInfo?.connectionTime) return 0;
-    return Date.now() - (connectionStartTime.current || 0);
-  }, [streamInfo?.connectionTime]);
-
-  // Computed states
   const isStreaming = streamState === 'streaming' || streamState === 'connected';
   const isConnecting = streamState === 'connecting';
 
+  const getStreamDuration = useCallback(() => 0, []);
+
   return {
-    // State
     streamState,
     streamInfo,
     isStreaming,
     isConnecting,
     error,
-    
-    // Actions
-    startStream,
-    stopStream,
+    startStream: handleStartStream,
+    stopStream: handleStopStream,
     retry,
-    
-    // Video Element
     videoRef,
-    
-    // Utils
     getStreamDuration,
   };
 }

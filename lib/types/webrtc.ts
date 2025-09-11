@@ -83,7 +83,7 @@ export interface UseWebRTCStreamReturn {
   error: string | null;
   
   // Actions
-  startStream: (deviceId: string) => Promise<void>;
+  startStream: () => Promise<void>;
   stopStream: () => void;
   
   // Video Element
@@ -96,7 +96,7 @@ export interface UseWebRTCStreamReturn {
 
 // WebRTC Service Interface
 export interface WebRTCService {
-  connect: (deviceId: string) => Promise<void>;
+  connect: (deviceId: string, sessionId: string) => Promise<void>;
   disconnect: () => void;
   sendMessage: (message: WebRTCMessage) => void;
   isConnected: () => boolean;

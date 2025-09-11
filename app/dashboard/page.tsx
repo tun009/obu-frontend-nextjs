@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Car, Users, Smartphone, Activity, Plus, MapPin } from "lucide-react"
 import { StatsCard } from "@/components/stats-card"
 import { RecentActivities } from "@/components/recent-activities"
-import { VehicleMap } from "@/components/vehicle-map"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts"
 
@@ -102,8 +101,6 @@ export default function DashboardPage() {
         <RecentActivities />
       </div>
 
-      {/* Map Overview */}
-      <VehicleMap />
     </div>
   )
 }
