@@ -19,7 +19,7 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_BASE_URL || '/api/v1';
+        this.baseURL = process.env.NEXT_PUBLIC_BASE_URL || 'https://101.99.23.171:8800/api/v1';
     
     this.api = axios.create({
       baseURL: this.baseURL,
