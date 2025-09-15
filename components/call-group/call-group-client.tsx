@@ -19,15 +19,15 @@ declare global {
 }
 
 const CallGroupClient = () => {
-const statusName = (status: number) => {
-  switch (status) {
-    case 0: return "Rảnh rỗi";
-    case 100: return "Đang gọi";
-    case 180: return "Đang đổ chuông";
-    case 200: return "Đã kết nối";
-    default: return `Trạng thái ${status}`;
-  }
-};
+  const statusName = (status: number) => {
+    switch (status) {
+      case 0: return "Rảnh rỗi";
+      case 100: return "Đang gọi";
+      case 180: return "Đang đổ chuông";
+      case 200: return "Đã kết nối";
+      default: return `Trạng thái ${status}`;
+    }
+  };
 
   // === TRẠNG THÁI (STATE) ===
   const pocClientRef = useRef<any>(null);
@@ -268,7 +268,10 @@ const statusName = (status: number) => {
       if (group && group.members) setMembers(group.members);
     });
 
-    client.on('startTalk', (_: any, data: any) => setTalkingUser({ ms_code: data.ms_code, ms_name: data.ms_name, message: '' }));
+    client.on('startTalk', (_: any, data: any) => { 
+       console.info(_, data)
+      setTalkingUser({ ms_code: data.ms_code, ms_name: data.ms_name, message: '' })
+    })
     client.on('stopTalk', () => setTalkingUser({ ms_code: '', ms_name: '', message: '' }));
     client.on('talkDenied', (_: any, data: any) => {
       toast.error(`Yêu cầu nói bị từ chối: ${data.message}`);
@@ -276,7 +279,7 @@ const statusName = (status: number) => {
     });
 
     client.on('callStatus', (_: any, data: any) => {
-        setCallStatus(data);
+      setCallStatus(data);
     });
 
     client.on('playFrame', (_: any, data: any) => {
@@ -365,80 +368,80 @@ const statusName = (status: number) => {
               <CardTitle>Điều khiển Giao tiếp</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* PTT Control */}
-                <div className="space-y-3">
-                    <h4 className="font-semibold">Push-to-Talk (Nhóm)</h4>
-                    <div className="flex gap-2">
-                        <Button onClick={handleStartTalk} disabled={!!talkingUser.ms_code || callStatus.status !== 0}>Bắt đầu nói</Button>
-                        <Button onClick={handleStopTalk} disabled={!profile || talkingUser.ms_code !== profile.ms_code}>Dừng nói</Button>
-                    </div>
-                    {talkingUser.ms_code && (
-                        <Badge variant="secondary">
-                            {!profile || talkingUser.ms_code === profile.ms_code ? "Bạn đang nói..." : `${talkingUser.ms_name} đang nói...`}
-                        </Badge>
-                    )}
+              {/* PTT Control */}
+              <div className="space-y-3">
+                <h4 className="font-semibold">Push-to-Talk (Nhóm)</h4>
+                <div className="flex gap-2">
+                  <Button onClick={handleStartTalk} disabled={!!talkingUser.ms_code || callStatus.status !== 0}>Bắt đầu nói</Button>
+                  <Button onClick={handleStopTalk} disabled={!profile || talkingUser.ms_code !== profile.ms_code}>Dừng nói</Button>
                 </div>
-                {/* Duplex Call Control */}
-                <div className="space-y-3">
-                    <h4 className="font-semibold">Cuộc gọi trực tiếp</h4>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={handleDuplexAnswer}
-                            disabled={callStatus.status !== 180 || callStatus.is_caller}
-                            variant={callStatus.status === 180 && !callStatus.is_caller ? 'destructive' : 'outline'}
-                        >
-                            Trả lời
-                        </Button>
-                        <Button
-                            onClick={handleDuplexBye}
-                            disabled={callStatus.status === 0}
-                            variant="outline"
-                        >
-                            Gác máy
-                        </Button>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                        Trạng thái: <span className="font-semibold text-primary">{statusName(callStatus.status)}</span>
-                        {callStatus.status !== 0 && (
-                            <span> - {callStatus.ms_name}</span>
-                        )}
-                    </div>
+                {talkingUser.ms_code && (
+                  <Badge variant="secondary">
+                    {!profile || talkingUser.ms_code === profile.ms_code ? "Bạn đang nói..." : `${talkingUser.ms_name} đang nói...`}
+                  </Badge>
+                )}
+              </div>
+              {/* Duplex Call Control */}
+              <div className="space-y-3">
+                <h4 className="font-semibold">Cuộc gọi trực tiếp</h4>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleDuplexAnswer}
+                    disabled={callStatus.status !== 180 || callStatus.is_caller}
+                    variant={callStatus.status === 180 && !callStatus.is_caller ? 'destructive' : 'outline'}
+                  >
+                    Trả lời
+                  </Button>
+                  <Button
+                    onClick={handleDuplexBye}
+                    disabled={callStatus.status === 0}
+                    variant="outline"
+                  >
+                    Gác máy
+                  </Button>
                 </div>
+                <div className="text-sm text-muted-foreground">
+                  Trạng thái: <span className="font-semibold text-primary">{statusName(callStatus.status)}</span>
+                  {callStatus.status !== 0 && (
+                    <span> - {callStatus.ms_name}</span>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
           <div className="lg:col-span-3">
             <Card>
-                <CardHeader><CardTitle>Thành viên trong nhóm</CardTitle></CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Mã người dùng</TableHead>
-                                <TableHead>Tên người dùng</TableHead>
-                                <TableHead>Trạng thái</TableHead>
-                                <TableHead>Hành động</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {members.map(member => (
-                                <TableRow key={member.ms_code}>
-                                    <TableCell>{member.ms_code}</TableCell>
-                                    <TableCell>{member.ms_name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={member.online ? 'default' : 'outline'}>
-                                            {member.online ? 'Online' : 'Offline'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {profile && member.ms_code !== profile.ms_code && member.online && callStatus.status === 0 && (
-                                            <Button size="sm" variant="outline" onClick={() => handleDuplexCall(member.ms_code)}>Gọi trực tiếp</Button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
+              <CardHeader><CardTitle>Thành viên trong nhóm</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Mã người dùng</TableHead>
+                      <TableHead>Tên người dùng</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                      <TableHead>Hành động</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {members.map(member => (
+                      <TableRow key={member.ms_code}>
+                        <TableCell>{member.ms_code}</TableCell>
+                        <TableCell>{member.ms_name}</TableCell>
+                        <TableCell>
+                          <Badge variant={member.online ? 'default' : 'outline'}>
+                            {member.online ? 'Online' : 'Offline'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {profile && member.ms_code !== profile.ms_code && member.online && callStatus.status === 0 && (
+                            <Button size="sm" variant="outline" onClick={() => handleDuplexCall(member.ms_code)}>Gọi trực tiếp</Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
             </Card>
           </div>
         </div>

@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: obu-frontend-app
-    ports:
-      - "3031:3000"
+    # ports:
+    #   - "3031:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -20,7 +20,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - obu-network
+    depends_on:
+      - obu-frontend-app
+    restart: unless-stopped
 
 networks:
   obu-network:
