@@ -33,7 +33,7 @@ services:
     networks:
       - obu-network
     depends_on:
-      - obu-frontend-app
+      - obu-frontend
     restart: unless-stopped
 
 networks:
