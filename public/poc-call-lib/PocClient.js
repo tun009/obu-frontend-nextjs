@@ -260,7 +260,6 @@ class PocClient {
             console.error('parameter is not array')
             return;
         }
-        debugger
         const nonString = ids.filter(id => typeof (id) !== 'string')
         if (nonString.length > 0) {
             console.error('parameter contains non-string')

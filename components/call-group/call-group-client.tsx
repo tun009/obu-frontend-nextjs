@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -35,10 +36,12 @@ const CallGroupClient = () => {
   const playerRef = useRef<any>(null);
   const recorderRef = useRef<any>(null);
   const currentGroupCodeRef = useRef(''); // Ref để tránh stale state
+  const profileRef = useRef<any>(null); // Ref for profile
+  const groupMembersCacheRef = useRef<{ [key: string]: any[] }>({}); // Ref for member cache
   const scriptsLoadedRef = useRef(false); // Guard for useEffect
 
   const [isReady, setIsReady] = useState(false);
-  const [account, setAccount] = useState({ ws_url: 'wss://34.124.183.8/v1/ws/client', user: '25075738107', pwd: '123456' });
+  const [account, setAccount] = useState({ ws_url: 'wss://34.124.183.8/v1/ws/client', user: '25075738107', pwd: '123456', token:'any_token' });
   const [isConnected, setIsConnected] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [groups, setGroups] = useState<any[]>([]);
@@ -46,7 +49,26 @@ const CallGroupClient = () => {
   const [currentGroupCode, setCurrentGroupCode] = useState('');
   const [talkingUser, setTalkingUser] = useState({ ms_code: '', ms_name: '', message: '' });
   const [callStatus, setCallStatus] = useState({ status: 0, ms_name: '', is_caller: false });
-  const [profile, setProfile] = useState<any>(null); // Bổ sung state cho user profile
+
+  // State for temporary group mode
+  const [isInTempGroup, setIsInTempGroup] = useState(false);
+  const [tempGroupInfo, setTempGroupInfo] = useState<any>(null);
+  const [profile, setProfileState] = useState<any>(null); // Bổ sung state cho user profile
+  const [groupMembersCache, setGroupMembersCacheState] = useState<{ [key: string]: any[] }>({}); // Cache for group members
+
+  // Wrapper functions to update both state and ref
+  const setProfile = (data: any) => {
+    setProfileState(data);
+    profileRef.current = data;
+  };
+
+  const setGroupMembersCache = (updater: (prevCache: { [key: string]: any[] }) => { [key: string]: any[] }) => {
+    setGroupMembersCacheState(prevCache => {
+      const newCache = updater(prevCache);
+      groupMembersCacheRef.current = newCache;
+      return newCache;
+    });
+  };
 
   useEffect(() => {
     // Guard to prevent this from running twice in React Strict Mode
@@ -133,6 +155,12 @@ const CallGroupClient = () => {
         api._BeCodecInit();
         wasmApiRef.current = api;
 
+        if (!recorderRef.current) {
+          recorderRef.current = new window.PcmRecorder(8000);
+          recorderRef.current.requestMicrophone();
+          console.log('Đã yêu cầu quyền truy cập micro.');
+        }
+
         console.log('Tất cả thư viện đã sẵn sàng!');
         toast.success("Hệ thống giao tiếp đã sẵn sàng!");
         setIsReady(true);
@@ -165,12 +193,12 @@ const CallGroupClient = () => {
 
     // Thiết lập các trình xử lý sự kiện từ server
     setupEventListeners(client);
-
+    client.setLogLevel(0);
     client.setUsername(account.user);
     client.setPassword(account.pwd);
     client.setUrl(account.ws_url);
-    client.setTimestamp(Math.floor(Date.now() / 1000).toString());
-    client.setToken('any_token'); // Sử dụng token giống như trong demo
+    client.setTimestamp("1649209905");
+    client.setToken(account.token); // Sử dụng token giống như trong demo
     client.openPoc();
     setIsConnected(true);
   };
@@ -220,14 +248,27 @@ const CallGroupClient = () => {
     }
   };
 
+  const handleCreateTempGroupForRow = (member: any) => {
+    if (!profile || !pocClientRef.current) {
+      toast.error("Client chưa sẵn sàng.");
+      return;
+    }
+    pocClientRef.current.createTempGroup([member.ms_code]);
+  };
+
+  const handleExitTempGroup = () => {
+    if (pocClientRef.current) {
+      pocClientRef.current.quitTempGroup();
+    }
+  };
+
   // === THIẾT LẬP EVENT LISTENERS ===
   const setupEventListeners = (client: any) => {
     if (!playerRef.current) {
       playerRef.current = new window.PCMPlayer({ inputCodec: 'Int16', channels: 1, sampleRate: 8000, flushTime: 320 });
     }
-    if (!recorderRef.current) {
-      recorderRef.current = new window.PcmRecorder(8000);
-      recorderRef.current.requestMicrophone();
+    // The recorder is now initialized earlier, so we just need to link the events here.
+    if (recorderRef.current) {
       recorderRef.current.onFrameData = client.sendFrame.bind(client);
       client.on('startRecord', recorderRef.current.startRecord.bind(recorderRef.current));
       client.on('stopRecord', recorderRef.current.stopRecord.bind(recorderRef.current));
@@ -248,8 +289,16 @@ const CallGroupClient = () => {
     client.on('groupList', (_: any, data: any) => setGroups(data.groups));
 
     client.on('memberList', (_: any, data: any) => {
-      setGroups(prev => prev.map(g => g.group_code === data.group_code ? { ...g, members: data.members } : g));
-      // Luôn đọc giá trị mới nhất từ ref để tránh stale state
+      setGroupMembersCache(prevCache => ({
+        ...prevCache,
+        [data.group_code]: data.members
+      }));
+
+      setGroups(prevGroups => prevGroups.map(g =>
+        g.group_code === data.group_code ? { ...g, members: data.members } : g
+      ));
+
+      // Update the currently displayed members if it's for the current group
       if (currentGroupCodeRef.current === data.group_code) {
         setMembers(data.members);
       }
@@ -265,16 +314,38 @@ const CallGroupClient = () => {
 
     client.on('enterGroup', (_: any, data: any) => {
       const group = groups.find(g => g.group_code === data.group_code);
-      if (group && group.members) setMembers(group.members);
+      if (group && group.members) {
+        setMembers(group.members);
+      }
+      setCurrentGroupCode(data.group_code);
+      currentGroupCodeRef.current = data.group_code;
     });
 
-    client.on('startTalk', (_: any, data: any) => { 
+    client.on('tempGroup', (_: any, data: any) => {
+      const isTempGroup = !!data.group_code;
+      setIsInTempGroup(isTempGroup);
+      setTempGroupInfo(isTempGroup ? data : null);
+
+      if (isTempGroup) {
+        // If a temp group is created, set its members
+        setMembers(data.members);
+      } else {
+        // If a temp group is dissolved, restore the main group's members from the cache
+        const mainGroupMembers = groupMembersCacheRef.current[profileRef.current?.group_code];
+        if (mainGroupMembers) {
+          setMembers(mainGroupMembers);
+        }
+      }
+    });
+
+    client.on('startTalk', (_: any, data: any) => {
        console.info(_, data)
       setTalkingUser({ ms_code: data.ms_code, ms_name: data.ms_name, message: '' })
     })
     client.on('stopTalk', () => setTalkingUser({ ms_code: '', ms_name: '', message: '' }));
     client.on('talkDenied', (_: any, data: any) => {
-      toast.error(`Yêu cầu nói bị từ chối: ${data.message}`);
+      toast.error("Tự động kết thúc đàm thoại");
+      console.log(`Yêu cầu nói bị từ chối: ${data.message}`);
       setTalkingUser({ ms_code: '', ms_name: '', message: data.message });
     });
 
@@ -349,18 +420,24 @@ const CallGroupClient = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle>Danh sách Nhóm</CardTitle>
+              <CardTitle>
+                <span>{isInTempGroup ? `Đang trong nhóm tạm` : 'Danh sách Nhóm'}</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
-              {groups.map(group => (
-                <Button
-                  key={group.group_code}
-                  variant={currentGroupCode === group.group_code ? 'default' : 'outline'}
-                  onClick={() => handleEnterGroup(group.group_code)}
-                >
-                  {group.group_name}
-                </Button>
-              ))}
+              {isInTempGroup ? (
+                <Button onClick={handleExitTempGroup} variant="destructive" className="w-full">Thoát nhóm tạm</Button>
+              ) : (
+                groups.map(group => (
+                  <Button
+                    key={group.group_code}
+                    variant={currentGroupCode === group.group_code ? 'default' : 'outline'}
+                    onClick={() => handleEnterGroup(group.group_code)}
+                  >
+                    {group.group_name}
+                  </Button>
+                ))
+              )}
             </CardContent>
           </Card>
           <Card className="lg:col-span-2">
@@ -411,7 +488,7 @@ const CallGroupClient = () => {
           </Card>
           <div className="lg:col-span-3">
             <Card>
-              <CardHeader><CardTitle>Thành viên trong nhóm</CardTitle></CardHeader>
+              <CardHeader><CardTitle>{isInTempGroup ? `Thành viên: ${tempGroupInfo?.group_name}` : `Thành viên trong nhóm`}</CardTitle></CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
@@ -432,9 +509,12 @@ const CallGroupClient = () => {
                             {member.online ? 'Online' : 'Offline'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {profile && member.ms_code !== profile.ms_code && member.online && callStatus.status === 0 && (
-                            <Button size="sm" variant="outline" onClick={() => handleDuplexCall(member.ms_code)}>Gọi trực tiếp</Button>
+                        <TableCell className="space-x-2">
+                          {profile && member.ms_code !== profile.ms_code && member.online && callStatus.status === 0 && !isInTempGroup && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleDuplexCall(member.ms_code)}>Gọi trực tiếp</Button>
+                              <Button size="sm" variant="outline" onClick={() => handleCreateTempGroupForRow(member)}>Tạo nhóm tạm</Button>
+                            </>
                           )}
                         </TableCell>
                       </TableRow>
