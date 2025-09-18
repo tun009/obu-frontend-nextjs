@@ -49,6 +49,11 @@ const menuItems = [
     url: "/dashboard/map",
     icon: Radio,
   },
+   {
+    title: "Live Call",
+    url: "/dashboard/map2",
+    icon: Radio,
+  },
   {
     title: "Đàm thoại",
     url: "/dashboard/call-group",

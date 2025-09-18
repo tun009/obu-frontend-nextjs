@@ -1,24 +1,24 @@
 // WebRTC Configuration Constants
 export const WEBRTC_CONFIG = {
   // MQTT Configuration
-  // MQTT: {
-  //   HOST: "ws://zxs-cs.netbodycamera.com:8083/mqtt",
-  //   USERNAME: "dev1",
-  //   PASSWORD: "dev1",
-  //   SESSION_ID: "abcdefg23", // Fixed sessionId like in original example
-  // },
   MQTT: {
-    HOST: "ws://103.21.151.183:9001/mqtt",
-    USERNAME: "admin",
-    PASSWORD: "Elcom@123",
+    HOST: "ws://zxs-cs.netbodycamera.com:8083/mqtt",
+    USERNAME: "dev1",
+    PASSWORD: "dev1",
     SESSION_ID: "abcdefg23", // Fixed sessionId like in original example
   },
+  // MQTT: {
+  //   HOST: "ws://103.21.151.183:9001/mqtt",
+  //   USERNAME: "admin",
+  //   PASSWORD: "Elcom@123",
+  //   SESSION_ID: "abcdefg23", // Fixed sessionId like in original example
+  // },
 
   // ICE Servers Configuration
   ICE_SERVERS: [
-    { urls: "stun:34.124.183.8:3478" },
+    { urls: "stun:202.92.6.85:3478" },
     {
-      urls: 'turn:34.124.183.8:3478',
+      urls: 'turn:202.92.6.85:3478',
       username: 'dev1',
       credential: 'dev1',
       credentialType: 'password'
