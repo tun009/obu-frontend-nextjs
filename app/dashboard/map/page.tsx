@@ -342,7 +342,7 @@ export default function MapPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Danh sách thiết bị</CardTitle>
+                    <CardTitle className="text-lg">Danh sách các phương tiện trong ca làm việc</CardTitle>
                     {filteredDevices.length > 0 && <CardDescription className="text-xs mt-1 h-4">
                       {talkingUser.ms_code && !isInTempGroup
                         ? <Badge variant="destructive" className="animate-pulse">

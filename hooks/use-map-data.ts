@@ -22,7 +22,8 @@ export interface MapDevice extends Device {
   realtimeData?: DeviceRealtimeResponse;
   plate_number?: string;
   thumbnail_url?: string;
-  driver_name?: string
+  driver_name?: string;
+  hasGpsData?: boolean; // To specifically track if GPS data is active
 }
 
 interface UseMapDataReturn {
@@ -110,6 +111,8 @@ export function useMapData(): UseMapDataReturn {
         longitude = lngDegrees + (lngMinutes / 60);
       }
     }
+    const hasGps = !!(realtime && Object.keys(realtime).length > 0 && gpsInfo && gpsInfo.enable === 1 && gpsInfo.valid === 1);
+
     return {
       ...device,
       // GPS coordinates (converted to decimal degrees)
@@ -123,7 +126,8 @@ export function useMapData(): UseMapDataReturn {
       last_update: device?.last_update,
       error: error,
       realtimeData: realtimeData || { data: realtime } as any,
-      thumbnail_url: device.thumbnail_url
+      thumbnail_url: device.thumbnail_url,
+      hasGpsData: hasGps, // Set the GPS status flag
     };
   };
 
