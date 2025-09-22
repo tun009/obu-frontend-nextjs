@@ -1,191 +1,195 @@
 "use client"
 import Image from "next/image"
 
-import { useState, useCallback, useRef, useEffect } from "react"
-import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api"
-import { useGoogleMaps } from "@/components/providers/google-maps-provider"
+import { useState, useCallback, useRef, useEffect, useMemo } from "react"
+import DynamicMap from "@/components/map/dynamic-map"
+import L from 'leaflet'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Navigation, User, Phone, Maximize2, Video, Play, Pause, Volume2, VolumeX, RefreshCw, AlertCircle } from "lucide-react"
+import { MapPin, RefreshCw, Mic, MicOff, Video, Phone } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { useMapData, MapDevice } from "@/hooks/use-map-data"
+import { usePocCall } from "@/hooks/use-poc-call"
 import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
 import { WebRTCProvider } from "@/contexts/webrtc-provider"
-import { toast } from "sonner"
-
-const mapContainerStyle = {
-  width: "100%",
-  height: "600px",
-}
+import { PrivateCallOverlay } from "@/components/ui/private-call-overlay"
 
 const defaultCenter = {
   lat: 21.0285, // Default center - Hanoi
   lng: 105.8542,
 }
 
-const getCarIcon = (status: string) => {
-  const carSvg = `
-    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(16,16)">
-        <g transform="rotate(0)">
-          <circle cx="0" cy="0" r="8"
-                fill="${status === "online" ? "#22c55e" : status === "no_gps" ? "#f59e0b" : "#ef4444"}"
-                stroke="#ffffff"
-                strokeWidth="2"/>
-          <circle cx="0" cy="0" r="4" fill="#ffffff"/>
-          <text x="0" y="2" text-anchor="middle" fill="${status === "online" ? "#22c55e" : status === "no_gps" ? "#f59e0b" : "#ef4444"}" font-size="8" font-weight="bold">GPS</text>
-        </g>
-      </g>
-    </svg>
-  `
-
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(carSvg)}`,
-    scaledSize: new window.google.maps.Size(32, 32),
-    anchor: new window.google.maps.Point(16, 16),
-  }
-}
 
 function DeviceGrid({
   devices,
   selectedDevice,
   onDeviceSelect,
+  onInitiatePrivateCall,
+  isCallActive,
+  talkingUser,
 }: {
-  devices: MapDevice[]
-  selectedDevice: MapDevice | null
-  onDeviceSelect: (device: MapDevice) => void
+  devices: (MapDevice & { online: boolean; ms_code: string })[]
+  selectedDevice: (MapDevice & { online: boolean; ms_code: string }) | null
+  onDeviceSelect: (device: MapDevice & { online: boolean; ms_code: string }) => void
+  onInitiatePrivateCall: (device: any) => void;
+  isCallActive: boolean;
+  talkingUser: { ms_code: string; };
 }) {
   const [playingDeviceIds, setPlayingDeviceIds] = useState(new Set<string | number>())
 
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
-      {devices.map((device) => (
-        <Card
-          key={device.id}
-          className={`transition-all hover:shadow-md ${
-            selectedDevice?.id === device.id ? "ring-2 ring-blue-500" : ""
-          }`}
-        >
-          <CardHeader className="pb-2 cursor-pointer" onClick={() => onDeviceSelect(device)}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    device.status === "online"
-                      ? "bg-green-500"
-                      : device.status === "no_gps"
-                        ? "bg-orange-500"
-                        : "bg-red-500"
-                  }`}
-                />
-                <CardTitle className="text-sm">{device.imei}</CardTitle>
-              </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Phone className="h-4 w-4 text-green-500" />
-              </Button>
-            </div>
-            <CardDescription className="text-xs">{device?.plate_number || 'Chưa gắn xe'}</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3 group">
-              {playingDeviceIds.has(device.id) ? (
-                <WebRTCVideoPlayer
-                  deviceId={device.imei}
-                  deviceName={device.plate_number || device.imei}
-                  onStreamStop={() => {
-                    setPlayingDeviceIds(prev => {
-                      const newSet = new Set(prev);
-                      newSet.delete(device.id);
-                      return newSet;
-                    });
+    <div className="grid gap-4 mt-1 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
+      {devices.map((device) => {
+        const isTalking = talkingUser?.ms_code && talkingUser.ms_code === device.ms_code;
+        return (
+          <Card
+            key={device.id}
+            onClick={() => onDeviceSelect(device)}
+            className={`transition-all hover:shadow-md cursor-pointer ${selectedDevice?.id === device.id ? "ring-2 ring-blue-500" : ""
+              } ${isTalking ? "ring-2 ring-red-500 animate-talk-shake" : ""}`}
+          >
+
+            <CardHeader className="pb-2 !p-4 !pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-3 h-3 rounded-full ${device.online
+                        ? "bg-green-500"
+                        : device.status === "no_gps"
+                          ? "bg-orange-500"
+                          : "bg-red-500"
+                      }`}
+                  />
+                  <CardTitle className="text-sm">{device.driver_name}</CardTitle>
+                   {device.hasGpsData ? (
+                    <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">GPS</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="text-xs">No GPS</Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onInitiatePrivateCall(device);
                   }}
-                />
-              ) : (
-                <>
-                  {device.status === "online" && device.latitude && device.longitude ? (
-                    <div onClick={() => setPlayingDeviceIds(prev => new Set(prev).add(device.id))} className="cursor-pointer w-full h-full">
-                      {device.thumbnail_url ? (
-                        <img
-                          src={device.thumbnail_url}
-                          alt={`Thumbnail for ${device.imei}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-green-900 via-blue-900 to-gray-900 flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <MapPin className="h-8 w-8 mx-auto mb-2" />
-                            <div className="text-xs font-mono bg-black/50 px-2 py-1 rounded mb-1">
-                              📍 GPS ACTIVE
-                            </div>
+                  disabled={!device.online || isCallActive}
+                  title={isCallActive ? "Đang có cuộc gọi khác" : device.online ? "Bắt đầu gọi riêng" : "Thiết bị offline"}
+                >
+                  <Phone className={`h-4 w-4 ${device.online ? 'text-blue-500' : 'text-gray-400'}`} />
+                </Button>
+              </div>
+               <CardDescription className="text-xs font-medium">{device?.plate_number || 'Chưa gắn xe'}
+            <span className="text-xs"> ({device?.imei})</span>
+               </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 !p-4">
+              <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3 group">
+                {playingDeviceIds.has(device.id) ? (
+                  <WebRTCVideoPlayer
+                    deviceId={device.imei}
+                    deviceName={device.plate_number || device.imei}
+                    onStreamStop={() => {
+                      setPlayingDeviceIds(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(device.id);
+                        return newSet;
+                      });
+                    }}
+                  />
+                ) : (
+                  <>
+                    {device.online ? (
+                      <div onClick={() => setPlayingDeviceIds(prev => new Set(prev).add(device.id))} className="cursor-pointer w-full h-full">
+                        {device.thumbnail_url ? (
+                          <img
+                            src={device.thumbnail_url}
+                            alt={`Thumbnail for ${device.imei}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                            <Video className="h-8 w-8 text-gray-500" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Image
+                            src="/images/video-play.png"
+                            alt="Play Video"
+                            width={48}
+                            height={48}
+                            className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                        <div className="text-center text-gray-400">
+                          <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <div className="text-xs">Device Offline
                           </div>
                         </div>
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Image
-                          src="/images/video-play.png"
-                          alt="Play Video"
-                          width={48}
-                          height={48}
-                          className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
-                        />
                       </div>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                      <div className="text-center text-gray-400">
-                        <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <div className="text-xs">
-                          {device.error ? device.error :
-                           device.status === "no_gps" ? 'No GPS Signal' :
-                           'Device Offline'}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                    )}
+                  </>
+                )}
+              </div>
+{/* 
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">IMEI:</span>
+                  <span className="font-medium font-mono">{device.imei}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tốc độ:</span>
+                  <span className="font-medium">{device.speed || 0} km/h</span>
+                </div>
+                {device.battery_percent !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pin:</span>
+                    <span className="font-medium">{device.battery_percent}%</span>
+                  </div>
+                )}
+                {device.temperature !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Nhiệt độ:</span>
+                    <span className="font-medium">{device.temperature}°C</span>
+                  </div>
+                )}
+              </div> */}
+            </CardContent>
+          </Card>
+        )
+      })}
 
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IMEI:</span>
-                <span className="font-medium font-mono">{device.imei}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tốc độ:</span>
-                <span className="font-medium">{device.speed || 0} km/h</span>
-              </div>
-              {device.battery_percent !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pin:</span>
-                  <span className="font-medium">{device.battery_percent}%</span>
-                </div>
-              )}
-              {device.temperature !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nhiệt độ:</span>
-                  <span className="font-medium">{device.temperature}°C</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
     </div>
   )
 }
 
 export default function MapPage() {
-  const { devices, loading, error, selectedDevice, setSelectedDevice } = useMapData()
-  const { isLoaded } = useGoogleMaps()
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const { devices, loading, selectedDevice, setSelectedDevice } = useMapData();
+  const {
+    members: callMembers,
+    isReady: isCallReady,
+    handleStartTalk,
+    handleStopTalk,
+    talkingUser,
+    profile,
+    initiatePrivateTalk,
+    terminatePrivateTalk,
+    isInTempGroup,
+    isOnline
+  } = usePocCall();
+  const [searchTerm] = useState("") // We don't have a search input yet
+  const [statusFilter] = useState("all") // We don't have a status filter UI yet
+  const [map, setMap] = useState<L.Map | null>(null)
+  const [privateCallTarget, setPrivateCallTarget] = useState<(MapDevice & { online: boolean; ms_code: string }) | null>(null);
 
   // Ref để lưu mapCenter cố định - chỉ set 1 lần duy nhất
-  const fixedMapCenterRef = useRef<{lat: number, lng: number} | null>(null)
+  const fixedMapCenterRef = useRef<{ lat: number, lng: number } | null>(null)
 
   // Function tính toán center bao quát tất cả thiết bị
   const calculateBoundsCenter = (devicesWithGPS: MapDevice[]) => {
@@ -237,7 +241,35 @@ export default function MapPage() {
     }
   }, [devices]);
 
-  const filteredDevices = devices.filter((device) => {
+  const combinedDevices = useMemo(() => {
+    if (!devices.length) return [];
+
+    const callMembersMap = new Map(callMembers.map(m => [m.ms_code, m]));
+
+    return devices.map(device => {
+      const callMember = callMembersMap.get(device.imei);
+
+      let newStatus = device.status;
+      if (callMember !== undefined) {
+        // Prioritize call server's online status
+        newStatus = callMember.online ? 'online' : 'offline';
+      }
+
+      // If device is online but has no GPS, set status to 'no_gps'
+      if (newStatus === 'online' && (!device.latitude || !device.longitude)) {
+        newStatus = 'no_gps';
+      }
+
+      return {
+        ...device,
+        ms_code: device.imei, // Explicitly map imei to ms_code for clarity
+        online: callMember?.online ?? false, // Add true online status from call server
+        status: newStatus, // Overwrite status with more reliable data
+      };
+    });
+  }, [devices, callMembers]);
+
+  const filteredDevices = combinedDevices.filter((device) => {
     const matchesSearch =
       device?.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (device?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -248,27 +280,36 @@ export default function MapPage() {
   // Sử dụng mapCenter cố định đã được set 1 lần, fallback to default
   const mapCenter = fixedMapCenterRef.current || defaultCenter;
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMapLoaded(true)
-    setMap(map)
-  }, [])
+  // Find the combined device that matches the selected device from the map data hook
+  const selectedCombinedDevice = useMemo(() => {
+    if (!selectedDevice) return null;
+    return combinedDevices.find(d => d.id === selectedDevice.id) || null;
+  }, [selectedDevice, combinedDevices]);
 
   const handleMarkerClick = (device: MapDevice) => {
-    setSelectedDevice(device)
+    // Find the original device from the full list to set in state
+    setSelectedDevice(devices.find(d => d.id === device.id) || null);
   }
 
   const handleDeviceClick = (device: MapDevice) => {
-    setSelectedDevice(device)
+    setSelectedDevice(devices.find(d => d.id === device.id) || null);
 
     if (map && device.latitude && device.longitude) {
-      map.panTo({ lat: device.latitude, lng: device.longitude })
-      map.setZoom(15)
+      map.flyTo([device.latitude, device.longitude], 15)
+      // map.flyTo([device.latitude, device.longitude])
+      // map.setZoom(15)
     }
   }
 
+  const handleInitiatePrivateCall = (device: MapDevice & { online: boolean; ms_code: string }) => {
+    initiatePrivateTalk(device);
+    setPrivateCallTarget(device);
+  };
 
-  const toggleFullscreen = () => {
-  }
+  const handleTerminatePrivateCall = () => {
+    terminatePrivateTalk();
+    setPrivateCallTarget(null);
+  };
 
   if (loading && devices.length === 0) {
     return (
@@ -285,253 +326,105 @@ export default function MapPage() {
 
   return (
     <div className="space-y-6">
-      {/* <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Theo dõi thiết bị OBU</h1>
-          <p className="text-muted-foreground">Click vào thiết bị để tải dữ liệu GPS và hiển thị vị trí trên bản đồ</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={toggleFullscreen}>
-            <Maximize2 className="h-4 w-4 mr-2" />
-            Mở toàn màn hình
-          </Button>
-        </div>
-      </div> */}
-
-      {/* Stats Cards */}
-      {/* <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng thiết bị</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{devices.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">GPS Online</CardTitle>
-            <div className="w-3 h-3 bg-green-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {devices.filter((d) => d.status === "online").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">No GPS</CardTitle>
-            <div className="w-3 h-3 bg-orange-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {devices.filter((d) => d.status === "no_gps").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Offline</CardTitle>
-            <div className="w-3 h-3 bg-red-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {devices.filter((d) => d.status === "offline").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Có GPS Data</CardTitle>
-            <Navigation className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {devices.filter((d) => d.latitude && d.longitude).length}
-            </div>
-          </CardContent>
-        </Card>
-      </div> */}
+      {privateCallTarget && isInTempGroup && (
+        <PrivateCallOverlay
+          deviceName={privateCallTarget.plate_number || privateCallTarget.imei}
+          onStopCall={handleTerminatePrivateCall}
+        />
+      )}
 
       {/* Main Content with Resizable Layout */}
       <WebRTCProvider>
         <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border min-h-[800px]">
-        {/* Live Camera Grid - Left Panel */}
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <Card className="h-full border-0 rounded-none">
-            <CardHeader>
-              <CardTitle className="text-lg">Danh sách thiết bị</CardTitle>
-              <CardDescription>
-                {selectedDevice ? `Đang xem: ${selectedDevice.imei}` : "Click vào thiết bị hoặc marker để xem chi tiết"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[calc(100vh - 120px)] overflow-y-auto">
-              {filteredDevices.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Không có thiết bị nào</p>
+          {/* Live Camera Grid - Left Panel */}
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Card className="h-full border-0 rounded-none">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Danh sách thiết bị</CardTitle>
+                    {filteredDevices.length > 0 && <CardDescription className="text-xs mt-1 h-4">
+                      {talkingUser.ms_code && !isInTempGroup
+                        ? <Badge variant="destructive" className="animate-pulse">
+                          {(!profile || talkingUser.ms_code === profile.ms_code) ? "Bạn đang nói..." : `${talkingUser.ms_name} đang nói...`}
+                        </Badge>
+                        : <span>Nhấn để nói vào nhóm hiện tại</span>
+                      }
+                    </CardDescription>
+                    }
                   </div>
+                  {filteredDevices.length > 0 && <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={handleStartTalk}
+                      disabled={!isCallReady || !!talkingUser.ms_code || !isOnline || isInTempGroup}
+                      className="bg-green-500 hover:bg-green-600"
+                      title="Bắt đầu nói"
+                    >
+                      <Mic className="h-4 w-4 mr-2" />
+                      Nói
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleStopTalk}
+                      disabled={!isCallReady || !profile || talkingUser.ms_code !== profile.ms_code || !isOnline || isInTempGroup}
+                      title="Dừng nói"
+                    >
+                      <MicOff className="h-4 w-4 mr-2" />
+                      Dừng
+                    </Button>
+                  </div>
+                  }
                 </div>
-              ) : (
-                <DeviceGrid
+              </CardHeader>
+              <CardContent className="h-[calc(100vh - 120px)] overflow-y-auto">
+                {filteredDevices.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Không có thiết bị nào</p>
+                    </div>
+                  </div>
+                ) : (
+                  <DeviceGrid
+                    devices={filteredDevices}
+                    selectedDevice={selectedCombinedDevice}
+                    onDeviceSelect={handleDeviceClick}
+                    onInitiatePrivateCall={handleInitiatePrivateCall}
+                    isCallActive={!!privateCallTarget || (!!talkingUser.ms_code)}
+                    talkingUser={talkingUser}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          {/* Map - Right Panel */}
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Card className="h-full border-0 rounded-none">
+              <CardHeader>
+                {/* <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle> */}
+                <CardTitle className="text-lg">
+                  {selectedCombinedDevice
+                    ? `Đang xem: ${selectedCombinedDevice.driver_name} - ${selectedCombinedDevice?.plate_number || 'Chưa gắn xe'}`
+                    : "Click vào thiết bị để xem vị trí hiện tại"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-[calc(100%-80px)]">
+                <DynamicMap
                   devices={filteredDevices}
                   selectedDevice={selectedDevice}
-                  onDeviceSelect={handleDeviceClick}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </ResizablePanel>
-
-        <ResizableHandle withHandle />
-
-        {/* Map - Right Panel */}
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <Card className="h-full border-0 rounded-none">
-            <CardHeader>
-              <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle>
-              <CardDescription>
-                {selectedDevice
-                  ? `Đang xem: ${selectedDevice.imei} - ${selectedDevice?.plate_number || 'Chưa gắn xe'}`
-                  : "Click vào thiết bị để xem vị trí GPS"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-80px)]">
-              {isLoaded ? (
-                <GoogleMap
-                  mapContainerStyle={{ width: "100%", height: "100%" }}
+                  onMarkerClick={handleMarkerClick}
                   center={mapCenter}
-                  zoom={13}
-                  onLoad={onLoad}
-                  options={{
-                    zoomControl: true,
-                    streetViewControl: true,
-                    mapTypeControl: true,
-                    fullscreenControl: true,
-                    mapTypeId: "roadmap",
-                  }}
-                >
-                  {/* Hiển thị tất cả devices có GPS data */}
-                  {mapLoaded &&
-                    filteredDevices
-                      .filter(device => device.latitude && device.longitude)
-                      .map((device) => (
-                        <Marker
-                          key={device.id}
-                          position={{ lat: device.latitude!, lng: device.longitude! }}
-                          icon={getCarIcon(device.status)}
-                          onClick={() => handleMarkerClick(device)}
-                          title={`${device.imei} - ${device?.plate_number || 'Chưa gắn xe'}`}
-                        />
-                      ))}
-
-                  {/* InfoWindow cho selected device với WebRTC Video */}
-                  {selectedDevice && selectedDevice.latitude && selectedDevice.longitude && (
-                    <InfoWindow
-                      position={{ lat: selectedDevice.latitude, lng: selectedDevice.longitude }}
-                      onCloseClick={() => setSelectedDevice(null)}
-                      options={{
-                        maxWidth: 400,
-                        pixelOffset: new window.google.maps.Size(0, -10)
-                      }}
-                    >
-                      <div className="p-3 min-w-[350px]">
-                        {/* Header */}
-                        <div className="font-semibold text-lg mb-3 flex items-center gap-2">
-                          {selectedDevice.imei}
-                          <Badge
-                            variant={
-                              selectedDevice.status === "online"
-                                ? "default"
-                                : selectedDevice.status === "no_gps"
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                          >
-                            {selectedDevice.status === "online"
-                              ? "GPS Online"
-                              : selectedDevice.status === "no_gps"
-                                ? "No GPS"
-                                : "Offline"}
-                          </Badge>
-                        </div>
-
-
-
-                        {/* Device Info */}
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">IMEI: {selectedDevice.imei}</span>
-                          </div>
-                          {selectedDevice?.plate_number && (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-green-600" />
-                              <span>Xe: {selectedDevice.plate_number}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <Navigation className="h-4 w-4 text-purple-600" />
-                            <span>Tốc độ: {selectedDevice.speed || 0} km/h</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-orange-600" />
-                            <span className="font-mono text-xs">
-                              {selectedDevice.latitude?.toFixed(6)}, {selectedDevice.longitude?.toFixed(6)}
-                            </span>
-                          </div>
-
-                          {/* Stats Grid */}
-                          <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t">
-                            {selectedDevice.battery_percent !== undefined && (
-                              <div>
-                                <div className="text-xs text-gray-500">Pin</div>
-                                <div className="font-semibold">{selectedDevice.battery_percent}%</div>
-                              </div>
-                            )}
-                            {selectedDevice.temperature !== undefined && (
-                              <div>
-                                <div className="text-xs text-gray-500">Nhiệt độ</div>
-                                <div className="font-semibold">{selectedDevice.temperature}°C</div>
-                              </div>
-                            )}
-                          </div>
-
-                          {selectedDevice.error && (
-                            <div className="text-xs text-red-500 mt-2 pt-2 border-t">
-                              Lỗi: {selectedDevice.error}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </InfoWindow>
-                  )}
-                </GoogleMap>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
-                    <p>Loading Google Maps...</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Overlay message khi chưa có GPS data */}
-              {/* {filteredDevices.filter(d => d.latitude && d.longitude).length === 0 && (
-                <div className="absolute inset-4 flex items-center justify-center bg-white/90 rounded-lg">
-                  <div className="text-center text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-medium">Chưa có thiết bị nào có dữ liệu GPS</p>
-                    <p className="text-sm mt-2">Click vào thiết bị bên trái để tải dữ liệu GPS</p>
-                  </div>
-                </div>
-              )} */}
-            </CardContent>
-          </Card>
-        </ResizablePanel>
+                  mapRef={setMap}
+                />
+              </CardContent>
+            </Card>
+          </ResizablePanel>
         </ResizablePanelGroup>
       </WebRTCProvider>
     </div>

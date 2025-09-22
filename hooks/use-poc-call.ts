@@ -40,6 +40,8 @@ export interface PocCallActions {
   handleCreateTempGroupForRow: (member: any) => void;
   handleCreateTempGroup: (msCodes: string[]) => void; // New function for multi-member group
   handleExitTempGroup: () => void;
+  initiatePrivateTalk: (member: any) => void;
+  terminatePrivateTalk: () => void;
 }
 
 export const usePocCall = (): PocCallState & PocCallActions => {
@@ -50,6 +52,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
   const recorderRef = useRef<any>(null);
   const currentGroupCodeRef = useRef('');
   const profileRef = useRef<any>(null);
+  const startTalkAfterTempGroupCreationRef = useRef(false);
   const groupMembersCacheRef = useRef<{ [key: string]: any[] }>({});
   const scriptsLoadedRef = useRef(false);
 
@@ -63,7 +66,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
   const [talkingUser, setTalkingUser] = useState({ ms_code: '', ms_name: '', message: '' });
   const [callStatus, setCallStatus] = useState({ status: 0, ms_name: '', is_caller: false });
   const [isInTempGroup, setIsInTempGroup] = useState(false);
-  const [tempGroupInfo, setTempGroupInfo] = useState<any>(null);
+  const [tempGroupInfo] = useState<any>(null);
   const [profile, setProfileState] = useState<any>(null);
   const [, setGroupMembersCacheState] = useState<{ [key: string]: any[] }>({});
 
@@ -87,6 +90,10 @@ export const usePocCall = (): PocCallState & PocCallActions => {
     scriptsLoadedRef.current = true;
 
     const loadScript = (url: string) => new Promise<void>((resolve, reject) => {
+      // Prevent duplicate script loading in React Strict Mode
+      if (document.querySelector(`script[src="${url}"]`)) {
+        return resolve();
+      }
       const script = document.createElement('script');
       script.src = url;
       script.async = false;
@@ -131,7 +138,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
         setIsReady(true);
       } catch (error) {
         console.error('Lỗi khởi tạo thư viện PoC:', error);
-        toast.error("Lỗi nghiêm trọng khi tải thư viện giao tiếp.");
+        // toast.error("Lỗi nghiêm trọng khi tải thư viện giao tiếp.");
       }
     };
 
@@ -200,19 +207,35 @@ export const usePocCall = (): PocCallState & PocCallActions => {
 
     client.on('tempGroup', (_: any, data: any) => {
       const isTempGroup = !!data.group_code;
-      setIsInTempGroup(isTempGroup);
-      setTempGroupInfo(isTempGroup ? data : null);
+      // setIsInTempGroup(isTempGroup);
+      // setTempGroupInfo(isTempGroup ? data : null);
       if (isTempGroup) {
-        setMembers(data.members);
-      } else {
-        const mainGroupMembers = groupMembersCacheRef.current[profileRef.current?.group_code];
-        if (mainGroupMembers) setMembers(mainGroupMembers);
+       // setMembers(data.members);
+        // If the flag is set, start talking immediately and reset the flag
+        if (startTalkAfterTempGroupCreationRef.current) {
+          setTimeout(() => {
+          handleStartTalk();
+          startTalkAfterTempGroupCreationRef.current = false;
+          setIsInTempGroup(isTempGroup);
+          }, 500);
+        }
       }
+      //  else {
+      //   // Reset flag if we are leaving a temp group for any reason
+      //   startTalkAfterTempGroupCreationRef.current = false;
+      //   const mainGroupMembers = groupMembersCacheRef.current[profileRef.current?.group_code];
+      //   if (mainGroupMembers) setMembers(mainGroupMembers);
+      // }
     });
 
-    client.on('startTalk', (_: any, data: any) => setTalkingUser({ ms_code: data.ms_code, ms_name: data.ms_name, message: '' }));
+    client.on('startTalk', (_: any, data: any) => {
+      setTalkingUser({ ms_code: data.ms_code, ms_name: data.ms_name, message: '' })
+    });
     client.on('stopTalk', () => setTalkingUser({ ms_code: '', ms_name: '', message: '' }));
-    client.on('talkDenied', (_: any, data: any) => setTalkingUser({ ms_code: '', ms_name: '', message: data.message }));
+    client.on('talkDenied', (_: any, data: any) => {
+      setIsInTempGroup(false)
+      setTalkingUser({ ms_code: '', ms_name: '', message: data.message })
+    });
     client.on('callStatus', (_: any, data: any) => setCallStatus(data));
     client.on('playFrame', (_: any, data: any) => {
       let view = new DataView(data.buffer);
@@ -267,7 +290,32 @@ export const usePocCall = (): PocCallState & PocCallActions => {
     }
   };
 
-  const handleExitTempGroup = () => { if (pocClientRef.current) pocClientRef.current.quitTempGroup(); };
+  const handleExitTempGroup = () => { 
+    console.log('quitTempGroup');
+    if (pocClientRef.current){
+      pocClientRef.current.quitTempGroup();
+    } 
+  };
+
+  const initiatePrivateTalk = (member: any) => {
+    console.log('createTempGroup', member)
+    if (pocClientRef.current && member.ms_code) {
+      startTalkAfterTempGroupCreationRef.current = true;
+      pocClientRef.current.createTempGroup([member.ms_code]);
+    } else {
+      toast.error("Thiết bị không hợp lệ hoặc thiếu mã MS.");
+    }
+  };
+
+  const terminatePrivateTalk = () => {
+    if (pocClientRef.current) {
+      console.log('hehehe');
+      
+      handleStopTalk();
+      pocClientRef.current.quitTempGroup();
+      setIsInTempGroup(false)
+    }
+  };
 
   return {
     isReady,
@@ -290,5 +338,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
     handleCreateTempGroupForRow,
     handleCreateTempGroup,
     handleExitTempGroup,
+    initiatePrivateTalk,
+    terminatePrivateTalk,
   };
 };

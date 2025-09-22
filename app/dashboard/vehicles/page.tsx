@@ -37,7 +37,7 @@ export default function VehiclesPage() {
     plate_number: "",
     type: "",
     load_capacity_kg: undefined,
-    registration_expiry: ""
+    registration_expiry: "2025-09-16"
   })
 
   const fetchVehicles = async (page = 1, pageSize = 10, search = searchTerm) => {
@@ -54,8 +54,8 @@ export default function VehiclesPage() {
         setPagination({
           current: response.page,
           pageSize: response.items_per_page,
-          total: response.total,
-          pages: response.pages
+          total: response.total_count,
+          pages: response.page
         })
       }
     } catch (error) {
@@ -87,7 +87,7 @@ export default function VehiclesPage() {
         plate_number: "",
         type: "",
         load_capacity_kg: undefined,
-        registration_expiry: ""
+        registration_expiry: "2025-09-16"
       })
       fetchVehicles(pagination.current, pagination.pageSize, searchTerm)
     } catch (error: any) {
@@ -113,7 +113,7 @@ export default function VehiclesPage() {
         plate_number: "",
         type: "",
         load_capacity_kg: undefined,
-        registration_expiry: ""
+        registration_expiry: "2025-09-16"
       })
       fetchVehicles(pagination.current, pagination.pageSize, searchTerm)
     } catch (error: any) {
@@ -154,7 +154,7 @@ export default function VehiclesPage() {
       plate_number: "",
       type: "",
       load_capacity_kg: undefined,
-      registration_expiry: ""
+      registration_expiry: "2025-09-16"
     })
     setShowCreateDialog(true)
   }
@@ -180,21 +180,18 @@ export default function VehiclesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý xe</h1>
-          <p className="text-muted-foreground">Quản lý thông tin xe và gán thiết bị OBU</p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          Thêm xe mới
-        </Button>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách xe</CardTitle>
-          <CardDescription>Tổng cộng {pagination.total} xe trong hệ thống</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Danh sách xe</CardTitle>
+              <CardDescription>Tổng cộng {pagination.total} xe trong hệ thống</CardDescription>
+            </div>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm xe mới
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -221,8 +218,7 @@ export default function VehiclesPage() {
                   <TableHead>Biển số</TableHead>
                   <TableHead>Loại xe</TableHead>
                   <TableHead>Tải trọng</TableHead>
-                  <TableHead>Hạn đăng ký</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
+                  <TableHead className="text-center">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -247,8 +243,8 @@ export default function VehiclesPage() {
                       <TableCell className="font-medium">{vehicle.plate_number}</TableCell>
                       <TableCell>{vehicle.type || '-'}</TableCell>
                       <TableCell>{vehicle.load_capacity_kg ? `${vehicle.load_capacity_kg} kg` : '-'}</TableCell>
-                      <TableCell>{formatDate(vehicle.registration_expiry)}</TableCell>
-                      <TableCell className="text-right">
+                      {/* <TableCell>{formatDate(vehicle.registration_expiry)}</TableCell> */}
+                      <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0" disabled={loading}>
@@ -361,7 +357,7 @@ export default function VehiclesPage() {
                 }))}
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="registration_expiry">Hạn đăng ký</Label>
               <Input
                 id="registration_expiry"
@@ -369,7 +365,7 @@ export default function VehiclesPage() {
                 value={formData.registration_expiry}
                 onChange={(e) => setFormData(prev => ({ ...prev, registration_expiry: e.target.value }))}
               />
-            </div>
+            </div> */}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
@@ -424,7 +420,7 @@ export default function VehiclesPage() {
                 }))}
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="edit_registration_expiry">Hạn đăng ký</Label>
               <Input
                 id="edit_registration_expiry"
@@ -432,7 +428,7 @@ export default function VehiclesPage() {
                 value={formData.registration_expiry}
                 onChange={(e) => setFormData(prev => ({ ...prev, registration_expiry: e.target.value }))}
               />
-            </div>
+            </div> */}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditVehicle(null)}>

@@ -34,7 +34,8 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
     current: 1,
     pageSize: 10,
     total: 0,
-    pages: 0
+    pages: 0,
+    has_more: false 
   })
 
   const fetchSessions = async (page = 1, pageSize = 10, status = statusFilter) => {
@@ -50,8 +51,9 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
       setPagination({
         current: response.page,
         pageSize: response.items_per_page,
-        total: response.total,
-        pages: response.pages
+        total: response.total_count,
+        has_more: response.has_more,
+        pages: Math.floor(response.total_count/ response.items_per_page) + 1
       })
     } catch (error: any) {
       toast.error('Không thể tải danh sách ca làm việc')
@@ -301,7 +303,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.current + 1)}
-                  disabled={pagination.current >= pagination.pages}
+                  disabled={!pagination.has_more}
                 >
                   Sau
                   <ChevronRight className="h-4 w-4" />
@@ -370,13 +372,6 @@ function JourneySessionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ca làm việc</h1>
-        <p className="text-muted-foreground">
-          Quản lý ca làm việc của tài xế và xe trong hệ thống
-        </p>
-      </div>
-
       <JourneySessionList
         onCreateClick={handleCreateClick}
         onEditClick={handleEditClick}

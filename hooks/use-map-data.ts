@@ -22,6 +22,7 @@ export interface MapDevice extends Device {
   realtimeData?: DeviceRealtimeResponse;
   plate_number?: string;
   thumbnail_url?: string;
+  driver_name?: string
 }
 
 interface UseMapDataReturn {
@@ -109,7 +110,6 @@ export function useMapData(): UseMapDataReturn {
         longitude = lngDegrees + (lngMinutes / 60);
       }
     }
-
     return {
       ...device,
       // GPS coordinates (converted to decimal degrees)
@@ -120,7 +120,7 @@ export function useMapData(): UseMapDataReturn {
       status: error ? 'offline' : determineDeviceStatus(gpsInfo),
       battery_percent: batteryInfo?.bat_percent,
       temperature: systemInfo?.temperature,
-      last_update: realtimeData?.timestamp ? formatLastUpdate(realtimeData.timestamp) : undefined,
+      last_update: device?.last_update,
       error: error,
       realtimeData: realtimeData || { data: realtime } as any,
       thumbnail_url: device.thumbnail_url

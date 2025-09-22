@@ -85,11 +85,18 @@ const config: Config = {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+        'talk-shake': {
+          '0%, 100%': { transform: 'translate(0, 0) rotate(0)' },
+          '25%': { transform: 'translate(0.5px, -0.5px) rotate(0.1deg)' },
+          '50%': { transform: 'translate(-0.5px, 0.5px) rotate(-0.1deg)' },
+          '75%': { transform: 'translate(0.5px, 0.5px) rotate(0.1deg)' },
+        },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+          'talk-shake': 'talk-shake 0.5s infinite'
   		}
   	}
   },

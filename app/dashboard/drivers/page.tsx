@@ -29,7 +29,8 @@ export default function DriversPage() {
     current: 1,
     pageSize: 10,
     total: 0,
-    pages: 0
+    pages: 0,
+    has_more: false
   })
 
   const [formData, setFormData] = useState<CreateDriverRequest>({
@@ -53,8 +54,9 @@ export default function DriversPage() {
         setPagination({
           current: response.page,
           pageSize: response.items_per_page,
-          total: response.total,
-          pages: response.pages
+          total: response.total_count,
+          has_more: response.has_more,
+          pages: Math.floor(response.total_count / response.items_per_page) + 1
         })
       }
     } catch (error) {
@@ -196,21 +198,18 @@ export default function DriversPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý tài xế</h1>
-          <p className="text-muted-foreground">Quản lý thông tin tài xế và phân công xe</p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          Thêm tài xế mới
-        </Button>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách tài xế</CardTitle>
-          <CardDescription>Tổng cộng {pagination.total} tài xế trong hệ thống</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Danh sách tài xế</CardTitle>
+              <CardDescription>Tổng cộng {pagination.total} tài xế trong hệ thống</CardDescription>
+            </div>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm tài xế mới
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -236,7 +235,6 @@ export default function DriversPage() {
                 <TableRow>
                   <TableHead>Họ tên</TableHead>
                   <TableHead>Số GPLX</TableHead>
-                  <TableHead>Số thẻ</TableHead>
                   <TableHead>Số điện thoại</TableHead>
                   <TableHead>Ngày tạo</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
@@ -263,7 +261,6 @@ export default function DriversPage() {
                     <TableRow key={driver.id}>
                       <TableCell className="font-medium">{driver.full_name}</TableCell>
                       <TableCell>{driver.license_number}</TableCell>
-                      <TableCell>{driver.card_id || '-'}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3" />
@@ -331,7 +328,7 @@ export default function DriversPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.current + 1)}
-                  disabled={pagination.current >= pagination.pages || loading}
+                  disabled={!pagination.has_more}
                 >
                   Sau
                   <ChevronRight className="h-4 w-4" />
@@ -370,15 +367,6 @@ export default function DriversPage() {
                 value={formData.license_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, license_number: e.target.value }))}
                 required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="card_id">Số thẻ</Label>
-              <Input
-                id="card_id"
-                placeholder="001234567890"
-                value={formData.card_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, card_id: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
@@ -436,15 +424,6 @@ export default function DriversPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_card_id">Số thẻ</Label>
-              <Input
-                id="edit_card_id"
-                placeholder="001234567890"
-                value={formData.card_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, card_id: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="edit_phone_number">Số điện thoại</Label>
               <Input
                 id="edit_phone_number"
@@ -483,7 +462,6 @@ export default function DriversPage() {
               <br />
               <strong>Số điện thoại:</strong> {deleteDriver?.phone_number || 'Không có'}
               <br />
-              <strong>Xe hiện tại:</strong> {deleteDriver?.current_vehicle?.plate_number || 'Chưa gán'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams } from "next/navigation"
-import { GoogleMap, Marker, Polyline } from "@react-google-maps/api"
-import { useGoogleMaps } from "@/components/providers/google-maps-provider"
+
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import journeySessionsAPI from "@/lib/services/journey-sessions-api"
 import type { JourneySessionHistoryResponse, JourneySessionHistoryPoint } from "@/lib/types/api"
 import Link from "next/link"
+import DynamicMap from "@/components/map/dynamic-map";
 import { convertGpsCoordinates } from "@/lib/utils"
 
 // Define the type for a playlist item from our new API
@@ -48,8 +49,7 @@ interface PlaylistItem {
   belongs_to_department_name: string;
 }
 
-const mapContainerStyle = { width: "100%", height: "100%" };
-const defaultCenter = { lat: 21.0285, lng: 105.8542 };
+
 
 const PLAYBACK_SPEED_OPTIONS = [
   { value: 0.5, label: '0.5x' },
@@ -59,30 +59,11 @@ const PLAYBACK_SPEED_OPTIONS = [
   { value: 10, label: '10x' },
 ];
 
-const getCarIcon = (isActive: boolean) => {
-  const carSvg = `
-    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(16,16)">
-        <circle cx="0" cy="0" r="10"
-              fill="${isActive ? "#3b82f6" : "#6b7280"}"
-              stroke="#ffffff"
-              strokeWidth="2"/>
-        <circle cx="0" cy="0" r="6" fill="#ffffff"/>
-      </g>
-    </svg>
-  `
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(carSvg)}`,
-    scaledSize: new window.google.maps.Size(32, 32),
-    anchor: new window.google.maps.Point(16, 16),
-  }
-}
+
 
 export default function JourneyHistoryPage() {
   const params = useParams()
   const journeyId = parseInt(params.id as string)
-  const { isLoaded } = useGoogleMaps()
-
   // Data states
   const [historyData, setHistoryData] = useState<JourneySessionHistoryResponse | null>(null)
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([])
@@ -97,8 +78,8 @@ export default function JourneyHistoryPage() {
 
   // Map and Log states
   const [currentGpsIndex, setCurrentGpsIndex] = useState(0)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [mapLoaded, setMapLoaded] = useState(false)
+  const [map, setMap] = useState<any>(null);
+  
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -280,11 +261,59 @@ export default function JourneyHistoryPage() {
     activeItem?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [currentGpsIndex, historyData])
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMapLoaded(true)
-    setMap(map)
-  }, [])
 
+
+
+  // --- DATA PREPARATION FOR MAP (Hooks must be called at the top level) ---
+  const {
+    mapCenter,
+    carDeviceAsMapDevice,
+    pathCoordinatesForMap,
+    journeyMarkersForMap,
+    currentPoint
+  } = useMemo(() => {
+    const point = historyData?.data[currentGpsIndex];
+    const centerCoords = point ? convertGpsCoordinates(point) : null;
+    const center = centerCoords || { lat: 21.0285, lng: 105.8542 };
+
+    let carDevice: any[] = [];
+    if (point && centerCoords && historyData) {
+      carDevice = [{
+        id: historyData.imei,
+        imei: historyData.imei,
+        plate_number: historyData.plate_number,
+        status: 'online',
+        latitude: centerCoords.lat,
+        longitude: centerCoords.lng,
+        speed: point.gps_speed,
+        last_update: point.collected_at,
+      }];
+    }
+
+    const path = historyData?.data
+      ? historyData.data.slice(0, currentGpsIndex + 1)
+          .map(p => convertGpsCoordinates(p))
+          .filter(Boolean) as { lat: number; lng: number }[]
+      : [];
+
+    let markers;
+    if (historyData?.data?.length) {
+      const start = convertGpsCoordinates(historyData.data[0]);
+      const end = convertGpsCoordinates(historyData.data[historyData.data.length - 1]);
+      markers = {
+        start: start || undefined,
+        end: end || undefined,
+      };
+    }
+
+    return {
+      currentPoint: point,
+      mapCenter: center,
+      carDeviceAsMapDevice: carDevice,
+      pathCoordinatesForMap: path,
+      journeyMarkersForMap: markers,
+    };
+  }, [historyData, currentGpsIndex]);
 
   if (loading) {
     return (
@@ -307,11 +336,10 @@ export default function JourneyHistoryPage() {
       </div>
     )
   }
+  
 
-  const currentPoint = historyData.data[currentGpsIndex]
-  const pathCoordinates = historyData.data.slice(0, currentGpsIndex + 1)
-    .map(point => convertGpsCoordinates(point))
-    .filter(coords => coords) as { lat: number; lng: number }[]
+
+
 
 
 
@@ -328,7 +356,7 @@ export default function JourneyHistoryPage() {
                   ref={videoRef}
                   key={activeVideo?.id || 'no-video'}
                   className={`w-full h-full object-cover ${!activeVideo ? 'hidden' : ''}`}
-                  
+
                   autoPlay={isPlaying}
                   playsInline // for better mobile support
                 />
@@ -398,7 +426,7 @@ export default function JourneyHistoryPage() {
                         <div
                           key={point.id}
                           id={`log-item-${point.id}`}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-50 border-blue-200 shadow-sm" : "bg-white hover:bg-gray-50"}`}
+                          className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-200 border-blue-500 shadow-sm" : "bg-white hover:bg-gray-50"}`}
                           onClick={() => handleLogClick(index)}
                         >
                           <div className="flex items-center justify-between">
@@ -440,31 +468,13 @@ export default function JourneyHistoryPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden p-4">
-                {isLoaded ? (
-                  <GoogleMap mapContainerStyle={mapContainerStyle} center={currentPoint ? (convertGpsCoordinates(currentPoint) || defaultCenter) : defaultCenter} zoom={15} onLoad={onLoad} options={{ zoomControl: true, streetViewControl: true, mapTypeControl: true, fullscreenControl: true, mapTypeId: "roadmap" }}>
-                    {pathCoordinates.length > 1 && <Polyline path={pathCoordinates} options={{ strokeColor: "#3b82f6", strokeOpacity: 0.8, strokeWeight: 4 }} />}
-                    {mapLoaded && currentPoint && (() => {
-                      const convertedCoords = convertGpsCoordinates(currentPoint);
-                      return convertedCoords ? <Marker position={convertedCoords} icon={getCarIcon(true)} title={`${historyData.plate_number} - ${format(new Date(currentPoint.collected_at), "HH:mm:ss", { locale: vi })}`} /> : null;
-                    })()}
-                    {historyData.data.length > 0 && (() => {
-                      const startCoords = convertGpsCoordinates(historyData.data[0]);
-                      return startCoords ? <Marker position={startCoords} icon={{ url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" fill="#22c55e" stroke="#ffffff" strokeWidth="2"/><text x="12" y="16" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">S</text></svg>`), scaledSize: new window.google.maps.Size(24, 24), anchor: new window.google.maps.Point(12, 12) }} title="Điểm bắt đầu" /> : null;
-                    })()}
-                    {historyData.data.length > 1 && (() => {
-                      const endPoint = historyData.data[historyData.data.length - 1];
-                      const endCoords = convertGpsCoordinates(endPoint);
-                      return endCoords ? <Marker position={endCoords} icon={{ url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" fill="#ef4444" stroke="#ffffff" strokeWidth="2"/><text x="12" y="16" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">E</text></svg>`), scaledSize: new window.google.maps.Size(24, 24), anchor: new window.google.maps.Point(12, 12) }} title="Điểm kết thúc" /> : null;
-                    })()}
-                  </GoogleMap>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-muted-foreground">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                      <p>Đang tải bản đồ...</p>
-                    </div>
-                  </div>
-                )}
+                                <DynamicMap
+                  center={mapCenter}
+                  devices={carDeviceAsMapDevice}
+                  pathCoordinates={pathCoordinatesForMap}
+                  journeyMarkers={journeyMarkersForMap}
+                  mapRef={setMap}
+                />
               </CardContent>
             </Card>
           </ResizablePanel>

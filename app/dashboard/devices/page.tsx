@@ -35,7 +35,8 @@ export default function DevicesPage() {
     current: 1,
     pageSize: 10,
     total: 0,
-    pages: 0
+    pages: 0,
+    has_more: false
   })
 
   const [formData, setFormData] = useState<CreateDeviceRequest>({
@@ -58,8 +59,9 @@ export default function DevicesPage() {
         setPagination({
           current: response.page,
           pageSize: response.items_per_page,
-          total: response.total,
-          pages: response.pages
+          total: response.total_count,
+          has_more: response.has_more,
+          pages: Math.floor(response.total_count / response.items_per_page) + 1
         })
       }
     } catch (error) {
@@ -226,7 +228,7 @@ export default function DevicesPage() {
       imei: "",
       serial_number: "",
       firmware_version: "",
-      
+
     })
     setShowCreateDialog(true)
   }
@@ -236,7 +238,7 @@ export default function DevicesPage() {
       imei: device.imei,
       serial_number: device.serial_number || "",
       firmware_version: device.firmware_version || "",
-     
+
     })
     setEditDevice(device)
   }
@@ -263,17 +265,6 @@ export default function DevicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý thiết bị OBU</h1>
-          <p className="text-muted-foreground">Quản lý thiết bị theo dõi và gán cho xe</p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          Thêm thiết bị mới
-        </Button>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -321,8 +312,16 @@ export default function DevicesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách thiết bị</CardTitle>
-          <CardDescription>Tổng cộng {pagination.total} thiết bị trong hệ thống</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Danh sách thiết bị</CardTitle>
+              <CardDescription>Tổng cộng {pagination.total} thiết bị trong hệ thống</CardDescription>
+            </div>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm thiết bị mới
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -457,7 +456,7 @@ export default function DevicesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.current + 1)}
-                  disabled={pagination.current >= pagination.pages || loading}
+                  disabled={!pagination.has_more}
                 >
                   Sau
                   <ChevronRight className="h-4 w-4" />

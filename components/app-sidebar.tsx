@@ -48,17 +48,17 @@ const menuItems = [
     title: "Live",
     url: "/dashboard/map",
     icon: Radio,
-  },
-   {
-    title: "Live Call",
-    url: "/dashboard/map2",
-    icon: Radio,
-  },
-  {
-    title: "Đàm thoại",
-    url: "/dashboard/call-group",
-    icon: Phone,
-  },
+  }
+  //  {
+  //   title: "Live Call",
+  //   url: "/dashboard/map2",
+  //   icon: Radio,
+  // },
+  // {
+  //   title: "Đàm thoại",
+  //   url: "/dashboard/call-group",
+  //   icon: Phone,
+  // },
 ]
 
 export function AppSidebar() {

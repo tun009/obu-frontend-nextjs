@@ -24,7 +24,6 @@ const CallGroupClient = () => {
     handleDuplexAnswer,
     handleDuplexBye,
     handleEnterGroup,
-    handleCreateTempGroupForRow,
     handleExitTempGroup,
   } = usePocCall();
 
@@ -155,7 +154,7 @@ const CallGroupClient = () => {
                           {profile && member.ms_code !== profile.ms_code && member.online && callStatus.status === 0 && !isInTempGroup && (
                             <>
                               <Button size="sm" variant="outline" onClick={() => handleDuplexCall(member.ms_code)}>Gọi trực tiếp</Button>
-                              <Button size="sm" variant="outline" onClick={() => handleCreateTempGroupForRow(member)}>Tạo nhóm tạm</Button>
+
                             </>
                           )}
                         </TableCell>

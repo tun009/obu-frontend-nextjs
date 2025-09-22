@@ -38,7 +38,6 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
-    "@react-google-maps/api": "latest",
     "autoprefixer": "^10.4.20",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
@@ -47,6 +46,7 @@
     "date-fns": "4.1.0",
     "embla-carousel-react": "latest",
     "input-otp": "latest",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.454.0",
     "mqtt": "^5.14.0",
     "next": "14.2.16",
@@ -55,6 +55,7 @@
     "react-day-picker": "latest",
     "react-dom": "^18",
     "react-hook-form": "latest",
+    "react-leaflet": "^5.0.0",
     "react-resizable-panels": "latest",
     "recharts": "latest",
     "sonner": "latest",
@@ -64,6 +65,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.20",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",

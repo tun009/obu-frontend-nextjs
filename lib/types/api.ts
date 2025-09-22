@@ -119,6 +119,8 @@ export interface PaginatedResponse<T> {
   page: number;
   items_per_page: number;
   pages: number;
+  total_count: number,
+  has_more: boolean
 }
 
 // Device Realtime Types
