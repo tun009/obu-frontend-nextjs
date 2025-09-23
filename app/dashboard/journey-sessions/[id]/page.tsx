@@ -18,6 +18,7 @@ import type { JourneySessionHistoryResponse, JourneySessionHistoryPoint } from "
 import Link from "next/link"
 import DynamicMap from "@/components/map/dynamic-map";
 import { convertGpsCoordinates } from "@/lib/utils"
+import { getMediaUrl } from "@/lib/app-config"
 
 // Define the type for a playlist item from our new API
 interface PlaylistItem {
@@ -158,8 +159,9 @@ export default function JourneyHistoryPage() {
 
     if (activeVideo) {
       // If the video source is not the active one, change it
-      if (video.src !== activeVideo.file_url) {
-        video.src = activeVideo.file_url;
+      const proxyUrl = getMediaUrl(activeVideo.file_url);
+      if (video.src !== proxyUrl) {
+        video.src = proxyUrl;
       }
 
       // Calculate the correct time within the current video file

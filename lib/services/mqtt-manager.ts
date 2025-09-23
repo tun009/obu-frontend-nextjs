@@ -1,5 +1,6 @@
 import mqtt, { MqttClient } from 'mqtt';
 import { WEBRTC_CONFIG } from '@/lib/constants/webrtc';
+import { getMqttHost } from '@/lib/app-config';
 
 type MessageHandler = (topic: string, message: Buffer) => void;
 
@@ -37,7 +38,7 @@ class MqttManager {
       };
 
       console.log('🔌 Connecting to MQTT Broker...');
-      this.client = mqtt.connect(WEBRTC_CONFIG.MQTT.HOST, options);
+            this.client = mqtt.connect(getMqttHost(), options);
 
       this.client.on('connect', () => {
         console.log('✅ MQTT Manager connected successfully.');
