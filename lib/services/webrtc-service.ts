@@ -14,7 +14,7 @@ export class WebRTCStreamService {
   private connectionData: WebRTCConnectionData | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private retryCount: number = 0;
-  private maxRetries: number = 3;
+  private maxRetries: number = 2;
   private unsubscribeMqtt: (() => void) | null = null;
 
   private onStreamHandler: ((stream: MediaStream) => void) | null = null;
@@ -121,7 +121,8 @@ export class WebRTCStreamService {
         this.sendBye();
         setTimeout(() => this.sendPing(), 2000);
       } else {
-        toast.error('Device is busy');
+        this.sendBye()
+        toast.error('Thiết bị đang được phát trực tiếp bởi người dùng khác, vui lòng thử lại sau!');
       }
     }
   }

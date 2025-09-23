@@ -1,9 +1,4 @@
-// File: lib/app-config.ts
 
-// --- CÁC HẰNG SỐ CẤU HÌNH ---
-// Đây là nơi duy nhất bạn cần thay đổi nếu URL backend thay đổi trong tương lai.
-
-// URL cho môi trường DEVELOPMENT (local)
 const DEV_MQTT_HOST = 'ws://zxs-cs.netbodycamera.com:8083/mqtt';
 
 // Các tiền tố PROXY cho môi trường PRODUCTION (trên server)
@@ -11,10 +6,6 @@ const DEV_MQTT_HOST = 'ws://zxs-cs.netbodycamera.com:8083/mqtt';
 const PROD_MEDIA_PROXY_PREFIX = '/proxy-media';
 const PROD_MQTT_PROXY_PREFIX = '/proxy-mqtt';
 
-// --- LOGIC TỰ ĐỘNG ---
-// Đoạn code dưới đây sẽ tự động quyết định dùng cấu hình nào.
-
-// Kiểm tra xem có đang ở môi trường production hay không.
 const isProduction = process.env.NODE_ENV === 'production';
 
 /**
