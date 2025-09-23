@@ -14,6 +14,7 @@ import { usePocCall } from "@/hooks/use-poc-call"
 import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
 import { WebRTCProvider } from "@/contexts/webrtc-provider"
 import { PrivateCallOverlay } from "@/components/ui/private-call-overlay"
+import { getMediaUrl } from "@/lib/app-config"
 
 const defaultCenter = {
   lat: 21.0285, // Default center - Hanoi
@@ -106,7 +107,7 @@ function DeviceGrid({
                       <div onClick={() => setPlayingDeviceIds(prev => new Set(prev).add(device.id))} className="cursor-pointer w-full h-full">
                         {device.thumbnail_url ? (
                           <img
-                            src={device.thumbnail_url}
+                            src={getMediaUrl(device.thumbnail_url)}
                             alt={`Thumbnail for ${device.imei}`}
                             className="w-full h-full object-cover"
                           />
