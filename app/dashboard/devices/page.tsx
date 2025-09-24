@@ -377,11 +377,11 @@ export default function DevicesPage() {
                       <TableCell>{device.firmware_version || '-'}</TableCell>
                       <TableCell>
                         {device.vehicle_plate_number ? (
-                          <Badge variant="outline" className="font-mono">
+                          <Badge className="font-mono bg-green-100 text-green-800 hover:bg-green-100">
                             {device.vehicle_plate_number}
                           </Badge>
                         ) : (
-                          <span className="text-muted-foreground">Chưa gán</span>
+                          <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Chưa gán</Badge>
                         )}
                       </TableCell>
                       <TableCell>{formatDate(device.installed_at)}</TableCell>
