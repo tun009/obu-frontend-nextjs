@@ -1,6 +1,6 @@
 import mqtt, { MqttClient } from 'mqtt';
 import { WEBRTC_CONFIG } from '@/lib/constants/webrtc';
-import { getMqttHost } from '@/lib/app-config';
+import { getMqttHost } from '@/lib/proxy-service';
 
 type MessageHandler = (topic: string, message: Buffer) => void;
 

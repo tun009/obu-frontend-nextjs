@@ -14,7 +14,7 @@ import { usePocCall } from "@/hooks/use-poc-call"
 import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
 import { WebRTCProvider } from "@/contexts/webrtc-provider"
 import { PrivateCallOverlay } from "@/components/ui/private-call-overlay"
-import { getMediaUrl } from "@/lib/app-config"
+import { getMediaUrl } from "@/lib/proxy-service"
 
 const defaultCenter = {
   lat: 21.0285, // Default center - Hanoi
