@@ -112,7 +112,6 @@ export function useMapData(): UseMapDataReturn {
       }
     }
     const hasGps = !!(realtime && Object.keys(realtime).length > 0 && gpsInfo && gpsInfo.enable === 1 && gpsInfo.valid === 1);
-
     return {
       ...device,
       // GPS coordinates (converted to decimal degrees)

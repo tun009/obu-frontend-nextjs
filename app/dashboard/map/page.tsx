@@ -7,7 +7,7 @@ import L from 'leaflet'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, RefreshCw, Mic, MicOff, Video, Phone } from "lucide-react"
+import { MapPin, RefreshCw, Mic, MicOff, Video, Phone, WifiOff } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { useMapData, MapDevice } from "@/hooks/use-map-data"
 import { usePocCall } from "@/hooks/use-poc-call"
@@ -384,8 +384,8 @@ export default function MapPage() {
                 {filteredDevices.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center text-muted-foreground">
-                      <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Không có thiết bị nào</p>
+                      <WifiOff className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Không có thiết bị nào đang trong ca làm việc</p>
                     </div>
                   </div>
                 ) : (

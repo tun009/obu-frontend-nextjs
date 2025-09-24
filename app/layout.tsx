@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'OBU Fleet Management',
   description: 'Hệ thống quản lý và theo dõi xe thông qua thiết bị OBU',
   generator: 'v0.dev',
+  icons: {
+    icon: '/images/icon-web.png',
+  },
 }
 
 export default function RootLayout({

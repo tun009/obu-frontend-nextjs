@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, RotateCcw, Loader2, AlertCircle, Video } from 'lucide-react';
+import { Play, RotateCcw, Loader2, AlertCircle, Video, Maximize } from 'lucide-react';
 import { useWebRTCStream } from '@/hooks/use-webrtc-stream';
 import type { StreamState } from '@/lib/types/webrtc';
 
@@ -21,6 +21,16 @@ export function WebRTCVideoPlayer({
   onStreamStart,
   onStreamStop
 }: WebRTCVideoPlayerProps) {
+  const playerContainerRef = React.useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
   const {
     streamState,
     isStreaming,
@@ -61,8 +71,14 @@ export function WebRTCVideoPlayer({
     retry();
   };
 
+  const handleFullScreen = () => {
+    if (playerContainerRef.current?.requestFullscreen) {
+      playerContainerRef.current.requestFullscreen();
+    }
+  };
+
   return (
-    <div className={`relative bg-gray-900 rounded-lg overflow-hidden group ${className}`}>
+    <div ref={playerContainerRef} className={`relative bg-gray-900 rounded-lg overflow-hidden group ${className}`}>
       {/* Video Element */}
       <div className="relative aspect-video">
         <video
@@ -120,19 +136,40 @@ export function WebRTCVideoPlayer({
         )}
       </div>
 
-      {/* Controls */}
-      {isStreaming && (
+      {/* Controls - Hidden in fullscreen for better view */}
+      {isStreaming && !isFullscreen && (
         <div
-          onClick={handleStopStream}
-          className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         >
-          <Image
-            src="/images/stop.png"
-            alt="Stop Video"
-            width={48}
-            height={48}
-            className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
-          />
+          {/* Stop button in the center */}
+          <div
+            onClick={handleStopStream}
+            className="w-full h-full flex items-center justify-center cursor-pointer"
+          >
+            <Image
+              src="/images/stop.png"
+              alt="Stop Video"
+              width={48}
+              height={48}
+              className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+            />
+          </div>
+
+          {/* Fullscreen button in the corner */}
+          <div className="absolute top-2 right-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFullScreen();
+              }}
+              title="Toàn màn hình"
+            >
+              <Maximize className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

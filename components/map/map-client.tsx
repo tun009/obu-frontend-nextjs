@@ -36,6 +36,15 @@ export default function MapClient({
   const markersRef = useRef<Map<string | number, any>>(new Map());
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const pluginLoadedRef = useRef(false);
+
+  // Dynamically import the plugin on the client side to avoid SSR issues
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !pluginLoadedRef.current) {
+      import('leaflet-rotatedmarker');
+      pluginLoadedRef.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -72,7 +81,7 @@ export default function MapClient({
 
         mapInstanceRef.current = L.map(mapContainerRef.current, {
           center: validCenter,
-          zoom: 13,
+          zoom: 15,
           zoomControl: true,
           attributionControl: true
         })
@@ -143,7 +152,6 @@ export default function MapClient({
       try {
         const L = (await import('leaflet')).default;
         const deviceIdsOnMap = new Set(devices.map(d => d.id));
-
         // 1. Update existing markers and add new ones
         devices.forEach(device => {
           if (!device.latitude || !device.longitude) return;
@@ -162,13 +170,16 @@ export default function MapClient({
               </div>
             </div>
           `;
-
           if (markersRef.current.has(device.id)) {
             // Marker exists: Update position, icon, and popup content
             const marker = markersRef.current.get(device.id);
             marker
               .setLatLng([device.latitude, device.longitude])
               .setIcon(createDeviceIcon(device.id));
+            // Use the method from leaflet-rotatedmarker plugin
+            if (marker.setRotationAngle) {
+              marker.setRotationAngle((device.direction ?? 0) -90);
+            }
 
             // Only update popup content if it's not currently open, to avoid flicker
             if (!marker.isPopupOpen()) {
@@ -176,9 +187,12 @@ export default function MapClient({
             }
           } else {
             // Marker doesn't exist: Create and add it
+            // Add rotationAngle option from the plugin
             const newMarker = L.marker([device.latitude, device.longitude], {
-              icon: createDeviceIcon(device.id)
-            })
+              icon: createDeviceIcon(device.id),
+              rotationAngle: device.direction ?? 0,
+              rotationOrigin: 'center center',
+            } as any) // Use 'as any' to allow the custom option
               .addTo(mapInstanceRef.current)
               .bindPopup(popupContent)
               .on('click', () => {

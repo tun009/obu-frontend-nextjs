@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useParams } from "next/navigation"
 
 
@@ -14,11 +15,10 @@ import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { toast } from "sonner"
 import journeySessionsAPI from "@/lib/services/journey-sessions-api"
-import type { JourneySessionHistoryResponse, JourneySessionHistoryPoint } from "@/lib/types/api"
+import type { JourneySessionHistoryResponse } from "@/lib/types/api"
 import Link from "next/link"
-import DynamicMap from "@/components/map/dynamic-map";
+import JourneyMap from "@/components/map/journey-map";
 import { convertGpsCoordinates } from "@/lib/utils"
-import { getMediaUrl } from "@/lib/app-config"
 
 // Define the type for a playlist item from our new API
 interface PlaylistItem {
@@ -79,8 +79,8 @@ export default function JourneyHistoryPage() {
 
   // Map and Log states
   const [currentGpsIndex, setCurrentGpsIndex] = useState(0)
-  const [map, setMap] = useState<any>(null);
-  
+
+
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -119,10 +119,10 @@ export default function JourneyHistoryPage() {
     const journeyStart = new Date(historyData.data[0].collected_at).getTime();
 
     // If there's a playlist, duration is based on video lengths
-    if (playlist.length > 0) {
-      const accumulatedDuration = playlist.reduce((acc, item) => acc + item.media_duration, 0);
-      return { totalDuration: accumulatedDuration, journeyStartTimeMs: journeyStart };
-    }
+    // if (playlist.length > 0) {
+    //   const accumulatedDuration = playlist.reduce((acc, item) => acc + item.media_duration, 0);
+    //   return { totalDuration: accumulatedDuration, journeyStartTimeMs: journeyStart };
+    // }
 
     // If no playlist, duration is based on GPS history
     const journeyEnd = new Date(historyData.data[historyData.data.length - 1].collected_at).getTime();
@@ -159,9 +159,8 @@ export default function JourneyHistoryPage() {
 
     if (activeVideo) {
       // If the video source is not the active one, change it
-      const proxyUrl = getMediaUrl(activeVideo.file_url);
-      if (video.src !== proxyUrl) {
-        video.src = proxyUrl;
+      if (video.src !== activeVideo.file_url) {
+        video.src = activeVideo.file_url;
       }
 
       // Calculate the correct time within the current video file
@@ -250,70 +249,57 @@ export default function JourneyHistoryPage() {
     const newGlobalTime = (pointTimeMs - journeyStartTimeMs) / 1000
     handleSliderChange([Math.max(0, newGlobalTime)])
 
-    if (map && historyData?.data[index]) {
-      const point = historyData.data[index]
-      const convertedCoords = convertGpsCoordinates(point)
-      if (convertedCoords) map.panTo(convertedCoords)
-    }
+    // The new map component will handle panning automatically based on vehicle position.
   }
+
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  const rowVirtualizer = useVirtualizer({
+    count: historyData?.data.length ?? 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 76, // Approx height of one log item in pixels
+    overscan: 5,
+  });
 
   // Auto-scroll to active log item
   useEffect(() => {
-    const activeItem = document.getElementById(`log-item-${historyData?.data[currentGpsIndex]?.id}`)
-    activeItem?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [currentGpsIndex, historyData])
+    if (rowVirtualizer) {
+      rowVirtualizer.scrollToIndex(currentGpsIndex, { align: 'center', behavior: 'smooth' });
+    }
+  }, [currentGpsIndex]);
 
 
 
 
-  // --- DATA PREPARATION FOR MAP (Hooks must be called at the top level) ---
+  // --- DATA PREPARATION FOR NEW JOURNEY MAP ---
   const {
-    mapCenter,
-    carDeviceAsMapDevice,
-    pathCoordinatesForMap,
-    journeyMarkersForMap,
+    fullPathCoordinates,
+    progressPathCoordinates,
+    vehiclePosition,
+    startPosition,
+    endPosition,
     currentPoint
   } = useMemo(() => {
-    const point = historyData?.data[currentGpsIndex];
-    const centerCoords = point ? convertGpsCoordinates(point) : null;
-    const center = centerCoords || { lat: 21.0285, lng: 105.8542 };
-
-    let carDevice: any[] = [];
-    if (point && centerCoords && historyData) {
-      carDevice = [{
-        id: historyData.imei,
-        imei: historyData.imei,
-        plate_number: historyData.plate_number,
-        status: 'online',
-        latitude: centerCoords.lat,
-        longitude: centerCoords.lng,
-        speed: point.gps_speed,
-        last_update: point.collected_at,
-      }];
+    if (!historyData?.data || historyData.data.length === 0) {
+      return { fullPathCoordinates: [], progressPathCoordinates: [], currentPoint: undefined };
     }
 
-    const path = historyData?.data
-      ? historyData.data.slice(0, currentGpsIndex + 1)
-          .map(p => convertGpsCoordinates(p))
-          .filter(Boolean) as { lat: number; lng: number }[]
-      : [];
+    const allPoints = historyData.data
+      .map(p => convertGpsCoordinates(p))
+      .filter(Boolean) as { lat: number; lng: number }[];
 
-    let markers;
-    if (historyData?.data?.length) {
-      const start = convertGpsCoordinates(historyData.data[0]);
-      const end = convertGpsCoordinates(historyData.data[historyData.data.length - 1]);
-      markers = {
-        start: start || undefined,
-        end: end || undefined,
-      };
-    }
+    const progressPoints = allPoints.slice(0, currentGpsIndex + 1);
 
+    const point = historyData.data[currentGpsIndex];
+    debugger
+    const vehiclePos = point ? { ...convertGpsCoordinates(point), direction: point.direction ?? 0 } : undefined; // Direction is not available in history data, default to 0
     return {
+      fullPathCoordinates: allPoints,
+      progressPathCoordinates: progressPoints,
+      vehiclePosition: vehiclePos,
+      startPosition: allPoints[0],
+      endPosition: allPoints[allPoints.length - 1],
       currentPoint: point,
-      mapCenter: center,
-      carDeviceAsMapDevice: carDevice,
-      pathCoordinatesForMap: path,
-      journeyMarkersForMap: markers,
     };
   }, [historyData, currentGpsIndex]);
 
@@ -338,12 +324,6 @@ export default function JourneyHistoryPage() {
       </div>
     )
   }
-  
-
-
-
-
-
 
   return (
     <div className="h-[calc(100vh-115px)] flex flex-col overflow-scroll">
@@ -422,35 +402,49 @@ export default function JourneyHistoryPage() {
               <div className="flex-1 overflow-hidden">
                 <Card className="h-full border-0 rounded-none flex flex-col">
                   <CardHeader className="py-3 flex-shrink-0"><CardTitle className="text-base">Nhật ký di chuyển</CardTitle></CardHeader>
-                  <CardContent className="flex-1 overflow-y-auto p-4 pt-0">
-                    <div className="space-y-2">
-                      {historyData.data.map((point, index) => (
-                        <div
-                          key={point.id}
-                          id={`log-item-${point.id}`}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-200 border-blue-500 shadow-sm" : "bg-white hover:bg-gray-50"}`}
-                          onClick={() => handleLogClick(index)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-2 h-2 rounded-full ${index === currentGpsIndex ? "bg-blue-500" : "bg-gray-300"}`} />
-                              <div>
-                                <div className="font-medium text-sm flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" />{format(new Date(point.collected_at), "HH:mm:ss", { locale: vi })}</div>
-                                <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />
-                                  {(() => {
-                                    const coords = convertGpsCoordinates(point)
-                                    return coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : 'Invalid GPS'
-                                  })()}
+                  <CardContent ref={parentRef} className="flex-1 overflow-y-auto p-4 pt-0">
+                    <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+                      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                        const index = virtualItem.index;
+                        const point = historyData.data[index];
+                        return (
+                          <div
+                            key={point.id}
+                            id={`log-item-${point.id}`}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: `${virtualItem.size}px`,
+                              transform: `translateY(${virtualItem.start}px)`,
+                              padding: '0.25rem' // Add padding to compensate for space-y-2
+                            }}
+                            onClick={() => handleLogClick(index)}
+                          >
+                            <div className={`p-3 h-full rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-200 border-blue-500 shadow-sm" : "bg-white hover:bg-gray-50"}`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-2 h-2 rounded-full ${index === currentGpsIndex ? "bg-blue-500" : "bg-gray-300"}`} />
+                                  <div>
+                                    <div className="font-medium text-sm flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" />{format(new Date(point.collected_at), "HH:mm:ss", { locale: vi })}</div>
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />
+                                      {(() => {
+                                        const coords = convertGpsCoordinates(point)
+                                        return coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : 'Invalid GPS'
+                                      })()}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right space-y-1">
+                                  <div className="text-sm font-medium flex items-center justify-end gap-1"><Gauge className="h-3 w-3 text-muted-foreground" />{point.gps_speed.toFixed(1)} km/h</div>
+                                  <div className="text-xs text-muted-foreground flex items-center justify-end gap-1"><Battery className="h-3 w-3" />{point.bat_percent}%</div>
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right space-y-1">
-                              <div className="text-sm font-medium flex items-center justify-end gap-1"><Gauge className="h-3 w-3 text-muted-foreground" />{point.gps_speed.toFixed(1)} km/h</div>
-                              <div className="text-xs text-muted-foreground flex items-center justify-end gap-1"><Battery className="h-3 w-3" />{point.bat_percent}%</div>
-                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -470,12 +464,12 @@ export default function JourneyHistoryPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden p-4">
-                                <DynamicMap
-                  center={mapCenter}
-                  devices={carDeviceAsMapDevice}
-                  pathCoordinates={pathCoordinatesForMap}
-                  journeyMarkers={journeyMarkersForMap}
-                  mapRef={setMap}
+                <JourneyMap
+                  fullPathCoordinates={fullPathCoordinates}
+                  progressPathCoordinates={progressPathCoordinates}
+                  vehiclePosition={vehiclePosition}
+                  startPosition={startPosition}
+                  endPosition={endPosition}
                 />
               </CardContent>
             </Card>

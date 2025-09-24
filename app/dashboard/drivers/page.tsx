@@ -276,12 +276,12 @@ export default function DriversPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
+                            {/* <DropdownMenuItem asChild>
                               <Link href={`/dashboard/drivers/${driver.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Xem chi tiết
                               </Link>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             <DropdownMenuItem onClick={() => openEditDialog(driver)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Chỉnh sửa

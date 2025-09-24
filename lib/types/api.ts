@@ -306,6 +306,7 @@ export interface JourneySessionHistoryPoint {
   gps_valid: number;
   gps_enable: number;
   bat_percent: number;
+  direction: number
 }
 
 export interface JourneySessionHistoryResponse {

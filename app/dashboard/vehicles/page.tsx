@@ -252,12 +252,12 @@ export default function VehiclesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
+                            {/* <DropdownMenuItem asChild>
                               <Link href={`/dashboard/vehicles/${vehicle.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Xem chi tiết
                               </Link>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             <DropdownMenuItem onClick={() => openEditDialog(vehicle)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Chỉnh sửa

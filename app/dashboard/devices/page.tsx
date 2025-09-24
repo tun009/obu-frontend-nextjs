@@ -393,12 +393,12 @@ export default function DevicesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
+                            {/* <DropdownMenuItem asChild>
                               <Link href={`/dashboard/devices/${device.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Xem chi tiết
                               </Link>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             {device.vehicle_id ? (
                               <DropdownMenuItem onClick={() => setUnassignDevice(device)}>
                                 <LinkIcon className="h-4 w-4 mr-2" />
