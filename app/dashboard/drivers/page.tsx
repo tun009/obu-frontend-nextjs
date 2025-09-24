@@ -18,6 +18,10 @@ import Link from "next/link"
 import driversAPI from "@/lib/services/drivers-api"
 import type { Driver, CreateDriverRequest, UpdateDriverRequest } from "@/lib/types/api"
 
+const generateCardId = (): string => {
+  return Math.floor(Math.random() * 1_000_000_0000).toString().padStart(10, '0')
+}
+
 export default function DriversPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [drivers, setDrivers] = useState<Driver[]>([])
@@ -36,7 +40,7 @@ export default function DriversPage() {
   const [formData, setFormData] = useState<CreateDriverRequest>({
     full_name: "",
     license_number: "",
-    card_id: "",
+    card_id: generateCardId(),
     phone_number: ""
   })
 
@@ -87,7 +91,7 @@ export default function DriversPage() {
       setFormData({
         full_name: "",
         license_number: "",
-        card_id: "",
+        card_id: generateCardId(),
         phone_number: ""
       })
       fetchDrivers(pagination.current, pagination.pageSize, searchTerm)
@@ -172,7 +176,7 @@ export default function DriversPage() {
     setFormData({
       full_name: "",
       license_number: "",
-      card_id: "",
+      card_id: generateCardId(),
       phone_number: ""
     })
     setShowCreateDialog(true)
