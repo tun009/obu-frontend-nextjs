@@ -161,7 +161,11 @@ export default function JourneyHistoryPage() {
     if (activeVideo) {
       // If the video source is not the active one, change it
       const proxyUrl = getMediaUrl(activeVideo.file_url);
+      console.log(video.src, '-', proxyUrl, 'heheeh' );
+      
       if (video.src !== proxyUrl) {
+        console.log('oke duoc nhe');
+        
         video.src = proxyUrl;
       }
 
@@ -294,7 +298,6 @@ export default function JourneyHistoryPage() {
     const progressPoints = allPoints.slice(0, currentGpsIndex + 1);
 
     const point = historyData.data[currentGpsIndex];
-    debugger
     const vehiclePos = point ? { ...convertGpsCoordinates(point), direction: point.direction ?? 0 } : undefined; // Direction is not available in history data, default to 0
     return {
       fullPathCoordinates: allPoints,
