@@ -56,3 +56,22 @@ export const getMediaUrl = (originalUrl: string | null | undefined): string => {
   return originalUrl;
 };
 
+export const getMediaWithBaseUrl = (originalUrl: string | null | undefined): string => {
+  if (!originalUrl) {
+    return '';
+  }
+
+  if (isProduction) {
+    try {
+      const url = new URL(originalUrl);
+      // Trả về đường dẫn tương đối, ví dụ: /proxy-media/media/file.mp4
+      return `${process.env.NEXT_PUBLIC_BASE_URL}${PROD_MEDIA_PROXY_PREFIX}${url.pathname}`;
+    } catch (error) {
+      // Nếu URL không hợp lệ, trả về gốc để tránh crash
+      return originalUrl;
+    }
+  }
+
+  // Môi trường dev, trả về URL trực tiếp
+  return originalUrl;
+};

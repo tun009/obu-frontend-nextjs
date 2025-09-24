@@ -161,11 +161,11 @@ export default function JourneyHistoryPage() {
     if (activeVideo) {
       // If the video source is not the active one, change it
       const proxyUrl = getMediaUrl(activeVideo.file_url);
-      console.log(video.src, '-', proxyUrl, 'heheeh' );
-      
-      if (video.src !== proxyUrl) {
+      console.log(video.src, '-', proxyUrl, 'heheeh');
+
+      if (!video.src || !video.src.endsWith(proxyUrl)) {
         console.log('oke duoc nhe');
-        
+
         video.src = proxyUrl;
       }
 
