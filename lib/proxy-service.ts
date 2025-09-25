@@ -23,10 +23,8 @@ export const getMqttHost = (): string => {
       const host = origin.split('//')[1];
       return `${wsProtocol}${host}${PROD_MQTT_PROXY_PREFIX}`;
     }
-    // Trả về chuỗi rỗng nếu chạy ở server-side trong lúc build
     return '';
   }
-  // Môi trường dev, trả về URL trực tiếp
   return DEV_MQTT_HOST;
 };
 
@@ -44,19 +42,16 @@ export const getMediaUrl = (originalUrl: string | null | undefined): string => {
   if (isProduction) {
     try {
       const url = new URL(originalUrl);
-      // Trả về đường dẫn tương đối, ví dụ: /proxy-media/media/file.mp4
       return `${PROD_MEDIA_PROXY_PREFIX}${url.pathname}`;
     } catch (error) {
-      // Nếu URL không hợp lệ, trả về gốc để tránh crash
       return originalUrl;
     }
   }
 
-  // Môi trường dev, trả về URL trực tiếp
   return originalUrl;
 };
 
-export const getMediaWithBaseUrl = (originalUrl: string | null | undefined): string => {
+export const getMediaContainBaseUrl = (originalUrl: string | null | undefined): string => {
   if (!originalUrl) {
     return '';
   }
@@ -64,14 +59,11 @@ export const getMediaWithBaseUrl = (originalUrl: string | null | undefined): str
   if (isProduction) {
     try {
       const url = new URL(originalUrl);
-      // Trả về đường dẫn tương đối, ví dụ: /proxy-media/media/file.mp4
       return `${process.env.NEXT_PUBLIC_BASE_URL}${PROD_MEDIA_PROXY_PREFIX}${url.pathname}`;
     } catch (error) {
-      // Nếu URL không hợp lệ, trả về gốc để tránh crash
       return originalUrl;
     }
   }
 
-  // Môi trường dev, trả về URL trực tiếp
   return originalUrl;
 };

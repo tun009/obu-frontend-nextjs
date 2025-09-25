@@ -161,11 +161,7 @@ export default function JourneyHistoryPage() {
     if (activeVideo) {
       // If the video source is not the active one, change it
       const proxyUrl = getMediaUrl(activeVideo.file_url);
-      console.log(video.src, '-', proxyUrl, 'heheeh');
-
       if (!video.src || !video.src.endsWith(proxyUrl)) {
-        console.log('oke duoc nhe');
-
         video.src = proxyUrl;
       }
 
@@ -463,7 +459,7 @@ export default function JourneyHistoryPage() {
           {/* Right Panel - Map */}
           <ResizablePanel defaultSize={60} minSize={40}>
             <Card className="h-full border-0 rounded-none flex flex-col">
-              <CardHeader className="pb-3 flex-shrink-0">
+              <CardHeader className="pb-3 flex-shrink-0 pt-0">
                 <CardTitle className="text-lg">Bản đồ hành trình</CardTitle>
                 <CardDescription>
                   {currentPoint && (<>Vị trí hiện tại: {format(new Date(currentPoint.collected_at), "HH:mm:ss dd/MM/yyyy", { locale: vi })} - Tốc độ: {currentPoint.gps_speed} km/h</>)}

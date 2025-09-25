@@ -336,7 +336,7 @@ export default function MapPage() {
 
       {/* Main Content with Resizable Layout */}
       <WebRTCProvider>
-        <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border min-h-[800px]">
+        <ResizablePanelGroup id="main-content" direction="horizontal" className="rounded-lg border !h-[calc(100vh-113px)]">
           {/* Live Camera Grid - Left Panel */}
           <ResizablePanel defaultSize={50} minSize={30}>
             <Card className="h-full border-0 rounded-none">
@@ -380,7 +380,7 @@ export default function MapPage() {
                   }
                 </div>
               </CardHeader>
-              <CardContent className="h-[calc(100vh - 120px)] overflow-y-auto">
+              <CardContent className="h-[calc(100vh-120px)] overflow-y-auto">
                 {filteredDevices.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center text-muted-foreground">
