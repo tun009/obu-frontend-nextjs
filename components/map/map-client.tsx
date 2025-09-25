@@ -178,7 +178,7 @@ export default function MapClient({
               .setIcon(createDeviceIcon(device.id));
             // Use the method from leaflet-rotatedmarker plugin
             if (marker.setRotationAngle) {
-              marker.setRotationAngle((device.direction ?? 0) -90);
+              marker.setRotationAngle(device.direction ?? 0);
             }
 
             // Only update popup content if it's not currently open, to avoid flicker
