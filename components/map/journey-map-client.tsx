@@ -93,7 +93,7 @@ export default function JourneyMapClient({
     // 3. Draw Progress Path (Green) on top of the blue path
     if (progressPathCoordinates.length > 0) {
       const latLngs = progressPathCoordinates.map(p => [p.lat, p.lng]);
-      layersRef.current.progressPath = L.polyline(latLngs, { color: '#22c55e', weight: 6 }).addTo(map);
+      layersRef.current.progressPath = L.polyline(latLngs, { color: '#22c55e', weight: 3 }).addTo(map);
     }
 
     // 4. Draw Start/End Markers
