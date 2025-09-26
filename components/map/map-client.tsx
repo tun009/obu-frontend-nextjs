@@ -158,14 +158,14 @@ export default function MapClient({
 
           const popupContent = `
             <div class="p-2 min-w-[250px]">
-              <div class="font-semibold text-base mb-2">${device.imei}</div>
+              <div class="font-semibold text-base mb-2">${device.driver_name} (${device?.imei})</div>
               <div class="space-y-1 text-sm">
-                <div>Status: <span class="font-medium">${device.status}</span></div>
-                <div>Location: ${device.latitude?.toFixed(6)}, ${device.longitude?.toFixed(6)}</div>
-                <div>Speed: ${device.speed || 0} km/h</div>
-                <div>Plate: ${device.plate_number || "Unknown"}</div>
+                <div>Trạng thái: <span class="font-medium">${device.status}</span></div>
+                <div>Vị trí: ${device.latitude?.toFixed(6)}, ${device.longitude?.toFixed(6)}</div>
+                <div>Tốc độ: ${device.speed || 0} km/h</div>
+                <div>Biển số xe: ${device.plate_number || "Unknown"}</div>
                 <div class="text-xs text-gray-500">
-                  Last update: ${device.last_update ? new Date(device.last_update).toLocaleString() : "Unknown"}
+                  Cập nhật lần cuối: ${device.last_update ? new Date(device.last_update).toLocaleString() : "Unknown"}
                 </div>
               </div>
             </div>
