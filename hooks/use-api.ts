@@ -140,15 +140,15 @@ export function useDrivers() {
   const listApi = useApi();
   const createApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Tạo tài xế thành công',
+    successMessage: 'Tạo người dùng thành công',
   });
   const updateApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Cập nhật tài xế thành công',
+    successMessage: 'Cập nhật người dùng thành công',
   });
   const deleteApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Xóa tài xế thành công',
+    successMessage: 'Xóa người dùng thành công',
   });
 
   const getDrivers = useCallback(

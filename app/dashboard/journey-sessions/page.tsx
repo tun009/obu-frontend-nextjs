@@ -193,7 +193,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Tìm kiếm IMEI, tài xế..."
+                  placeholder="Tìm kiếm IMEI, người sử dụng..."
                   className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -301,6 +301,9 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                       </TableCell>
                       <TableCell className="font-medium">
                          {session.device_imei}
+                           {session?.plate_number && (
+                            <div className="text-xs text-muted-foreground">Biển số xe: {session?.plate_number}</div>
+                          )}
                       </TableCell>
                       <TableCell className="font-medium">
                         <div>

@@ -84,7 +84,8 @@ function DeviceGrid({
                 </Button>
               </div>
               <CardDescription className="text-xs font-medium">{device?.imei}
-                {/* <span className="text-xs"> ({device?.imei})</span> */}
+               {device?.plate_number && <span className="text-xs"> ({device?.plate_number})</span>}
+                
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0 !p-4">
@@ -92,7 +93,7 @@ function DeviceGrid({
                 {playingDeviceIds.has(device.id) ? (
                   <WebRTCVideoPlayer
                     deviceId={device.imei}
-                    deviceName={device.device_name || device.imei}
+                    deviceName={device.imei}
                     onStreamStop={() => {
                       setPlayingDeviceIds(prev => {
                         const newSet = new Set(prev);

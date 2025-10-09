@@ -1,8 +1,8 @@
 "use client"
 
-import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, Radio, Calendar, Phone, HelpCircle } from "lucide-react"
+import { Car, Users, Smartphone, LayoutDashboard, Settings, LogOut, Radio, Calendar, HelpCircle } from "lucide-react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import {
@@ -11,7 +11,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -22,17 +22,17 @@ import { HelpPanel } from "@/components/ui/help-panel"
 
 const menuItems = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
+    title: "Live",
+    url: "/dashboard/map",
+    icon: Radio,
   },
   {
-    title: "Quản lý xe",
+    title: "Quản lý xe tuần tra",
     url: "/dashboard/vehicles",
     icon: Car,
   },
   {
-    title: "Quản lý tài xế",
+    title: "Quản lý người dùng",
     url: "/dashboard/drivers",
     icon: Users,
   },
@@ -45,11 +45,6 @@ const menuItems = [
     title: "Ca làm việc",
     url: "/dashboard/journey-sessions",
     icon: Calendar,
-  },
-  {
-    title: "Live",
-    url: "/dashboard/map",
-    icon: Radio,
   }
   //  {
   //   title: "Live Call",
@@ -65,7 +60,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
+
   const [helpOpen, setHelpOpen] = useState(false)
 
   const handleLogout = async () => {

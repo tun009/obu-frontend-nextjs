@@ -21,7 +21,7 @@ class DevicesAPI {
   // Get paginated list of devices (always set include_realtime=false)
   async getDevices(params: DeviceListParams = {}): Promise<PaginatedResponse<Device>> {
     const searchParams = new URLSearchParams();
-    
+
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.items_per_page) searchParams.append('items_per_page', params.items_per_page.toString());
     if (params.search) searchParams.append('search', params.search);
@@ -52,6 +52,15 @@ class DevicesAPI {
   // Delete device
   async deleteDevice(id: string): Promise<void> {
     return apiService.delete<void>(`${this.basePath}/${id}`);
+  }
+
+  // Assign/unassign vehicle
+  async assignDeviceToVehicle(deviceId: string, vehicleId: string | null): Promise<Device> {
+    return apiService.put<Device>(`${this.basePath}/${deviceId}/assign`, { vehicle_id: vehicleId });
+  }
+
+  async unassignDeviceFromVehicle(deviceId: string): Promise<Device> {
+    return apiService.put<Device>(`${this.basePath}/${deviceId}/unassign`);
   }
 
 

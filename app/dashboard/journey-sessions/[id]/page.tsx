@@ -636,7 +636,7 @@ export default function JourneyHistoryPage() {
           <ResizablePanel defaultSize={60} minSize={40}>
             <Card className="h-full border-0 rounded-none flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0 pt-0">
-                <CardTitle className="text-lg">Bản đồ hành trình</CardTitle>
+                <CardTitle className="text-lg">Bản đồ hành trình {historyData.imei}</CardTitle>
                 <CardDescription>
                   {currentPoint && (<>Vị trí hiện tại: {format(new Date(currentPoint.collected_at), "HH:mm:ss dd/MM/yyyy", { locale: vi })} - Tốc độ: {currentPoint.gps_speed} km/h</>)}
                 </CardDescription>

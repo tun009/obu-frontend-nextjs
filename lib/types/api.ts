@@ -54,11 +54,8 @@ export interface Device {
   serial_number?: string;
   firmware_version?: string;
   installed_at: string;
-
-  // Fields from former Vehicle model
-  device_name?: string; // Formerly vehicle plate_number
-  device_type?: string; // Formerly vehicle type
-  description?: string;
+  vehicle_id: string | null;
+  plate_number: string | null;
 }
 
 export interface CreateDeviceRequest {
@@ -122,6 +119,27 @@ export interface GPSInfo {
   ew: string;
   longitude_str: string;
   latitude_str: string;
+}
+
+// Vehicle
+export interface Vehicle {
+  id: string
+  plate_number: string
+  load_capacity_kg: number | null
+  type: string | null
+  created_at: string
+}
+
+export interface CreateVehicleRequest {
+  plate_number: string
+  load_capacity_kg?: number | null
+  type?: string | null
+}
+
+export interface UpdateVehicleRequest {
+  plate_number?: string
+  load_capacity_kg?: number | null
+  type?: string | null
 }
 
 export interface BatteryInfo {
@@ -227,6 +245,7 @@ export interface JourneySessionWithDetails extends JourneySession {
   driver_name: string;
   device_imei?: string;
   driver_phone_number?: string
+  plate_number?: string
 }
 
 export interface CreateJourneySessionRequest {

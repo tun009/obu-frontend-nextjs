@@ -71,7 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Tạm thời set user = {} để đánh dấu đã authenticated
         setUser({ id: 1, username: 'user', email: '', is_active: true, created_at: '', updated_at: '' });
         toast.success('Đăng nhập thành công');
-        router.push('/dashboard');
+        router.push('/dashboard/map');
       } else {
         const errorMessage = 'Đăng nhập thất bại';
         toast.error(errorMessage);

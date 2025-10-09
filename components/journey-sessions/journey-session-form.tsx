@@ -18,7 +18,7 @@ import type { Device, Driver, CreateJourneySessionRequest, JourneySessionWithDet
 
 const createFormSchema = (isEditing: boolean = false) => z.object({
   device_id: z.string().min(1, "Vui lòng chọn thiết bị"),
-  driver_id: z.string().min(1, "Vui lòng chọn tài xế"),
+  driver_id: z.string().min(1, "Vui lòng chọn người sử dụng"),
   start_time: z.date({
     required_error: "Vui lòng chọn thời gian bắt đầu",
   }).refine((date) => {
@@ -46,6 +46,16 @@ const createFormSchema = (isEditing: boolean = false) => z.object({
   notes: z.string().optional(),
 }).refine((data) => data.end_time > data.start_time, {
   message: "Thời gian kết thúc phải sau thời gian bắt đầu",
+  path: ["end_time"],
+}).refine((data) => {
+  if (data.start_time && data.end_time) {
+    const diffInMs = data.end_time.getTime() - data.start_time.getTime();
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    return diffInMs <= sevenDaysInMs;
+  }
+  return true; 
+}, {
+  message: "Khoảng thời gian ca làm việc không được vượt quá 7 ngày.",
   path: ["end_time"],
 })
 
@@ -87,7 +97,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
         setDevices(devicesResponse.data)
         setDrivers(driversResponse.data)
       } catch (error) {
-        toast.error('Không thể tải dữ liệu thiết bị và tài xế')
+        toast.error('Không thể tải dữ liệu thiết bị và người dùng')
         console.error('Error loading data:', error)
       } finally {
         setLoadingData(false)
@@ -142,20 +152,46 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
       <CardHeader>
         <CardTitle>{isEditing ? 'Cập nhật ca làm việc' : 'Tạo ca làm việc mới'}</CardTitle>
         <CardDescription>
-          {isEditing ? 'Cập nhật thông tin ca làm việc' : 'Tạo ca làm việc mới cho tài xế và xe'}
+          {isEditing ? 'Cập nhật thông tin ca làm việc' : 'Tạo ca làm việc mới cho người dùng'}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Driver Selection */}
+              <FormField
+                control={form.control}
+                name="driver_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Người sử dụng <span className="text-destructive">*</span></FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn người sử dụng" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {drivers.map((driver) => (
+                          <SelectItem key={driver.id} value={driver.id}>
+                            {driver.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {/* Device Selection */}
               <FormField
                 control={form.control}
                 name="device_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Thiết bị</FormLabel>
+                    <FormLabel>Thiết bị <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -165,33 +201,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                       <SelectContent>
                         {devices.map((device) => (
                           <SelectItem key={device.id} value={device.id}>
-                            {device.imei}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Driver Selection */}
-              <FormField
-                control={form.control}
-                name="driver_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tài xế</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn tài xế" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {drivers.map((driver) => (
-                          <SelectItem key={driver.id} value={driver.id}>
-                            {driver.full_name}
+                            {device.plate_number ? `${device.imei} (${device.plate_number})` : device.imei}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -209,7 +219,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="start_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Thời gian bắt đầu</FormLabel>
+                    <FormLabel>Thời gian bắt đầu <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DateTimePicker
                         value={field.value}
@@ -231,7 +241,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="end_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Thời gian kết thúc</FormLabel>
+                    <FormLabel>Thời gian kết thúc <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DateTimePicker
                         value={field.value}

@@ -12,14 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Car, Unlink, LinkIcon } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
-import Link from "next/link"
 import devicesAPI from "@/lib/services/devices-api"
-import type { Device, CreateDeviceRequest, UpdateDeviceRequest } from "@/lib/types/api"
+import vehiclesAPI from "@/lib/services/vehicles-api"
+import type { Device, CreateDeviceRequest, Vehicle } from "@/lib/types/api"
 
 export default function DevicesPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -29,6 +29,10 @@ export default function DevicesPage() {
   const [deleteDevice, setDeleteDevice] = useState<Device | null>(null)
   const [editDevice, setEditDevice] = useState<Device | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [assignDevice, setAssignDevice] = useState<Device | null>(null)
+  const [unassignDevice, setUnassignDevice] = useState<Device | null>(null)
+  const [unassignedVehicles, setUnassignedVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
 
   const [pagination, setPagination] = useState({
     current: 1,
@@ -156,9 +160,9 @@ export default function DevicesPage() {
     }
   }
 
-  
 
-  
+
+
 
   const openCreateDialog = () => {
     setFormData({
@@ -178,7 +182,51 @@ export default function DevicesPage() {
     setEditDevice(device)
   }
 
-  
+  const openAssignDialog = async (device: Device) => {
+    try {
+      setLoading(true);
+      const vehicles = await vehiclesAPI.getUnassignedVehicles();
+      setUnassignedVehicles(vehicles);
+      setAssignDevice(device);
+      setSelectedVehicleId(null);
+    } catch (error) {
+      toast.error('Không thể tải danh sách xe chưa được gán');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignDevice = async () => {
+    if (!assignDevice || !selectedVehicleId) return;
+    try {
+      setLoading(true);
+      await devicesAPI.assignDeviceToVehicle(assignDevice.id, selectedVehicleId);
+      toast.success('Gán thiết bị vào xe thành công');
+      setAssignDevice(null);
+      fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery);
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi gán thiết bị');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnassignConfirm = async () => {
+    if (!unassignDevice) return;
+    try {
+      setLoading(true);
+      await devicesAPI.unassignDeviceFromVehicle(unassignDevice.id);
+      toast.success('Hủy gán thiết bị thành công');
+      setUnassignDevice(null);
+      fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery);
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi hủy gán thiết bị');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   const formatDate = (dateString: string) => {
     try {
@@ -188,8 +236,7 @@ export default function DevicesPage() {
     }
   }
 
-  // Calculate stats
-  const totalDevices = pagination.total
+
 
   return (
     <div className="space-y-6">
@@ -228,6 +275,7 @@ export default function DevicesPage() {
                   <TableHead>Device No</TableHead>
                   <TableHead>Serial Number</TableHead>
                   <TableHead>Firmware</TableHead>
+                  <TableHead>Xe được gán</TableHead>
                   <TableHead>Ngày cài đặt</TableHead>
                   <TableHead className="text-center w-40">Thao tác</TableHead>
                 </TableRow>
@@ -257,10 +305,56 @@ export default function DevicesPage() {
                       <TableCell className="font-medium">{device.imei}</TableCell>
                       <TableCell>{device.serial_number || '-'}</TableCell>
                       <TableCell>{device.firmware_version || '-'}</TableCell>
+                      <TableCell>
+                        {device.plate_number ? (
+                          <Badge variant="default" className="bg-green-100 text-green-800">
+                            {device.plate_number}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Chưa gán</Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{formatDate(device.installed_at)}</TableCell>
                       <TableCell className="text-center">
                         <TooltipProvider>
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-1">
+                            {device.vehicle_id ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setUnassignDevice(device)}
+                                    disabled={loading}
+                                    className="text-yellow-600 border-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
+                                  >
+                                    <Unlink className="h-4 w-4" />
+                                    <span className="sr-only">Hủy gán xe</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Hủy gán xe</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => openAssignDialog(device)}
+                                    disabled={loading}
+                                    className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+                                  >
+                                    <LinkIcon className="h-4 w-4" />
+                                    <span className="sr-only">Gán xe</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Gán xe</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -352,7 +446,7 @@ export default function DevicesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="imei">Device No *</Label>
+              <Label htmlFor="imei">Device No <span className="text-destructive">*</span></Label>
               <Input
                 id="imei"
                 placeholder="OBU-001234"
@@ -447,7 +541,7 @@ export default function DevicesPage() {
         </DialogContent>
       </Dialog>
 
-      
+
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteDevice} onOpenChange={() => setDeleteDevice(null)}>
@@ -464,7 +558,7 @@ export default function DevicesPage() {
               <br />
               <strong>Firmware:</strong> {deleteDevice?.firmware_version || 'Không có'}
               <br />
-              
+
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -475,6 +569,72 @@ export default function DevicesPage() {
               disabled={loading}
             >
               Xóa thiết bị
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Assign Device Dialog */}
+      <Dialog open={!!assignDevice} onOpenChange={() => setAssignDevice(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gán thiết bị cho xe</DialogTitle>
+            <DialogDescription>
+              Chọn xe để gán cho thiết bị: <strong>{assignDevice?.imei}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="vehicle-select">Chọn xe</Label>
+              <Select onValueChange={setSelectedVehicleId} value={selectedVehicleId || undefined}>
+                <SelectTrigger id="vehicle-select">
+                  <SelectValue placeholder="Chọn từ danh sách xe chưa được gán..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {unassignedVehicles.length > 0 ? (
+                    unassignedVehicles.map(vehicle => (
+                      <SelectItem key={vehicle.id} value={vehicle.id}>
+                        {vehicle.plate_number}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-4 text-sm text-muted-foreground">Không có xe nào khả dụng</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDevice(null)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={handleAssignDevice}
+              disabled={loading || !selectedVehicleId}
+            >
+              Gán thiết bị
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unassign Confirmation Dialog */}
+      <AlertDialog open={!!unassignDevice} onOpenChange={() => setUnassignDevice(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy gán thiết bị</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy gán thiết bị <strong>{unassignDevice?.imei}</strong> khỏi xe <strong>{unassignDevice?.plate_number}</strong> không?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnassignConfirm}
+              className="bg-yellow-600 hover:bg-yellow-700"
+              disabled={loading}
+            >
+              Xác nhận
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
