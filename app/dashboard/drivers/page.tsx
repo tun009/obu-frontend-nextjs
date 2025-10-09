@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Plus, Search, Edit, Trash2, Phone, ChevronLeft, ChevronRight } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 import { format } from "date-fns"
@@ -19,6 +20,7 @@ import driversAPI from "@/lib/services/drivers-api"
 import type { Driver, CreateDriverRequest, UpdateDriverRequest } from "@/lib/types/api"
 
 export default function DriversPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
   const [drivers, setDrivers] = useState<Driver[]>([])
@@ -59,7 +61,7 @@ export default function DriversPage() {
         })
       }
     } catch (error) {
-      toast.error('Không thể tải danh sách người dùng')
+      toast.error(t('usersPage.toasts.load_error'))
     } finally {
       setLoading(false)
     }
@@ -77,15 +79,15 @@ export default function DriversPage() {
     try {
       setLoading(true)
       await driversAPI.createDriver(formData)
-      toast.success('Tạo người dùng thành công')
+      toast.success(t('usersPage.toasts.create_success'))
       setShowCreateDialog(false)
       setFormData({ full_name: "", phone_number: "" })
       fetchDrivers(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 400) {
-        toast.error('Dữ liệu không hợp lệ hoặc đã tồn tại')
+        toast.error(t('usersPage.toasts.create_error_duplicate'))
       } else {
-        toast.error('Có lỗi xảy ra khi tạo người dùng')
+        toast.error(t('usersPage.toasts.create_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -97,15 +99,15 @@ export default function DriversPage() {
     try {
       setLoading(true)
       await driversAPI.updateDriver(editDriver.id, formData)
-      toast.success('Cập nhật người dùng thành công')
+      toast.success(t('usersPage.toasts.update_success'))
       setEditDriver(null)
       setFormData({ full_name: "", phone_number: "" })
       fetchDrivers(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy người dùng')
+        toast.error(t('usersPage.toasts.update_error_notfound'))
       } else {
-        toast.error('Có lỗi xảy ra khi cập nhật người dùng')
+        toast.error(t('usersPage.toasts.update_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -117,14 +119,14 @@ export default function DriversPage() {
     try {
       setLoading(true)
       await driversAPI.deleteDriver(deleteDriver.id)
-      toast.success('Xóa người dùng thành công')
+      toast.success(t('usersPage.toasts.delete_success'))
       setDeleteDriver(null)
       fetchDrivers(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy người dùng')
+        toast.error(t('usersPage.toasts.delete_error_notfound'))
       } else {
-        toast.error('Có lỗi xảy ra khi xóa người dùng')
+        toast.error(t('usersPage.toasts.delete_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -155,15 +157,15 @@ export default function DriversPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Danh sách người dùng</CardTitle>
-              <CardDescription>Tổng cộng {pagination.total} người dùng trong hệ thống</CardDescription>
+              <CardTitle>{t('usersPage.title')}</CardTitle>
+              <CardDescription>{t('usersPage.description', { total: pagination.total })}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Tìm kiếm theo tên, SĐT..."
+                  placeholder={t('usersPage.searchPlaceholder')}
                   className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -171,7 +173,7 @@ export default function DriversPage() {
               </div>
               <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Thêm người dùng
+                {t('usersPage.addUserButton')}
               </Button>
             </div>
           </div>
@@ -182,11 +184,11 @@ export default function DriversPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">STT</TableHead>
-                  <TableHead>Họ tên</TableHead>
-                  <TableHead>Số điện thoại</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead className="text-center w-[200px]">Thao tác</TableHead>
+                  <TableHead className="w-[50px]">{t('usersPage.table.col_no')}</TableHead>
+                  <TableHead>{t('usersPage.table.col_fullName')}</TableHead>
+                  <TableHead>{t('usersPage.table.col_phoneNumber')}</TableHead>
+                  <TableHead>{t('usersPage.table.col_createdAt')}</TableHead>
+                  <TableHead className="text-center w-[200px]">{t('usersPage.table.col_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -195,14 +197,14 @@ export default function DriversPage() {
                     <TableCell colSpan={5} className="h-24 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                        <span className="ml-2">Đang tải...</span>
+                        <span className="ml-2">{t('common.loading')}</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : !drivers || drivers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                      Không có người dùng nào
+                      {t('usersPage.noUsers')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -232,11 +234,11 @@ export default function DriversPage() {
                                   className="text-blue-500 border-blue-500 hover:bg-blue-50 hover:text-blue-600"
                                 >
                                   <Edit className="h-4 w-4" />
-                                  <span className="sr-only">Sửa</span>
+                                  <span className="sr-only">{t('common.edit')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Sửa</p>
+                                <p>{t('common.edit')}</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
@@ -249,11 +251,11 @@ export default function DriversPage() {
                                   className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Xóa</span>
+                                  <span className="sr-only">{t('common.delete')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Xóa</p>
+                                <p>{t('common.delete')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -270,7 +272,11 @@ export default function DriversPage() {
           {pagination.total > 0 && (
             <div className="flex items-center justify-between space-x-2 py-4">
               <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.current - 1) * pagination.pageSize + 1} đến {Math.min(pagination.current * pagination.pageSize, pagination.total)} trong tổng số {pagination.total} kết quả
+                {t('usersPage.pagination', {
+                  from: (pagination.current - 1) * pagination.pageSize + 1,
+                  to: Math.min(pagination.current * pagination.pageSize, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -280,12 +286,12 @@ export default function DriversPage() {
                   disabled={pagination.current <= 1 || loading}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Trước
+                  {t('common.previous')}
                 </Button>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground">Trang</span>
+                  <span className="text-sm text-muted-foreground">{t('common.page')}</span>
                   <span className="text-sm font-medium">{pagination.current}</span>
-                  <span className="text-sm text-muted-foreground">trên {pagination.pages}</span>
+                  <span className="text-sm text-muted-foreground">{t('common.of')} {pagination.pages}</span>
                 </div>
                 <Button
                   variant="outline"
@@ -293,7 +299,7 @@ export default function DriversPage() {
                   onClick={() => handlePageChange(pagination.current + 1)}
                   disabled={!pagination.has_more}
                 >
-                  Sau
+                  {t('common.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -306,27 +312,27 @@ export default function DriversPage() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Thêm người dùng mới</DialogTitle>
+            <DialogTitle>{t('usersPage.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              Nhập thông tin người dùng mới vào hệ thống
+              {t('usersPage.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Họ và tên <span className="text-destructive">*</span></Label>
+              <Label htmlFor="full_name">{t('usersPage.createDialog.fullNameLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="full_name"
-                placeholder="Nguyễn Văn A"
+                placeholder={t('usersPage.createDialog.fullNamePlaceholder')}
                 value={formData.full_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone_number">Số điện thoại</Label>
+              <Label htmlFor="phone_number">{t('usersPage.createDialog.phoneLabel')}</Label>
               <Input
                 id="phone_number"
-                placeholder="0901234567"
+                placeholder={t('usersPage.createDialog.phonePlaceholder')}
                 value={formData.phone_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
               />
@@ -334,13 +340,13 @@ export default function DriversPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleCreateDriver}
               disabled={loading || !formData.full_name}
             >
-              Tạo người dùng
+              {t('usersPage.createDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -350,27 +356,27 @@ export default function DriversPage() {
       <Dialog open={!!editDriver} onOpenChange={() => setEditDriver(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cập nhật người dùng</DialogTitle>
+            <DialogTitle>{t('usersPage.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              Cập nhật thông tin người dùng: {editDriver?.full_name}
+              {t('usersPage.editDialog.description', { name: editDriver?.full_name })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_full_name">Họ và tên <span className="text-destructive">*</span></Label>
+              <Label htmlFor="edit_full_name">{t('usersPage.createDialog.fullNameLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="edit_full_name"
-                placeholder="Nguyễn Văn A"
+                placeholder={t('usersPage.createDialog.fullNamePlaceholder')}
                 value={formData.full_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_phone_number">Số điện thoại</Label>
+              <Label htmlFor="edit_phone_number">{t('usersPage.createDialog.phoneLabel')}</Label>
               <Input
                 id="edit_phone_number"
-                placeholder="0901234567"
+                placeholder={t('usersPage.createDialog.phonePlaceholder')}
                 value={formData.phone_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
               />
@@ -378,13 +384,13 @@ export default function DriversPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDriver(null)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateDriver}
               disabled={loading || !formData.full_name}
             >
-              Cập nhật
+              {t('usersPage.editDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -394,25 +400,25 @@ export default function DriversPage() {
       <AlertDialog open={!!deleteDriver} onOpenChange={() => setDeleteDriver(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa người dùng</AlertDialogTitle>
+            <AlertDialogTitle>{t('usersPage.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác.
+              {t('usersPage.deleteDialog.description')}
               <br />
               <br />
-              <strong>Họ tên:</strong> {deleteDriver?.full_name}
+              <strong>{t('usersPage.deleteDialog.infoName')}</strong> {deleteDriver?.full_name}
               <br />
-              <strong>Số điện thoại:</strong> {deleteDriver?.phone_number || 'Không có'}
+              <strong>{t('usersPage.deleteDialog.infoPhone')}</strong> {deleteDriver?.phone_number || t('common.none')}
               <br />
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700"
               disabled={loading}
             >
-              Xóa người dùng
+              {t('usersPage.deleteDialog.submitButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

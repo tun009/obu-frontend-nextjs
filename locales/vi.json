@@ -1,0 +1,369 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "cancel": "Hủy",
+    "page": "Trang",
+    "of": "trên",
+    "previous": "Trước",
+    "next": "Sau",
+    "none": "Không có",
+    "pagination": "Hiển thị {{from}} đến {{to}} trong tổng số {{total}} kết quả"
+  },
+  "header": {
+    "account": "Tài khoản của tôi",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "sidebar": {
+    "title": "Quản lý Tuần tra",
+    "subtitle": "Hệ thống giám sát OBU",
+    "live": "TT Điều hành",
+    "vehicles": "Quản lý xe tuần tra",
+    "users": "Quản lý người dùng",
+    "devices": "Quản lý thiết bị",
+    "shifts": "Ca làm việc",
+    "help": "Trợ giúp",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "commandCenter": {
+    "loadingMessage": "Đang tải thiết bị và dữ liệu GPS...",
+    "deviceListTitle": "Danh sách các thiết bị trong ca làm việc",
+    "youAreSpeaking": "Bạn đang nói...",
+    "userIsSpeaking": "{{name}} đang nói...",
+    "pressToTalk": "Nhấn để nói vào nhóm hiện tại",
+    "startTalk": "Nói",
+    "stopTalk": "Dừng",
+    "noDevicesInShift": "Không có thiết bị nào đang trong ca làm việc",
+    "viewingDevice": "Đang xem: {{name}} (SĐT: {{phone}})",
+    "clickToViewLocation": "Click vào thiết bị để xem vị trí hiện tại",
+    "callInProgress": "Đang có cuộc gọi khác",
+    "startPrivateCall": "Bắt đầu gọi riêng",
+    "deviceOffline": "Thiết bị offline",
+    "noGPS": "Không có GPS"
+  },
+  "vehiclesPage": {
+    "title": "Danh sách xe tuần tra",
+    "description": "Tổng cộng {{total}} xe trong hệ thống",
+    "searchPlaceholder": "Tìm kiếm theo biển số xe...",
+    "addVehicleButton": "Thêm xe",
+    "table": {
+      "col_no": "STT",
+      "col_plateNumber": "Biển số xe",
+      "col_type": "Loại xe",
+      "col_capacity": "Tải trọng (kg)",
+      "col_createdAt": "Ngày tạo",
+      "col_actions": "Thao tác"
+    },
+    "noVehicles": "Không có xe nào",
+    "createDialog": {
+      "title": "Thêm xe mới",
+      "description": "Nhập thông tin xe mới vào hệ thống",
+      "plateLabel": "Biển số xe",
+      "platePlaceholder": "29A-12345",
+      "typeLabel": "Loại xe",
+      "typePlaceholder": "Xe tải, bán tải...",
+      "capacityLabel": "Tải trọng (kg)",
+      "capacityPlaceholder": "1000",
+      "submitButton": "Tạo xe"
+    },
+    "editDialog": {
+      "title": "Cập nhật xe",
+      "description": "Cập nhật thông tin xe: {{plate}}",
+      "submitButton": "Cập nhật"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa xe",
+      "description": "Bạn có chắc chắn muốn xóa xe này không? Hành động này không thể hoàn tác.",
+      "infoPlate": "Biển số:",
+      "infoType": "Loại xe:",
+      "submitButton": "Xóa xe"
+    },
+    "toasts": {
+      "load_error": "Không thể tải danh sách xe",
+      "create_success": "Tạo xe thành công",
+      "create_error_duplicate": "Biển số xe đã tồn tại",
+      "create_error_generic": "Có lỗi xảy ra khi tạo xe",
+      "update_success": "Cập nhật xe thành công",
+      "update_error_notfound": "Không tìm thấy xe",
+      "update_error_duplicate": "Biển số xe đã tồn tại",
+      "update_error_generic": "Có lỗi xảy ra khi cập nhật xe",
+      "delete_success": "Xóa xe thành công",
+      "delete_error_notfound": "Không tìm thấy xe",
+      "delete_error_generic": "Có lỗi xảy ra khi xóa xe"
+    }
+  },
+  "devicesPage": {
+    "title": "Danh sách thiết bị",
+    "description": "Tổng cộng {{total}} thiết bị trong hệ thống",
+    "searchPlaceholder": "Tìm kiếm theo Device No...",
+    "addDeviceButton": "Thêm thiết bị",
+    "table": {
+      "col_no": "STT",
+      "col_deviceNo": "Device No",
+      "col_serial": "Serial Number",
+      "col_firmware": "Firmware",
+      "col_assignedVehicle": "Xe được gán",
+      "col_installedAt": "Ngày cài đặt",
+      "col_actions": "Thao tác"
+    },
+    "noDevices": "Không có thiết bị nào",
+    "unassigned": "Chưa gán",
+    "tooltips": {
+      "unassign": "Hủy gán xe",
+      "assign": "Gán xe",
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "createDialog": {
+      "title": "Thêm thiết bị mới",
+      "description": "Nhập thông tin thiết bị OBU mới vào hệ thống",
+      "deviceNoLabel": "Device No",
+      "deviceNoPlaceholder": "OBU-001234",
+      "serialLabel": "Serial Number",
+      "serialPlaceholder": "SN001234567",
+      "firmwareLabel": "Firmware Version",
+      "firmwarePlaceholder": "v1.0.0",
+      "submitButton": "Tạo thiết bị"
+    },
+    "editDialog": {
+      "title": "Cập nhật thiết bị",
+      "description": "Cập nhật thông tin thiết bị: {{imei}}",
+      "submitButton": "Cập nhật"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa thiết bị",
+      "description": "Bạn có chắc chắn muốn xóa thiết bị này không? Hành động này không thể hoàn tác.",
+      "infoDeviceNo": "Device No:",
+      "infoSerial": "Serial Number:",
+      "infoFirmware": "Firmware:",
+      "submitButton": "Xóa thiết bị"
+    },
+    "assignDialog": {
+      "title": "Gán thiết bị cho xe",
+      "description": "Chọn xe để gán cho thiết bị: {{imei}}",
+      "selectLabel": "Chọn xe",
+      "selectPlaceholder": "Chọn từ danh sách xe chưa được gán...",
+      "noVehicles": "Không có xe nào khả dụng",
+      "submitButton": "Gán thiết bị"
+    },
+    "unassignDialog": {
+      "title": "Xác nhận hủy gán thiết bị",
+      "description": "Bạn có chắc chắn muốn hủy gán thiết bị {{imei}} khỏi xe {{plate}} không?",
+      "submitButton": "Xác nhận"
+    },
+    "toasts": {
+      "load_error": "Không thể tải danh sách thiết bị",
+      "create_success": "Tạo thiết bị thành công",
+      "create_error_generic": "Có lỗi xảy ra khi tạo thiết bị",
+      "update_success": "Cập nhật thiết bị thành công",
+      "update_error_duplicate_imei": "Device No đã tồn tại",
+      "update_error_duplicate_serial": "Số serial đã tồn tại",
+      "update_error_duplicate_generic": "Dữ liệu đã tồn tại",
+      "update_error_notfound": "Không tìm thấy thiết bị",
+      "update_error_generic": "Có lỗi xảy ra khi cập nhật thiết bị",
+      "delete_success": "Xóa thiết bị thành công",
+      "delete_error_notfound": "Không tìm thấy thiết bị",
+      "delete_error_generic": "Có lỗi xảy ra khi xóa thiết bị",
+      "load_unassigned_vehicles_error": "Không thể tải danh sách xe chưa được gán",
+      "assign_success": "Gán thiết bị vào xe thành công",
+      "assign_error": "Có lỗi xảy ra khi gán thiết bị",
+      "unassign_success": "Hủy gán thiết bị thành công",
+      "unassign_error": "Có lỗi xảy ra khi hủy gán thiết bị"
+    }
+  },
+  "journeySessionsPage": {
+    "title": "Danh sách ca làm việc",
+    "description": "Tổng cộng {{total}} ca làm việc trong hệ thống",
+    "searchPlaceholder": "Tìm kiếm IMEI, người sử dụng...",
+    "createButton": "Tạo ca làm việc",
+    "noSessions": "Không có ca làm việc nào",
+    "table": {
+      "col_no": "STT",
+      "col_device": "Thiết bị",
+      "col_user": "Người sử dụng",
+      "col_time": "Thời gian",
+      "col_status": "Trạng thái",
+      "col_notes": "Ghi chú",
+      "col_actions": "Thao tác"
+    },
+    "status": {
+      "pending": "Chờ bắt đầu",
+      "active": "Đang hoạt động",
+      "completed": "Đã hoàn thành",
+      "all": "Tất cả"
+    },
+    "timeLabels": {
+      "plate": "Biển số xe:",
+      "phone": "SĐT:",
+      "start": "Bắt đầu:",
+      "end": "Kết thúc:",
+      "activated": "Kích hoạt:"
+    },
+    "tooltips": {
+      "start": "Bắt đầu",
+      "view": "Xem hành trình",
+      "end": "Kết thúc",
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "filters": {
+      "title": "Bộ lọc",
+      "tooltip": "Bộ lọc",
+      "statusLabel": "Trạng thái",
+      "statusPlaceholder": "Chọn trạng thái",
+      "startLabel": "Thời gian bắt đầu",
+      "startPlaceholder": "Chọn thời gian bắt đầu",
+      "endLabel": "Thời gian kết thúc",
+      "endPlaceholder": "Chọn thời gian kết thúc",
+      "clearButton": "Xóa bộ lọc",
+      "applyButton": "Áp dụng"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa",
+      "description": "Bạn có chắc chắn muốn xóa ca làm việc này không? Hành động này không thể hoàn tác.",
+      "infoDevice": "Thiết bị:",
+      "infoUser": "Người sử dụng:",
+      "infoTime": "Thời gian:",
+      "submitButton": "Xóa"
+    },
+    "createDialog": {
+      "title": "Tạo ca làm việc mới"
+    },
+    "editDialog": {
+      "title": "Cập nhật ca làm việc"
+    },
+    "toasts": {
+      "load_error": "Không thể tải danh sách ca làm việc",
+      "start_success": "Bắt đầu ca làm việc thành công",
+      "end_success": "Kết thúc ca làm việc thành công",
+      "delete_success": "Xóa ca làm việc thành công",
+      "generic_error": "Có lỗi xảy ra"
+    }
+  },
+  "loginPage": {
+    "title": "Quản lý Tuần tra",
+    "description": "Hệ thống giám sát và điều hành tuần tra",
+    "usernameLabel": "Tên đăng nhập",
+    "passwordLabel": "Mật khẩu",
+    "loginButton": "Đăng nhập",
+    "errorToast": "Vui lòng nhập đầy đủ thông tin",
+    "demoCredentials": "Demo: admin / admin"
+  },
+  "journeySessionForm": {
+    "validation": {
+      "deviceRequired": "Vui lòng chọn thiết bị",
+      "driverRequired": "Vui lòng chọn người sử dụng",
+      "startTimeRequired": "Vui lòng chọn thời gian bắt đầu",
+      "pastDateNotAllowed": "Không được chọn ngày trong quá khứ",
+      "endTimeRequired": "Vui lòng chọn thời gian kết thúc",
+      "endTimeAfterStart": "Thời gian kết thúc phải sau thời gian bắt đầu",
+      "durationExceeds7Days": "Khoảng thời gian ca làm việc không được vượt quá 7 ngày."
+    },
+    "toasts": {
+      "loadDataError": "Không thể tải dữ liệu thiết bị và người dùng",
+      "updateSuccess": "Cập nhật ca làm việc thành công",
+      "createSuccess": "Tạo ca làm việc thành công",
+      "genericError": "Có lỗi xảy ra"
+    },
+    "loadingData": "Đang tải dữ liệu...",
+    "editTitle": "Cập nhật ca làm việc",
+    "createTitle": "Tạo ca làm việc mới",
+    "editDescription": "Cập nhật thông tin ca làm việc",
+    "createDescription": "Tạo ca làm việc mới cho người dùng",
+    "driverLabel": "Người sử dụng",
+    "driverPlaceholder": "Chọn người sử dụng",
+    "deviceLabel": "Thiết bị",
+    "devicePlaceholder": "Chọn thiết bị",
+    "startTimeLabel": "Thời gian bắt đầu",
+    "startTimePlaceholder": "Chọn thời gian bắt đầu",
+    "endTimeLabel": "Thời gian kết thúc",
+    "endTimePlaceholder": "Chọn thời gian kết thúc",
+    "notesLabel": "Ghi chú",
+    "notesPlaceholder": "Nhập ghi chú cho ca làm việc...",
+    "updateButton": "Cập nhật",
+    "createButton": "Tạo ca làm việc",
+    "cancelButton": "Hủy"
+  },
+  "journeySessionDetailsPage": {
+    "loading": "Đang tải lịch sử hành trình...",
+    "notFound": "Không tìm thấy dữ liệu hành trình",
+    "backButton": "Quay lại",
+    "loadError": "Không thể tải dữ liệu hành trình hoặc video.",
+    "filterApplied": "Đã áp dụng bộ lọc thời gian",
+    "filterReset": "Đã xóa bộ lọc thời gian",
+    "noVideo": "Không có video cho thời điểm này",
+    "filter": {
+      "title": "Bộ lọc",
+      "fullJourney": "Toàn bộ hành trình",
+      "startTooltip": "Thời gian bắt đầu hành trình",
+      "endTooltip": "Thời gian kết thúc hành trình",
+      "duration": "Thời lượng",
+      "resetButton": "Reset",
+      "applyButton": "Áp dụng"
+    },
+    "player": {
+      "videoProgress": "Video {{current}} / {{total}}",
+      "speed": "Tốc độ"
+    },
+    "log": {
+      "title": "Nhật ký di chuyển",
+      "invalidGps": "GPS không hợp lệ"
+    },
+    "map": {
+      "title": "Bản đồ hành trình - {{imei}}",
+      "currentLocation": "Vị trí hiện tại: {{time}} - Tốc độ: {{speed}} km/h"
+    }
+  },
+  "usersPage": {
+    "title": "Danh sách Người dùng",
+    "description": "Tổng cộng {{total}} người dùng trong hệ thống",
+    "searchPlaceholder": "Tìm kiếm theo tên, SĐT...",
+    "addUserButton": "Thêm Người dùng",
+    "table": {
+      "col_no": "STT",
+      "col_fullName": "Họ tên",
+      "col_phoneNumber": "Số điện thoại",
+      "col_createdAt": "Ngày tạo",
+      "col_actions": "Thao tác"
+    },
+    "noUsers": "Không có người dùng nào",
+    "pagination": "Hiển thị {{from}} đến {{to}} trong tổng số {{total}} kết quả",
+    "createDialog": {
+      "title": "Thêm Người dùng mới",
+      "description": "Nhập thông tin người dùng mới vào hệ thống",
+      "fullNameLabel": "Họ và tên",
+      "fullNamePlaceholder": "Nguyễn Văn A",
+      "phoneLabel": "Số điện thoại",
+      "phonePlaceholder": "0901234567",
+      "submitButton": "Tạo Người dùng"
+    },
+    "editDialog": {
+      "title": "Cập nhật Người dùng",
+      "description": "Cập nhật thông tin người dùng: {{name}}",
+      "submitButton": "Cập nhật"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa Người dùng",
+      "description": "Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác.",
+      "infoName": "Họ tên:",
+      "infoPhone": "Số điện thoại:",
+      "submitButton": "Xóa Người dùng"
+    },
+    "toasts": {
+      "load_error": "Không thể tải danh sách người dùng",
+      "create_success": "Tạo người dùng thành công",
+      "create_error_duplicate": "Dữ liệu không hợp lệ hoặc đã tồn tại",
+      "create_error_generic": "Có lỗi xảy ra khi tạo người dùng",
+      "update_success": "Cập nhật người dùng thành công",
+      "update_error_notfound": "Không tìm thấy người dùng",
+      "update_error_generic": "Có lỗi xảy ra khi cập nhật người dùng",
+      "delete_success": "Xóa người dùng thành công",
+      "delete_error_notfound": "Không tìm thấy người dùng",
+      "delete_error_generic": "Có lỗi xảy ra khi xóa người dùng"
+    }
+  }
+}

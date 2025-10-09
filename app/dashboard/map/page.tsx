@@ -11,6 +11,7 @@ import { MapPin, RefreshCw, Mic, MicOff, Video, Phone, WifiOff } from "lucide-re
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { useMapData, MapDevice } from "@/hooks/use-map-data"
 import { usePocCall } from "@/hooks/use-poc-call"
+import { useTranslation } from "react-i18next"
 import { WebRTCVideoPlayer } from "@/components/webrtc-video-player"
 import { WebRTCProvider } from "@/contexts/webrtc-provider"
 import { PrivateCallOverlay } from "@/components/ui/private-call-overlay"
@@ -37,6 +38,7 @@ function DeviceGrid({
   isCallActive: boolean;
   talkingUser: { ms_code: string; };
 }) {
+  const { t } = useTranslation();
   const [playingDeviceIds, setPlayingDeviceIds] = useState(new Set<string | number>())
 
   return (
@@ -66,7 +68,7 @@ function DeviceGrid({
                   {device.hasGpsData ? (
                     <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">GPS</Badge>
                   ) : (
-                    <Badge variant="destructive" className="text-xs">No GPS</Badge>
+                    <Badge variant="destructive" className="text-xs">{t('commandCenter.noGPS')}</Badge>
                   )}
                 </div>
                 <Button
@@ -78,7 +80,7 @@ function DeviceGrid({
                     onInitiatePrivateCall(device);
                   }}
                   disabled={!device.online || isCallActive}
-                  title={isCallActive ? "Đang có cuộc gọi khác" : device.online ? "Bắt đầu gọi riêng" : "Thiết bị offline"}
+                  title={isCallActive ? t('commandCenter.callInProgress') : device.online ? t('commandCenter.startPrivateCall') : t('commandCenter.deviceOffline')}
                 >
                   <Phone className={`h-4 w-4 ${device.online ? 'text-blue-500' : 'text-gray-400'}`} />
                 </Button>
@@ -131,7 +133,7 @@ function DeviceGrid({
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
                         <div className="text-center text-gray-400">
                           <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <div className="text-xs">Device Offline
+                          <div className="text-xs">{t('commandCenter.deviceOffline')}
                           </div>
                         </div>
                       </div>
@@ -172,6 +174,7 @@ function DeviceGrid({
 }
 
 export default function MapPage() {
+  const { t } = useTranslation();
   const { devices, loading, selectedDevice, setSelectedDevice } = useMapData();
   const {
     members: callMembers,
@@ -319,7 +322,7 @@ export default function MapPage() {
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Đang tải thiết bị và dữ liệu GPS...</p>
+            <p className="text-muted-foreground">{t('commandCenter.loadingMessage')}</p>
           </div>
         </div>
       </div>
@@ -344,13 +347,13 @@ export default function MapPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Danh sách các thiết bị trong ca làm việc</CardTitle>
+                    <CardTitle className="text-lg">{t('commandCenter.deviceListTitle')}</CardTitle>
                     {filteredDevices.length > 0 && <CardDescription className="text-xs mt-1 h-4">
                       {talkingUser.ms_code && !isInTempGroup
                         ? <Badge variant="destructive" className="animate-pulse">
-                          {(!profile || talkingUser.ms_code === profile.ms_code) ? "Bạn đang nói..." : `${talkingUser.ms_name} đang nói...`}
+                          {(!profile || talkingUser.ms_code === profile.ms_code) ? t('commandCenter.youAreSpeaking') : t('commandCenter.userIsSpeaking', { name: talkingUser.ms_name })}
                         </Badge>
-                        : <span>Nhấn để nói vào nhóm hiện tại</span>
+                        : <span>{t('commandCenter.pressToTalk')}</span>
                       }
                     </CardDescription>
                     }
@@ -362,20 +365,20 @@ export default function MapPage() {
                       onClick={handleStartTalk}
                       disabled={!isCallReady || !!talkingUser.ms_code || !isOnline || isInTempGroup}
                       className="bg-green-500 hover:bg-green-600"
-                      title="Bắt đầu nói"
+                      title={t('commandCenter.startTalk')}
                     >
                       <Mic className="h-4 w-4 mr-2" />
-                      Nói
+                      {t('commandCenter.startTalk')}
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={handleStopTalk}
                       disabled={!isCallReady || !profile || talkingUser.ms_code !== profile.ms_code || !isOnline || isInTempGroup}
-                      title="Dừng nói"
+                      title={t('commandCenter.stopTalk')}
                     >
                       <MicOff className="h-4 w-4 mr-2" />
-                      Dừng
+                      {t('commandCenter.stopTalk')}
                     </Button>
                   </div>
                   }
@@ -386,7 +389,7 @@ export default function MapPage() {
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center text-muted-foreground">
                       <WifiOff className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Không có thiết bị nào đang trong ca làm việc</p>
+                      <p>{t('commandCenter.noDevicesInShift')}</p>
                     </div>
                   </div>
                 ) : (
@@ -412,8 +415,8 @@ export default function MapPage() {
                 {/* <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle> */}
                 <CardTitle className="text-lg">
                   {selectedCombinedDevice
-                    ? `Đang xem: ${selectedCombinedDevice.driver_name} (Phone: ${selectedCombinedDevice?.driver_phone_number})`
-                    : "Click vào thiết bị để xem vị trí hiện tại"}
+                    ? t('commandCenter.viewingDevice', { name: selectedCombinedDevice.driver_name, phone: selectedCombinedDevice?.driver_phone_number })
+                    : t('commandCenter.clickToViewLocation')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-[calc(100%-80px)]">

@@ -22,6 +22,7 @@ import Link from "next/link"
 import JourneyMap from "@/components/map/journey-map";
 import { convertGpsCoordinates } from "@/lib/utils"
 import { getMediaUrl } from "@/lib/proxy-service"
+import { useTranslation } from "react-i18next"
 
 // Define the type for a playlist item from our new API
 interface PlaylistItem {
@@ -66,6 +67,7 @@ const PLAYBACK_SPEED_OPTIONS = [
 
 
 export default function JourneyHistoryPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const journeyId = parseInt(params.id as string)
   // Data states
@@ -111,7 +113,7 @@ export default function JourneyHistoryPage() {
       setPlaylist(playlistResponse);
 
     } catch (error: any) {
-      toast.error('Không thể tải dữ liệu hành trình hoặc video.');
+      toast.error(t('journeySessionDetailsPage.loadError'));
       console.error('Error fetching data:', error);
     } finally {
       if (!isFiltering) {
@@ -141,7 +143,7 @@ export default function JourneyHistoryPage() {
     setGlobalTime(0); // Reset playback position
 
     await fetchData(startTimeISO, endTimeISO, true);
-    toast.success('Đã áp dụng bộ lọc thời gian');
+    toast.success(t('journeySessionDetailsPage.filterApplied'));
   };
 
   const handleResetFilter = async () => {
@@ -150,7 +152,7 @@ export default function JourneyHistoryPage() {
     setGlobalTime(0); // Reset playback position
 
     await fetchData(undefined, undefined, true);
-    toast.success('Đã xóa bộ lọc thời gian');
+    toast.success(t('journeySessionDetailsPage.filterReset'));
   };
 
 
@@ -363,7 +365,7 @@ export default function JourneyHistoryPage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Đang tải lịch sử hành trình...</p>
+          <p className="text-muted-foreground">{t('journeySessionDetailsPage.loading')}</p>
         </div>
       </div>
     )
@@ -373,8 +375,8 @@ export default function JourneyHistoryPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <p className="text-muted-foreground">Không tìm thấy dữ liệu hành trình</p>
-          <Link href="/dashboard/journey-sessions"><Button variant="outline" className="mt-4"><ArrowLeft className="mr-2 h-4 w-4" />Quay lại</Button></Link>
+          <p className="text-muted-foreground">{t('journeySessionDetailsPage.notFound')}</p>
+          <Link href="/dashboard/journey-sessions"><Button variant="outline" className="mt-4"><ArrowLeft className="mr-2 h-4 w-4" />{t('journeySessionDetailsPage.backButton')}</Button></Link>
         </div>
       </div>
     )
@@ -399,7 +401,7 @@ export default function JourneyHistoryPage() {
                 />
                 {!activeVideo && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white">
-                    <p className="text-muted-foreground">Không có video cho thời điểm này</p>
+                    <p className="text-muted-foreground">{t('journeySessionDetailsPage.noVideo')}</p>
                   </div>
                 )}
                 <div className="absolute top-4 right-4">
@@ -415,7 +417,7 @@ export default function JourneyHistoryPage() {
                   <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${isFilterActive ? 'bg-green-500' : 'bg-blue-500'}`}></div>
-                      <span className="text-sm font-medium">Bộ lọc</span>
+                      <span className="text-sm font-medium">{t('journeySessionDetailsPage.filter.title')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-slate-300">
@@ -423,7 +425,7 @@ export default function JourneyHistoryPage() {
                           ? `${formatTimestampFromSeconds(timeRange[0])} → ${formatTimestampFromSeconds(timeRange[1])}`
                           : (isFilterActive && appliedTimeRange)
                             ? `${formatTimestampFromSeconds(appliedTimeRange[0])} → ${formatTimestampFromSeconds(appliedTimeRange[1])}`
-                            : "Toàn bộ hành trình"
+                            : t('journeySessionDetailsPage.filter.fullJourney')
                         }
                       </span>
                       <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -435,9 +437,7 @@ export default function JourneyHistoryPage() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <div className="relative h-8 w-full flex items-center">
-                          {/* Track background */}
                           <div className="absolute h-2 w-full bg-slate-600 rounded-full" />
-                          {/* Range highlight */}
                           <div
                             className="absolute h-2 bg-blue-500 rounded-full"
                             style={{
@@ -445,21 +445,18 @@ export default function JourneyHistoryPage() {
                               width: `${((timeRange[1] - timeRange[0]) / totalDuration) * 100}%`,
                             }}
                           />
-                          {/* Start marker */}
                           <div
                             className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
                             style={{ left: `calc(${(timeRange[0] / totalDuration) * 100}% - 12px)` }}
                           >
                             <ChevronLeft className="w-4 h-4 text-white" />
                           </div>
-                          {/* End marker */}
                           <div
                             className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
                             style={{ left: `calc(${(timeRange[1] / totalDuration) * 100}% - 12px)` }}
                           >
                             <ChevronRight className="w-4 h-4 text-white" />
                           </div>
-                          {/* Invisible range inputs */}
                           <input
                             type="range"
                             min={0}
@@ -498,7 +495,7 @@ export default function JourneyHistoryPage() {
                                 <span className="cursor-help">{formatTimestampFromSeconds(0)}</span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Thời gian bắt đầu hành trình</p>
+                                <p>{t('journeySessionDetailsPage.filter.startTooltip')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -508,7 +505,7 @@ export default function JourneyHistoryPage() {
                                 <span className="cursor-help">{formatTimestampFromSeconds(totalDuration)}</span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Thời gian kết thúc hành trình</p>
+                                <p>{t('journeySessionDetailsPage.filter.endTooltip')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -518,14 +515,14 @@ export default function JourneyHistoryPage() {
                       {/* Stats and buttons */}
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-slate-400">
-                          Duration: {new Date((timeRange[1] - timeRange[0]) * 1000).toISOString().slice(11, 19)}
+                          {t('journeySessionDetailsPage.filter.duration')}: {new Date((timeRange[1] - timeRange[0]) * 1000).toISOString().slice(11, 19)}
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" onClick={handleResetFilter} className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
-                            Reset
+                            {t('journeySessionDetailsPage.filter.resetButton')}
                           </Button>
                           <Button size="sm" onClick={handleApplyFilter} className="bg-blue-600 hover:bg-blue-700">
-                            Apply
+                            {t('journeySessionDetailsPage.filter.applyButton')}
                           </Button>
                         </div>
                       </div>
@@ -538,10 +535,10 @@ export default function JourneyHistoryPage() {
               <div className="p-4 border-b flex-shrink-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-muted-foreground">
-                    Video {activeVideo ? playlist.findIndex(v => v.id === activeVideo.id) + 1 : '-'} / {playlist.length}
+                    {t('journeySessionDetailsPage.player.videoProgress', { current: activeVideo ? playlist.findIndex(v => v.id === activeVideo.id) + 1 : '-', total: playlist.length })}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Tốc độ:</span>
+                    <span className="text-sm text-gray-600">{t('journeySessionDetailsPage.player.speed')}:</span>
                     <Select value={playbackSpeed.toString()} onValueChange={(value) => setPlaybackSpeed(Number(value))}>
                       <SelectTrigger className="w-20 h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -579,7 +576,7 @@ export default function JourneyHistoryPage() {
               {/* Journey Log */}
               <div className="flex-1 overflow-hidden">
                 <Card className="h-full border-0 rounded-none flex flex-col">
-                  <CardHeader className="py-3 flex-shrink-0"><CardTitle className="text-base">Nhật ký di chuyển</CardTitle></CardHeader>
+                  <CardHeader className="py-3 flex-shrink-0"><CardTitle className="text-base">{t('journeySessionDetailsPage.log.title')}</CardTitle></CardHeader>
                   <CardContent ref={parentRef} className="flex-1 overflow-y-auto p-4 pt-0">
                     <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
@@ -609,7 +606,7 @@ export default function JourneyHistoryPage() {
                                     <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />
                                       {(() => {
                                         const coords = convertGpsCoordinates(point)
-                                        return coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : 'Invalid GPS'
+                                        return coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : t('journeySessionDetailsPage.log.invalidGps')
                                       })()}
                                     </div>
                                   </div>
@@ -636,9 +633,9 @@ export default function JourneyHistoryPage() {
           <ResizablePanel defaultSize={60} minSize={40}>
             <Card className="h-full border-0 rounded-none flex flex-col">
               <CardHeader className="pb-3 flex-shrink-0 pt-0">
-                <CardTitle className="text-lg">Bản đồ hành trình {historyData.imei}</CardTitle>
+                <CardTitle className="text-lg">{t('journeySessionDetailsPage.map.title', { imei: historyData.imei })}</CardTitle>
                 <CardDescription>
-                  {currentPoint && (<>Vị trí hiện tại: {format(new Date(currentPoint.collected_at), "HH:mm:ss dd/MM/yyyy", { locale: vi })} - Tốc độ: {currentPoint.gps_speed} km/h</>)}
+                  {currentPoint && t('journeySessionDetailsPage.map.currentLocation', { time: format(new Date(currentPoint.collected_at), "HH:mm:ss dd/MM/yyyy", { locale: vi }), speed: currentPoint.gps_speed })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden p-4">

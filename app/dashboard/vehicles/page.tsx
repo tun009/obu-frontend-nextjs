@@ -9,15 +9,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Weight, Car } from "lucide-react"
+import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import vehiclesAPI from "@/lib/services/vehicles-api"
-import type { Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from "@/lib/types/api"
+import type { Vehicle, CreateVehicleRequest } from "@/lib/types/api"
+import { useTranslation } from "react-i18next"
 
 export default function VehiclesPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -59,7 +61,7 @@ export default function VehiclesPage() {
         })
       }
     } catch (error) {
-      toast.error('Không thể tải danh sách xe')
+      toast.error(t('vehiclesPage.toasts.load_error'))
     } finally {
       setLoading(false)
     }
@@ -78,15 +80,15 @@ export default function VehiclesPage() {
     try {
       setLoading(true)
       await vehiclesAPI.createVehicle(formData)
-      toast.success('Tạo xe thành công')
+      toast.success(t('vehiclesPage.toasts.create_success'))
       setShowCreateDialog(false)
       setFormData({ plate_number: "", type: "", load_capacity_kg: undefined })
       fetchVehicles(1, pagination.pageSize, "") // Refetch from page 1 without search
     } catch (error: any) {
       if (error?.response?.status === 400) {
-        toast.error('Biển số xe đã tồn tại')
+        toast.error(t('vehiclesPage.toasts.create_error_duplicate'))
       } else {
-        toast.error('Có lỗi xảy ra khi tạo xe')
+        toast.error(t('vehiclesPage.toasts.create_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -98,17 +100,17 @@ export default function VehiclesPage() {
     try {
       setLoading(true)
       await vehiclesAPI.updateVehicle(editVehicle.id, formData)
-      toast.success('Cập nhật xe thành công')
+      toast.success(t('vehiclesPage.toasts.update_success'))
       setEditVehicle(null)
       setFormData({ plate_number: "", type: "", load_capacity_kg: undefined })
       fetchVehicles(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy xe')
+        toast.error(t('vehiclesPage.toasts.update_error_notfound'))
       } else if (error?.response?.status === 400) {
-        toast.error('Biển số xe đã tồn tại')
+        toast.error(t('vehiclesPage.toasts.update_error_duplicate'))
       } else {
-        toast.error('Có lỗi xảy ra khi cập nhật xe')
+        toast.error(t('vehiclesPage.toasts.update_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -120,14 +122,14 @@ export default function VehiclesPage() {
     try {
       setLoading(true)
       await vehiclesAPI.deleteVehicle(deleteVehicle.id)
-      toast.success('Xóa xe thành công')
+      toast.success(t('vehiclesPage.toasts.delete_success'))
       setDeleteVehicle(null)
       fetchVehicles(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy xe')
+        toast.error(t('vehiclesPage.toasts.delete_error_notfound'))
       } else {
-        toast.error('Có lỗi xảy ra khi xóa xe')
+        toast.error(t('vehiclesPage.toasts.delete_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -162,15 +164,15 @@ export default function VehiclesPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Danh sách xe tuần tra</CardTitle>
-              <CardDescription>Tổng cộng {pagination.total} xe trong hệ thống</CardDescription>
+              <CardTitle>{t('vehiclesPage.title')}</CardTitle>
+              <CardDescription>{t('vehiclesPage.description', { total: pagination.total })}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Tìm kiếm theo biển số xe..."
+                  placeholder={t('vehiclesPage.searchPlaceholder')}
                   className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -178,7 +180,7 @@ export default function VehiclesPage() {
               </div>
               <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Thêm xe
+                {t('vehiclesPage.addVehicleButton')}
               </Button>
             </div>
           </div>
@@ -188,12 +190,12 @@ export default function VehiclesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">STT</TableHead>
-                  <TableHead>Biển số xe</TableHead>
-                  <TableHead>Loại xe</TableHead>
-                  <TableHead>Tải trọng (kg)</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead className="text-center w-[120px]">Thao tác</TableHead>
+                  <TableHead className="w-[50px]">{t('vehiclesPage.table.col_no')}</TableHead>
+                  <TableHead>{t('vehiclesPage.table.col_plateNumber')}</TableHead>
+                  <TableHead>{t('vehiclesPage.table.col_type')}</TableHead>
+                  <TableHead>{t('vehiclesPage.table.col_capacity')}</TableHead>
+                  <TableHead>{t('vehiclesPage.table.col_createdAt')}</TableHead>
+                  <TableHead className="text-center w-[120px]">{t('vehiclesPage.table.col_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,14 +204,14 @@ export default function VehiclesPage() {
                     <TableCell colSpan={6} className="h-24 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                        <span className="ml-2">Đang tải...</span>
+                        <span className="ml-2">{t('common.loading')}</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : !vehicles || vehicles.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      Không có xe nào
+                      {t('vehiclesPage.noVehicles')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -235,11 +237,11 @@ export default function VehiclesPage() {
                                   className="text-blue-500 border-blue-500 hover:bg-blue-50 hover:text-blue-600"
                                 >
                                   <Edit className="h-4 w-4" />
-                                  <span className="sr-only">Sửa</span>
+                                  <span className="sr-only">{t('common.edit')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Sửa</p>
+                                <p>{t('common.edit')}</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
@@ -252,11 +254,11 @@ export default function VehiclesPage() {
                                   className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Xóa</span>
+                                  <span className="sr-only">{t('common.delete')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Xóa</p>
+                                <p>{t('common.delete')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -273,7 +275,11 @@ export default function VehiclesPage() {
           {pagination.total > 0 && (
             <div className="flex items-center justify-between space-x-2 py-4">
               <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.current - 1) * pagination.pageSize + 1} đến {Math.min(pagination.current * pagination.pageSize, pagination.total)} trong tổng số {pagination.total} kết quả
+                {t('common.pagination', {
+                  from: (pagination.current - 1) * pagination.pageSize + 1,
+                  to: Math.min(pagination.current * pagination.pageSize, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -283,12 +289,12 @@ export default function VehiclesPage() {
                   disabled={pagination.current <= 1 || loading}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Trước
+                  {t('common.previous')}
                 </Button>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground">Trang</span>
+                  <span className="text-sm text-muted-foreground">{t('common.page')}</span>
                   <span className="text-sm font-medium">{pagination.current}</span>
-                  <span className="text-sm text-muted-foreground">trên {pagination.pages}</span>
+                  <span className="text-sm text-muted-foreground">{t('common.of')} {pagination.pages}</span>
                 </div>
                 <Button
                   variant="outline"
@@ -296,7 +302,7 @@ export default function VehiclesPage() {
                   onClick={() => handlePageChange(pagination.current + 1)}
                   disabled={!pagination.has_more}
                 >
-                  Sau
+                  {t('common.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -309,37 +315,37 @@ export default function VehiclesPage() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Thêm xe mới</DialogTitle>
+            <DialogTitle>{t('vehiclesPage.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              Nhập thông tin xe mới vào hệ thống
+              {t('vehiclesPage.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="plate_number">Biển số xe <span className="text-destructive">*</span></Label>
+              <Label htmlFor="plate_number">{t('vehiclesPage.createDialog.plateLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="plate_number"
-                placeholder="29A-12345"
+                placeholder={t('vehiclesPage.createDialog.platePlaceholder')}
                 value={formData.plate_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, plate_number: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Loại xe</Label>
+              <Label htmlFor="type">{t('vehiclesPage.createDialog.typeLabel')}</Label>
               <Input
                 id="type"
-                placeholder="Xe tải, bán tải..."
+                placeholder={t('vehiclesPage.createDialog.typePlaceholder')}
                 value={formData.type || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="load_capacity_kg">Tải trọng (kg)</Label>
+              <Label htmlFor="load_capacity_kg">{t('vehiclesPage.createDialog.capacityLabel')}</Label>
               <Input
                 id="load_capacity_kg"
                 type="number"
-                placeholder="1000"
+                placeholder={t('vehiclesPage.createDialog.capacityPlaceholder')}
                 value={formData.load_capacity_kg || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, load_capacity_kg: e.target.value ? parseInt(e.target.value) : undefined }))}
               />
@@ -347,13 +353,13 @@ export default function VehiclesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleCreateVehicle}
               disabled={loading || !formData.plate_number}
             >
-              Tạo xe
+              {t('vehiclesPage.createDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -363,37 +369,37 @@ export default function VehiclesPage() {
       <Dialog open={!!editVehicle} onOpenChange={() => setEditVehicle(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cập nhật xe</DialogTitle>
+            <DialogTitle>{t('vehiclesPage.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              Cập nhật thông tin xe: {editVehicle?.plate_number}
+              {t('vehiclesPage.editDialog.description', { plate: editVehicle?.plate_number })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_plate_number">Biển số xe <span className="text-destructive">*</span></Label>
+              <Label htmlFor="edit_plate_number">{t('vehiclesPage.createDialog.plateLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="edit_plate_number"
-                placeholder="29A-12345"
+                placeholder={t('vehiclesPage.createDialog.platePlaceholder')}
                 value={formData.plate_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, plate_number: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_type">Loại xe</Label>
+              <Label htmlFor="edit_type">{t('vehiclesPage.createDialog.typeLabel')}</Label>
               <Input
                 id="edit_type"
-                placeholder="Xe tải, bán tải..."
+                placeholder={t('vehiclesPage.createDialog.typePlaceholder')}
                 value={formData.type || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_load_capacity_kg">Tải trọng (kg)</Label>
+              <Label htmlFor="edit_load_capacity_kg">{t('vehiclesPage.createDialog.capacityLabel')}</Label>
               <Input
                 id="edit_load_capacity_kg"
                 type="number"
-                placeholder="1000"
+                placeholder={t('vehiclesPage.createDialog.capacityPlaceholder')}
                 value={formData.load_capacity_kg || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, load_capacity_kg: e.target.value ? parseInt(e.target.value) : undefined }))}
               />
@@ -401,13 +407,13 @@ export default function VehiclesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditVehicle(null)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateVehicle}
               disabled={loading || !formData.plate_number}
             >
-              Cập nhật
+              {t('vehiclesPage.editDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -417,24 +423,24 @@ export default function VehiclesPage() {
       <AlertDialog open={!!deleteVehicle} onOpenChange={() => setDeleteVehicle(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa xe</AlertDialogTitle>
+            <AlertDialogTitle>{t('vehiclesPage.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa xe này không? Hành động này không thể hoàn tác.
+              {t('vehiclesPage.deleteDialog.description')}
               <br />
               <br />
-              <strong>Biển số:</strong> {deleteVehicle?.plate_number}
+              <strong>{t('vehiclesPage.deleteDialog.infoPlate')}</strong> {deleteVehicle?.plate_number}
               <br />
-              <strong>Loại xe:</strong> {deleteVehicle?.type || 'Không có'}
+              <strong>{t('vehiclesPage.deleteDialog.infoType')}</strong> {deleteVehicle?.type || t('common.none')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700"
               disabled={loading}
             >
-              Xóa xe
+              {t('vehiclesPage.deleteDialog.submitButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

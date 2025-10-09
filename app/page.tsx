@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,19 +11,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Truck, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useAuthContext } from "@/components/providers/auth-provider"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const router = useRouter()
+
   const { login, isLoading } = useAuthContext()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!username || !password) {
-      toast.error("Vui lòng nhập đầy đủ thông tin")
+      toast.error(t('loginPage.errorToast'))
       return
     }
 
@@ -45,13 +47,13 @@ export default function LoginPage() {
               <Truck className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Fleet Management</CardTitle>
-          <CardDescription>Hệ thống quản lý và theo dõi xe thông qua thiết bị OBU</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t('loginPage.title')}</CardTitle>
+          <CardDescription>{t('loginPage.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Tên đăng nhập</Label>
+              <Label htmlFor="username">{t('loginPage.usernameLabel')}</Label>
               <Input
                 id="username"
                 type="text"
@@ -63,7 +65,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
+              <Label htmlFor="password">{t('loginPage.passwordLabel')}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -88,10 +90,10 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Đăng nhập
+              {t('loginPage.loginButton')}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">Demo: admin / admin</div>
+          <div className="mt-4 text-center text-sm text-muted-foreground">{t('loginPage.demoCredentials')}</div>
         </CardContent>
       </Card>
     </div>

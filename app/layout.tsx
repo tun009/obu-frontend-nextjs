@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { LanguageProvider } from '@/components/providers/language-provider'
 
 import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
-  title: 'OBU Fleet Management',
-  description: 'Hệ thống quản lý và theo dõi xe thông qua thiết bị OBU',
+  title: 'Patrol Management',
+  description: 'Hệ thống giám sát và điều hành tuần tra',
   generator: 'v0.dev',
   icons: {
     icon: '/images/icon-web.png',
@@ -21,10 +22,12 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

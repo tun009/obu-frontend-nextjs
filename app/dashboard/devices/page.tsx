@@ -20,8 +20,10 @@ import { vi } from "date-fns/locale"
 import devicesAPI from "@/lib/services/devices-api"
 import vehiclesAPI from "@/lib/services/vehicles-api"
 import type { Device, CreateDeviceRequest, Vehicle } from "@/lib/types/api"
+import { useTranslation } from "react-i18next"
 
 export default function DevicesPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
   const [devices, setDevices] = useState<Device[]>([])
@@ -68,7 +70,7 @@ export default function DevicesPage() {
         })
       }
     } catch (error) {
-      toast.error('Không thể tải danh sách thiết bị')
+      toast.error(t('devicesPage.toasts.load_error'))
     } finally {
       setLoading(false)
     }
@@ -87,7 +89,7 @@ export default function DevicesPage() {
     try {
       setLoading(true)
       await devicesAPI.createDevice(formData)
-      toast.success('Tạo thiết bị thành công')
+      toast.success(t('devicesPage.toasts.create_success'))
       setShowCreateDialog(false)
       setFormData({
         imei: "",
@@ -97,9 +99,9 @@ export default function DevicesPage() {
       fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.status === 400) {
-        toast.error(error.details?.detail ?? 'Có lỗi xảy ra khi tạo thiết bị')
+        toast.error(error.details?.detail ?? t('devicesPage.toasts.create_error_generic'))
       } else {
-        toast.error('Có lỗi xảy ra khi tạo thiết bị')
+        toast.error(t('devicesPage.toasts.create_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -112,7 +114,7 @@ export default function DevicesPage() {
     try {
       setLoading(true)
       await devicesAPI.updateDevice(editDevice.id, formData)
-      toast.success('Cập nhật thiết bị thành công')
+      toast.success(t('devicesPage.toasts.update_success'))
       setEditDevice(null)
       setFormData({
         imei: "",
@@ -124,16 +126,16 @@ export default function DevicesPage() {
       if (error?.response?.status === 400) {
         const detail = error?.response?.data?.detail
         if (detail?.includes('Device No')) {
-          toast.error('Device No đã tồn tại')
+          toast.error(t('devicesPage.toasts.update_error_duplicate_imei'))
         } else if (detail?.includes('Serial number')) {
-          toast.error('Số serial đã tồn tại')
+          toast.error(t('devicesPage.toasts.update_error_duplicate_serial'))
         } else {
-          toast.error('Dữ liệu đã tồn tại')
+          toast.error(t('devicesPage.toasts.update_error_duplicate_generic'))
         }
       } else if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy thiết bị')
+        toast.error(t('devicesPage.toasts.update_error_notfound'))
       } else {
-        toast.error('Có lỗi xảy ra khi cập nhật thiết bị')
+        toast.error(t('devicesPage.toasts.update_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -146,14 +148,14 @@ export default function DevicesPage() {
     try {
       setLoading(true)
       await devicesAPI.deleteDevice(deleteDevice.id)
-      toast.success('Xóa thiết bị thành công')
+      toast.success(t('devicesPage.toasts.delete_success'))
       setDeleteDevice(null)
       fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery)
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        toast.error('Không tìm thấy thiết bị')
+        toast.error(t('devicesPage.toasts.delete_error_notfound'))
       } else {
-        toast.error('Có lỗi xảy ra khi xóa thiết bị')
+        toast.error(t('devicesPage.toasts.delete_error_generic'))
       }
     } finally {
       setLoading(false)
@@ -190,7 +192,7 @@ export default function DevicesPage() {
       setAssignDevice(device);
       setSelectedVehicleId(null);
     } catch (error) {
-      toast.error('Không thể tải danh sách xe chưa được gán');
+      toast.error(t('devicesPage.toasts.load_unassigned_vehicles_error'));
     } finally {
       setLoading(false);
     }
@@ -201,11 +203,11 @@ export default function DevicesPage() {
     try {
       setLoading(true);
       await devicesAPI.assignDeviceToVehicle(assignDevice.id, selectedVehicleId);
-      toast.success('Gán thiết bị vào xe thành công');
+      toast.success(t('devicesPage.toasts.assign_success'));
       setAssignDevice(null);
       fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery);
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi gán thiết bị');
+      toast.error(t('devicesPage.toasts.assign_error'));
     } finally {
       setLoading(false);
     }
@@ -216,11 +218,11 @@ export default function DevicesPage() {
     try {
       setLoading(true);
       await devicesAPI.unassignDeviceFromVehicle(unassignDevice.id);
-      toast.success('Hủy gán thiết bị thành công');
+      toast.success(t('devicesPage.toasts.unassign_success'));
       setUnassignDevice(null);
       fetchDevices(pagination.current, pagination.pageSize, debouncedSearchQuery);
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi hủy gán thiết bị');
+      toast.error(t('devicesPage.toasts.unassign_error'));
     } finally {
       setLoading(false);
     }
@@ -244,15 +246,15 @@ export default function DevicesPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Danh sách thiết bị</CardTitle>
-              <CardDescription>Tổng cộng {pagination.total} thiết bị trong hệ thống</CardDescription>
+              <CardTitle>{t('devicesPage.title')}</CardTitle>
+              <CardDescription>{t('devicesPage.description', { total: pagination.total })}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Tìm kiếm theo Device No..."
+                  placeholder={t('devicesPage.searchPlaceholder')}
                   className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -260,7 +262,7 @@ export default function DevicesPage() {
               </div>
               <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Thêm thiết bị
+                {t('devicesPage.addDeviceButton')}
               </Button>
             </div>
           </div>
@@ -271,13 +273,13 @@ export default function DevicesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px]">STT</TableHead>
-                  <TableHead>Device No</TableHead>
-                  <TableHead>Serial Number</TableHead>
-                  <TableHead>Firmware</TableHead>
-                  <TableHead>Xe được gán</TableHead>
-                  <TableHead>Ngày cài đặt</TableHead>
-                  <TableHead className="text-center w-40">Thao tác</TableHead>
+                  <TableHead className="w-[50px]">{t('devicesPage.table.col_no')}</TableHead>
+                  <TableHead>{t('devicesPage.table.col_deviceNo')}</TableHead>
+                  <TableHead>{t('devicesPage.table.col_serial')}</TableHead>
+                  <TableHead>{t('devicesPage.table.col_firmware')}</TableHead>
+                  <TableHead>{t('devicesPage.table.col_assignedVehicle')}</TableHead>
+                  <TableHead>{t('devicesPage.table.col_installedAt')}</TableHead>
+                  <TableHead className="text-center w-40">{t('devicesPage.table.col_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -286,14 +288,14 @@ export default function DevicesPage() {
                     <TableCell colSpan={6} className="h-24 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                        <span className="ml-2">Đang tải...</span>
+                        <span className="ml-2">{t('common.loading')}</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : !devices || devices.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      Không có thiết bị nào
+                      {t('devicesPage.noDevices')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -311,7 +313,7 @@ export default function DevicesPage() {
                             {device.plate_number}
                           </Badge>
                         ) : (
-                          <Badge variant="secondary">Chưa gán</Badge>
+                          <Badge variant="secondary">{t('devicesPage.unassigned')}</Badge>
                         )}
                       </TableCell>
                       <TableCell>{formatDate(device.installed_at)}</TableCell>
@@ -329,11 +331,11 @@ export default function DevicesPage() {
                                     className="text-yellow-600 border-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
                                   >
                                     <Unlink className="h-4 w-4" />
-                                    <span className="sr-only">Hủy gán xe</span>
+                                    <span className="sr-only">{t('devicesPage.tooltips.unassign')}</span>
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Hủy gán xe</p>
+                                  <p>{t('devicesPage.tooltips.unassign')}</p>
                                 </TooltipContent>
                               </Tooltip>
                             ) : (
@@ -347,11 +349,11 @@ export default function DevicesPage() {
                                     className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
                                   >
                                     <LinkIcon className="h-4 w-4" />
-                                    <span className="sr-only">Gán xe</span>
+                                    <span className="sr-only">{t('devicesPage.tooltips.assign')}</span>
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Gán xe</p>
+                                  <p>{t('devicesPage.tooltips.assign')}</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
@@ -365,11 +367,11 @@ export default function DevicesPage() {
                                   className="text-blue-500 border-blue-500 hover:bg-blue-50 hover:text-blue-600"
                                 >
                                   <Edit className="h-4 w-4" />
-                                  <span className="sr-only">Sửa</span>
+                                  <span className="sr-only">{t('devicesPage.tooltips.edit')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Sửa</p>
+                                <p>{t('devicesPage.tooltips.edit')}</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
@@ -382,11 +384,11 @@ export default function DevicesPage() {
                                   className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Xóa</span>
+                                  <span className="sr-only">{t('devicesPage.tooltips.delete')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Xóa</p>
+                                <p>{t('devicesPage.tooltips.delete')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -403,7 +405,11 @@ export default function DevicesPage() {
           {pagination.total > 0 && (
             <div className="flex items-center justify-between space-x-2 py-4">
               <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.current - 1) * pagination.pageSize + 1} đến {Math.min(pagination.current * pagination.pageSize, pagination.total)} trong tổng số {pagination.total} kết quả
+                {t('common.pagination', {
+                  from: (pagination.current - 1) * pagination.pageSize + 1,
+                  to: Math.min(pagination.current * pagination.pageSize, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -413,12 +419,12 @@ export default function DevicesPage() {
                   disabled={pagination.current <= 1 || loading}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Trước
+                  {t('common.previous')}
                 </Button>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground">Trang</span>
+                  <span className="text-sm text-muted-foreground">{t('common.page')}</span>
                   <span className="text-sm font-medium">{pagination.current}</span>
-                  <span className="text-sm text-muted-foreground">trên {pagination.pages}</span>
+                  <span className="text-sm text-muted-foreground">{t('common.of')} {pagination.pages}</span>
                 </div>
                 <Button
                   variant="outline"
@@ -426,7 +432,7 @@ export default function DevicesPage() {
                   onClick={() => handlePageChange(pagination.current + 1)}
                   disabled={!pagination.has_more}
                 >
-                  Sau
+                  {t('common.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -439,36 +445,36 @@ export default function DevicesPage() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Thêm thiết bị mới</DialogTitle>
+            <DialogTitle>{t('devicesPage.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              Nhập thông tin thiết bị OBU mới vào hệ thống
+              {t('devicesPage.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="imei">Device No <span className="text-destructive">*</span></Label>
+              <Label htmlFor="imei">{t('devicesPage.createDialog.deviceNoLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="imei"
-                placeholder="OBU-001234"
+                placeholder={t('devicesPage.createDialog.deviceNoPlaceholder')}
                 value={formData.imei}
                 onChange={(e) => setFormData(prev => ({ ...prev, imei: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="serial_number">Serial Number</Label>
+              <Label htmlFor="serial_number">{t('devicesPage.createDialog.serialLabel')}</Label>
               <Input
                 id="serial_number"
-                placeholder="SN001234567"
+                placeholder={t('devicesPage.createDialog.serialPlaceholder')}
                 value={formData.serial_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, serial_number: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="firmware_version">Firmware Version</Label>
+              <Label htmlFor="firmware_version">{t('devicesPage.createDialog.firmwareLabel')}</Label>
               <Input
                 id="firmware_version"
-                placeholder="v1.0.0"
+                placeholder={t('devicesPage.createDialog.firmwarePlaceholder')}
                 value={formData.firmware_version}
                 onChange={(e) => setFormData(prev => ({ ...prev, firmware_version: e.target.value }))}
               />
@@ -476,13 +482,13 @@ export default function DevicesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleCreateDevice}
               disabled={loading || !formData.imei}
             >
-              Tạo thiết bị
+              {t('devicesPage.createDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -492,36 +498,36 @@ export default function DevicesPage() {
       <Dialog open={!!editDevice} onOpenChange={() => setEditDevice(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cập nhật thiết bị</DialogTitle>
+            <DialogTitle>{t('devicesPage.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              Cập nhật thông tin thiết bị: {editDevice?.imei}
+              {t('devicesPage.editDialog.description', { imei: editDevice?.imei })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_imei">Device No *</Label>
+              <Label htmlFor="edit_imei">{t('devicesPage.createDialog.deviceNoLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 id="edit_imei"
-                placeholder="OBU-001234"
+                placeholder={t('devicesPage.createDialog.deviceNoPlaceholder')}
                 value={formData.imei}
                 onChange={(e) => setFormData(prev => ({ ...prev, imei: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_serial_number">Serial Number</Label>
+              <Label htmlFor="edit_serial_number">{t('devicesPage.createDialog.serialLabel')}</Label>
               <Input
                 id="edit_serial_number"
-                placeholder="SN001234567"
+                placeholder={t('devicesPage.createDialog.serialPlaceholder')}
                 value={formData.serial_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, serial_number: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_firmware_version">Firmware Version</Label>
+              <Label htmlFor="edit_firmware_version">{t('devicesPage.createDialog.firmwareLabel')}</Label>
               <Input
                 id="edit_firmware_version"
-                placeholder="v1.0.0"
+                placeholder={t('devicesPage.createDialog.firmwarePlaceholder')}
                 value={formData.firmware_version}
                 onChange={(e) => setFormData(prev => ({ ...prev, firmware_version: e.target.value }))}
               />
@@ -529,13 +535,13 @@ export default function DevicesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDevice(null)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateDevice}
               disabled={loading || !formData.imei}
             >
-              Cập nhật
+              {t('devicesPage.editDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -547,28 +553,27 @@ export default function DevicesPage() {
       <AlertDialog open={!!deleteDevice} onOpenChange={() => setDeleteDevice(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa thiết bị</AlertDialogTitle>
+            <AlertDialogTitle>{t('devicesPage.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa thiết bị này không? Hành động này không thể hoàn tác.
+              {t('devicesPage.deleteDialog.description')}
               <br />
               <br />
-              <strong>Device No:</strong> {deleteDevice?.imei}
+              <strong>{t('devicesPage.deleteDialog.infoDeviceNo')}</strong> {deleteDevice?.imei}
               <br />
-              <strong>Serial Number:</strong> {deleteDevice?.serial_number || 'Không có'}
+              <strong>{t('devicesPage.deleteDialog.infoSerial')}</strong> {deleteDevice?.serial_number || t('common.none')}
               <br />
-              <strong>Firmware:</strong> {deleteDevice?.firmware_version || 'Không có'}
+              <strong>{t('devicesPage.deleteDialog.infoFirmware')}</strong> {deleteDevice?.firmware_version || t('common.none')}
               <br />
-
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700"
               disabled={loading}
             >
-              Xóa thiết bị
+              {t('devicesPage.deleteDialog.submitButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -578,17 +583,17 @@ export default function DevicesPage() {
       <Dialog open={!!assignDevice} onOpenChange={() => setAssignDevice(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Gán thiết bị cho xe</DialogTitle>
+            <DialogTitle>{t('devicesPage.assignDialog.title')}</DialogTitle>
             <DialogDescription>
-              Chọn xe để gán cho thiết bị: <strong>{assignDevice?.imei}</strong>
+              {t('devicesPage.assignDialog.description', { imei: assignDevice?.imei })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="vehicle-select">Chọn xe</Label>
+              <Label htmlFor="vehicle-select">{t('devicesPage.assignDialog.selectLabel')}</Label>
               <Select onValueChange={setSelectedVehicleId} value={selectedVehicleId || undefined}>
                 <SelectTrigger id="vehicle-select">
-                  <SelectValue placeholder="Chọn từ danh sách xe chưa được gán..." />
+                  <SelectValue placeholder={t('devicesPage.assignDialog.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {unassignedVehicles.length > 0 ? (
@@ -598,7 +603,7 @@ export default function DevicesPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-4 text-sm text-muted-foreground">Không có xe nào khả dụng</div>
+                    <div className="p-4 text-sm text-muted-foreground">{t('devicesPage.assignDialog.noVehicles')}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -606,13 +611,13 @@ export default function DevicesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignDevice(null)}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleAssignDevice}
               disabled={loading || !selectedVehicleId}
             >
-              Gán thiết bị
+              {t('devicesPage.assignDialog.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -622,19 +627,19 @@ export default function DevicesPage() {
       <AlertDialog open={!!unassignDevice} onOpenChange={() => setUnassignDevice(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận hủy gán thiết bị</AlertDialogTitle>
+            <AlertDialogTitle>{t('devicesPage.unassignDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn hủy gán thiết bị <strong>{unassignDevice?.imei}</strong> khỏi xe <strong>{unassignDevice?.plate_number}</strong> không?
+              {t('devicesPage.unassignDialog.description', { imei: unassignDevice?.imei, plate: unassignDevice?.plate_number })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleUnassignConfirm}
               className="bg-yellow-600 hover:bg-yellow-700"
               disabled={loading}
             >
-              Xác nhận
+              {t('devicesPage.unassignDialog.submitButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

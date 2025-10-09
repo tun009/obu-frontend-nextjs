@@ -1,0 +1,369 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "page": "Page",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next",
+    "none": "None",
+    "pagination": "Showing {{from}} to {{to}} of {{total}} results"
+  },
+  "header": {
+    "account": "My Account",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "sidebar": {
+    "title": "Patrol Management",
+    "subtitle": "OBU Tracking System",
+    "live": "Command Center",
+    "vehicles": "Patrol Vehicles",
+    "users": "Users",
+    "devices": "Devices",
+    "shifts": "Patrol Shifts",
+    "help": "Help",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "commandCenter": {
+    "loadingMessage": "Loading devices and GPS data...",
+    "deviceListTitle": "Device List in Shift",
+    "youAreSpeaking": "You are speaking...",
+    "userIsSpeaking": "{{name}} is speaking...",
+    "pressToTalk": "Press to talk to the current group",
+    "startTalk": "Start Talk",
+    "stopTalk": "Stop Talk",
+    "noDevicesInShift": "No devices currently in a shift",
+    "viewingDevice": "Viewing: {{name}} (Phone: {{phone}})",
+    "clickToViewLocation": "Click on a device to see its current location",
+    "callInProgress": "Another call is in progress",
+    "startPrivateCall": "Start private call",
+    "deviceOffline": "Device offline",
+    "noGPS": "No GPS"
+  },
+  "vehiclesPage": {
+    "title": "Patrol Vehicles",
+    "description": "Total of {{total}} vehicles in the system",
+    "searchPlaceholder": "Search by license plate...",
+    "addVehicleButton": "Add Vehicle",
+    "table": {
+      "col_no": "No.",
+      "col_plateNumber": "License Plate",
+      "col_type": "Vehicle Type",
+      "col_capacity": "Load Capacity (kg)",
+      "col_createdAt": "Created At",
+      "col_actions": "Actions"
+    },
+    "noVehicles": "No vehicles found",
+    "createDialog": {
+      "title": "Add New Vehicle",
+      "description": "Enter the new vehicle's information into the system",
+      "plateLabel": "License Plate",
+      "platePlaceholder": "29A-12345",
+      "typeLabel": "Vehicle Type",
+      "typePlaceholder": "Truck, pickup...",
+      "capacityLabel": "Load Capacity (kg)",
+      "capacityPlaceholder": "1000",
+      "submitButton": "Create Vehicle"
+    },
+    "editDialog": {
+      "title": "Update Vehicle",
+      "description": "Update vehicle's information: {{plate}}",
+      "submitButton": "Update"
+    },
+    "deleteDialog": {
+      "title": "Confirm Vehicle Deletion",
+      "description": "Are you sure you want to delete this vehicle? This action cannot be undone.",
+      "infoPlate": "License Plate:",
+      "infoType": "Vehicle Type:",
+      "submitButton": "Delete Vehicle"
+    },
+    "toasts": {
+      "load_error": "Failed to load vehicle list",
+      "create_success": "Vehicle created successfully",
+      "create_error_duplicate": "License plate already exists",
+      "create_error_generic": "An error occurred while creating the vehicle",
+      "update_success": "Vehicle updated successfully",
+      "update_error_notfound": "Vehicle not found",
+      "update_error_duplicate": "License plate already exists",
+      "update_error_generic": "An error occurred while updating the vehicle",
+      "delete_success": "Vehicle deleted successfully",
+      "delete_error_notfound": "Vehicle not found",
+      "delete_error_generic": "An error occurred while deleting the vehicle"
+    }
+  },
+  "devicesPage": {
+    "title": "Device List",
+    "description": "Total of {{total}} devices in the system",
+    "searchPlaceholder": "Search by Device No...",
+    "addDeviceButton": "Add Device",
+    "table": {
+      "col_no": "No.",
+      "col_deviceNo": "Device No",
+      "col_serial": "Serial Number",
+      "col_firmware": "Firmware",
+      "col_assignedVehicle": "Assigned Vehicle",
+      "col_installedAt": "Installed At",
+      "col_actions": "Actions"
+    },
+    "noDevices": "No devices found",
+    "unassigned": "Unassigned",
+    "tooltips": {
+      "unassign": "Unassign Vehicle",
+      "assign": "Assign Vehicle",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "createDialog": {
+      "title": "Add New Device",
+      "description": "Enter the new OBU device's information into the system",
+      "deviceNoLabel": "Device No",
+      "deviceNoPlaceholder": "OBU-001234",
+      "serialLabel": "Serial Number",
+      "serialPlaceholder": "SN001234567",
+      "firmwareLabel": "Firmware Version",
+      "firmwarePlaceholder": "v1.0.0",
+      "submitButton": "Create Device"
+    },
+    "editDialog": {
+      "title": "Update Device",
+      "description": "Update device information: {{imei}}",
+      "submitButton": "Update"
+    },
+    "deleteDialog": {
+      "title": "Confirm Device Deletion",
+      "description": "Are you sure you want to delete this device? This action cannot be undone.",
+      "infoDeviceNo": "Device No:",
+      "infoSerial": "Serial Number:",
+      "infoFirmware": "Firmware:",
+      "submitButton": "Delete Device"
+    },
+    "assignDialog": {
+      "title": "Assign Device to Vehicle",
+      "description": "Select a vehicle to assign to device: {{imei}}",
+      "selectLabel": "Select Vehicle",
+      "selectPlaceholder": "Select from unassigned vehicles...",
+      "noVehicles": "No available vehicles",
+      "submitButton": "Assign Device"
+    },
+    "unassignDialog": {
+      "title": "Confirm Device Unassignment",
+      "description": "Are you sure you want to unassign device {{imei}} from vehicle {{plate}}?",
+      "submitButton": "Confirm"
+    },
+    "toasts": {
+      "load_error": "Failed to load device list",
+      "create_success": "Device created successfully",
+      "create_error_generic": "An error occurred while creating the device",
+      "update_success": "Device updated successfully",
+      "update_error_duplicate_imei": "Device No already exists",
+      "update_error_duplicate_serial": "Serial number already exists",
+      "update_error_duplicate_generic": "Data already exists",
+      "update_error_notfound": "Device not found",
+      "update_error_generic": "An error occurred while updating the device",
+      "delete_success": "Device deleted successfully",
+      "delete_error_notfound": "Device not found",
+      "delete_error_generic": "An error occurred while deleting the device",
+      "load_unassigned_vehicles_error": "Failed to load unassigned vehicle list",
+      "assign_success": "Device assigned to vehicle successfully",
+      "assign_error": "An error occurred while assigning the device",
+      "unassign_success": "Device unassigned successfully",
+      "unassign_error": "An error occurred while unassigning the device"
+    }
+  },
+  "journeySessionsPage": {
+    "title": "Patrol Shifts",
+    "description": "Total of {{total}} shifts in the system",
+    "searchPlaceholder": "Search IMEI, user...",
+    "createButton": "Create Shift",
+    "noSessions": "No shifts found",
+    "table": {
+      "col_no": "No.",
+      "col_device": "Device",
+      "col_user": "User",
+      "col_time": "Time",
+      "col_status": "Status",
+      "col_notes": "Notes",
+      "col_actions": "Actions"
+    },
+    "status": {
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed",
+      "all": "All"
+    },
+    "timeLabels": {
+      "plate": "Plate:",
+      "phone": "Phone:",
+      "start": "Start:",
+      "end": "End:",
+      "activated": "Activated:"
+    },
+    "tooltips": {
+      "start": "Start",
+      "view": "View Journey",
+      "end": "End",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "filters": {
+      "title": "Filters",
+      "tooltip": "Filter",
+      "statusLabel": "Status",
+      "statusPlaceholder": "Select status",
+      "startLabel": "Start Time",
+      "startPlaceholder": "Select start time",
+      "endLabel": "End Time",
+      "endPlaceholder": "Select end time",
+      "clearButton": "Clear Filters",
+      "applyButton": "Apply"
+    },
+    "deleteDialog": {
+      "title": "Confirm Deletion",
+      "description": "Are you sure you want to delete this shift? This action cannot be undone.",
+      "infoDevice": "Device:",
+      "infoUser": "User:",
+      "infoTime": "Time:",
+      "submitButton": "Delete"
+    },
+    "createDialog": {
+      "title": "Create New Shift"
+    },
+    "editDialog": {
+      "title": "Update Shift"
+    },
+    "toasts": {
+      "load_error": "Failed to load shift list",
+      "start_success": "Shift started successfully",
+      "end_success": "Shift ended successfully",
+      "delete_success": "Shift deleted successfully",
+      "generic_error": "An error occurred"
+    }
+  },
+  "loginPage": {
+    "title": "Patrol Management",
+    "description": "Patrol Monitoring and Operations System",
+    "usernameLabel": "Username",
+    "passwordLabel": "Password",
+    "loginButton": "Login",
+    "errorToast": "Please enter your username and password",
+    "demoCredentials": "Demo: admin / admin"
+  },
+  "journeySessionForm": {
+    "validation": {
+      "deviceRequired": "Please select a device",
+      "driverRequired": "Please select a user",
+      "startTimeRequired": "Please select a start time",
+      "pastDateNotAllowed": "Cannot select a date in the past",
+      "endTimeRequired": "Please select an end time",
+      "endTimeAfterStart": "End time must be after start time",
+      "durationExceeds7Days": "The shift duration cannot exceed 7 days."
+    },
+    "toasts": {
+      "loadDataError": "Failed to load device and user data",
+      "updateSuccess": "Shift updated successfully",
+      "createSuccess": "Shift created successfully",
+      "genericError": "An error occurred"
+    },
+    "loadingData": "Loading data...",
+    "editTitle": "Update Shift",
+    "createTitle": "Create New Shift",
+    "editDescription": "Update shift information",
+    "createDescription": "Create a new shift for a user",
+    "driverLabel": "User",
+    "driverPlaceholder": "Select a user",
+    "deviceLabel": "Device",
+    "devicePlaceholder": "Select a device",
+    "startTimeLabel": "Start Time",
+    "startTimePlaceholder": "Select start time",
+    "endTimeLabel": "End Time",
+    "endTimePlaceholder": "Select end time",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Enter notes for the shift...",
+    "updateButton": "Update",
+    "createButton": "Create Shift",
+    "cancelButton": "Cancel"
+  },
+  "journeySessionDetailsPage": {
+    "loading": "Loading journey history...",
+    "notFound": "Journey data not found",
+    "backButton": "Go Back",
+    "loadError": "Failed to load journey history or videos.",
+    "filterApplied": "Time filter applied",
+    "filterReset": "Time filter reset",
+    "noVideo": "No video available for this time",
+    "filter": {
+      "title": "Filter",
+      "fullJourney": "Full Journey",
+      "startTooltip": "Journey Start Time",
+      "endTooltip": "Journey End Time",
+      "duration": "Duration",
+      "resetButton": "Reset",
+      "applyButton": "Apply"
+    },
+    "player": {
+      "videoProgress": "Video {{current}} / {{total}}",
+      "speed": "Speed"
+    },
+    "log": {
+      "title": "Logs",
+      "invalidGps": "Invalid GPS"
+    },
+    "map": {
+      "title": "Journey Map - {{imei}}",
+      "currentLocation": "Current Location: {{time}} - Speed: {{speed}} km/h"
+    }
+  },
+  "usersPage": {
+    "title": "User List",
+    "description": "There are {{total}} users in the system",
+    "searchPlaceholder": "Search by name, phone...",
+    "addUserButton": "Add User",
+    "table": {
+      "col_no": "No.",
+      "col_fullName": "Full Name",
+      "col_phoneNumber": "Phone Number",
+      "col_createdAt": "Created At",
+      "col_actions": "Actions"
+    },
+    "noUsers": "No users found",
+    "pagination": "Showing {{from}} to {{to}} of {{total}} results",
+    "createDialog": {
+      "title": "Add New User",
+      "description": "Enter the new user's information into the system",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "John Doe",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "0901234567",
+      "submitButton": "Create User"
+    },
+    "editDialog": {
+      "title": "Update User",
+      "description": "Update user's information: {{name}}",
+      "submitButton": "Update"
+    },
+    "deleteDialog": {
+      "title": "Confirm User Deletion",
+      "description": "Are you sure you want to delete this user? This action cannot be undone.",
+      "infoName": "Full Name:",
+      "infoPhone": "Phone Number:",
+      "submitButton": "Delete User"
+    },
+    "toasts": {
+      "load_error": "Failed to load user list",
+      "create_success": "User created successfully",
+      "create_error_duplicate": "Invalid or duplicate data",
+      "create_error_generic": "An error occurred while creating the user",
+      "update_success": "User updated successfully",
+      "update_error_notfound": "User not found",
+      "update_error_generic": "An error occurred while updating the user",
+      "delete_success": "User deleted successfully",
+      "delete_error_notfound": "User not found",
+      "delete_error_generic": "An error occurred while deleting the user"
+    }
+  }
+}

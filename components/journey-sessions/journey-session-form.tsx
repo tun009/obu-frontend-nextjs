@@ -15,12 +15,13 @@ import { DateTimePicker } from "@/components/ui/datetime-picker"
 import { toast } from "sonner"
 import apiService from "@/lib/services/api"
 import type { Device, Driver, CreateJourneySessionRequest, JourneySessionWithDetails, PaginatedResponse } from "@/lib/types/api"
+import { useTranslation } from "react-i18next"
 
-const createFormSchema = (isEditing: boolean = false) => z.object({
-  device_id: z.string().min(1, "Vui lòng chọn thiết bị"),
-  driver_id: z.string().min(1, "Vui lòng chọn người sử dụng"),
+const createFormSchema = (isEditing: boolean = false, t: (key: string) => string) => z.object({
+  device_id: z.string().min(1, t('journeySessionForm.validation.deviceRequired')),
+  driver_id: z.string().min(1, t('journeySessionForm.validation.driverRequired')),
   start_time: z.date({
-    required_error: "Vui lòng chọn thời gian bắt đầu",
+    required_error: t('journeySessionForm.validation.startTimeRequired'),
   }).refine((date) => {
     if (isEditing) return true // Cho phép edit session trong quá khứ
     const today = new Date()
@@ -29,10 +30,10 @@ const createFormSchema = (isEditing: boolean = false) => z.object({
     selectedDate.setHours(0, 0, 0, 0) // Reset về đầu ngày
     return selectedDate >= today
   }, {
-    message: "Không được chọn ngày trong quá khứ",
+    message: t('journeySessionForm.validation.pastDateNotAllowed'),
   }),
   end_time: z.date({
-    required_error: "Vui lòng chọn thời gian kết thúc",
+    required_error: t('journeySessionForm.validation.endTimeRequired'),
   }).refine((date) => {
     if (isEditing) return true // Cho phép edit session trong quá khứ
     const today = new Date()
@@ -41,11 +42,11 @@ const createFormSchema = (isEditing: boolean = false) => z.object({
     selectedDate.setHours(0, 0, 0, 0) // Reset về đầu ngày
     return selectedDate >= today
   }, {
-    message: "Không được chọn ngày trong quá khứ",
+    message: t('journeySessionForm.validation.pastDateNotAllowed'),
   }),
   notes: z.string().optional(),
 }).refine((data) => data.end_time > data.start_time, {
-  message: "Thời gian kết thúc phải sau thời gian bắt đầu",
+  message: t('journeySessionForm.validation.endTimeAfterStart'),
   path: ["end_time"],
 }).refine((data) => {
   if (data.start_time && data.end_time) {
@@ -53,9 +54,9 @@ const createFormSchema = (isEditing: boolean = false) => z.object({
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     return diffInMs <= sevenDaysInMs;
   }
-  return true; 
+  return true;
 }, {
-  message: "Khoảng thời gian ca làm việc không được vượt quá 7 ngày.",
+  message: t('journeySessionForm.validation.durationExceeds7Days'),
   path: ["end_time"],
 })
 
@@ -66,13 +67,14 @@ interface JourneySessionFormProps {
 }
 
 export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySessionFormProps) {
+  const { t } = useTranslation()
   const [devices, setDevices] = useState<Device[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
 
   const isEditing = !!session
-  const formSchema = createFormSchema(isEditing)
+  const formSchema = createFormSchema(isEditing, t)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -97,7 +99,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
         setDevices(devicesResponse.data)
         setDrivers(driversResponse.data)
       } catch (error) {
-        toast.error('Không thể tải dữ liệu thiết bị và người dùng')
+        toast.error(t('journeySessionForm.toasts.loadDataError'))
         console.error('Error loading data:', error)
       } finally {
         setLoadingData(false)
@@ -121,15 +123,15 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
 
       if (isEditing) {
         await apiService.put(`/journey-sessions/${session.id}`, requestData)
-        toast.success('Cập nhật ca làm việc thành công')
+        toast.success(t('journeySessionForm.toasts.updateSuccess'))
       } else {
         await apiService.post('/journey-sessions', requestData)
-        toast.success('Tạo ca làm việc thành công')
+        toast.success(t('journeySessionForm.toasts.createSuccess'))
       }
 
       onSuccess?.()
     } catch (error: any) {
-      const errorMessage = error?.details?.detail || 'Có lỗi xảy ra'
+      const errorMessage = error?.details?.detail || t('journeySessionForm.toasts.genericError')
       toast.error(errorMessage)      
     } finally {
       setLoading(false)
@@ -141,7 +143,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Đang tải dữ liệu...</span>
+          <span>{t('journeySessionForm.loadingData')}</span>
         </CardContent>
       </Card>
     )
@@ -150,9 +152,9 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditing ? 'Cập nhật ca làm việc' : 'Tạo ca làm việc mới'}</CardTitle>
+        <CardTitle>{isEditing ? t('journeySessionForm.editTitle') : t('journeySessionForm.createTitle')}</CardTitle>
         <CardDescription>
-          {isEditing ? 'Cập nhật thông tin ca làm việc' : 'Tạo ca làm việc mới cho người dùng'}
+          {isEditing ? t('journeySessionForm.editDescription') : t('journeySessionForm.createDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -166,11 +168,11 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="driver_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Người sử dụng <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t('journeySessionForm.driverLabel')} <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Chọn người sử dụng" />
+                          <SelectValue placeholder={t('journeySessionForm.driverPlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -191,11 +193,11 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="device_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Thiết bị <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t('journeySessionForm.deviceLabel')} <span className="text-destructive">*</span></FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Chọn thiết bị" />
+                          <SelectValue placeholder={t('journeySessionForm.devicePlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -219,12 +221,12 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="start_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Thời gian bắt đầu <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t('journeySessionForm.startTimeLabel')} <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DateTimePicker
                         value={field.value}
                         onChange={field.onChange}
-                        placeholder="Chọn thời gian bắt đầu"
+                        placeholder={t('journeySessionForm.startTimePlaceholder')}
                         format24Hour={true}
                         disablePastDates={!isEditing}
                         maxDate={form.watch("end_time")}
@@ -241,12 +243,12 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
                 name="end_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Thời gian kết thúc <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t('journeySessionForm.endTimeLabel')} <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <DateTimePicker
                         value={field.value}
                         onChange={field.onChange}
-                        placeholder="Chọn thời gian kết thúc"
+                        placeholder={t('journeySessionForm.endTimePlaceholder')}
                         format24Hour={true}
                         disablePastDates={!isEditing}
                         minDate={form.watch("start_time")}
@@ -264,10 +266,10 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ghi chú</FormLabel>
+                  <FormLabel>{t('journeySessionForm.notesLabel')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Nhập ghi chú cho ca làm việc..."
+                      placeholder={t('journeySessionForm.notesPlaceholder')}
                       className="resize-none"
                       {...field}
                     />
@@ -281,11 +283,11 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
             <div className="flex items-center gap-4">
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Cập nhật' : 'Tạo ca làm việc'}
+                {isEditing ? t('journeySessionForm.updateButton') : t('journeySessionForm.createButton')}
               </Button>
               {onCancel && (
                 <Button type="button" variant="outline" onClick={onCancel}>
-                  Hủy
+                  {t('journeySessionForm.cancelButton')}
                 </Button>
               )}
             </div>
