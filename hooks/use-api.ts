@@ -136,60 +136,6 @@ export function useAuth() {
   };
 }
 
-export function useVehicles() {
-  const listApi = useApi();
-  const createApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Tạo xe thành công',
-  });
-  const updateApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Cập nhật xe thành công',
-  });
-  const deleteApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Xóa xe thành công',
-  });
-
-  const getVehicles = useCallback(
-    async (params?: any) => {
-      return listApi.execute(() => apiService.getVehicles(params));
-    },
-    [listApi]
-  );
-
-  const createVehicle = useCallback(
-    async (data: any) => {
-      return createApi.execute(() => apiService.createVehicle(data));
-    },
-    [createApi]
-  );
-
-  const updateVehicle = useCallback(
-    async (id: string, data: any) => {
-      return updateApi.execute(() => apiService.updateVehicle(id, data));
-    },
-    [updateApi]
-  );
-
-  const deleteVehicle = useCallback(
-    async (id: string) => {
-      return deleteApi.execute(() => apiService.deleteVehicle(id));
-    },
-    [deleteApi]
-  );
-
-  return {
-    vehicles: listApi.data,
-    getVehicles,
-    createVehicle,
-    updateVehicle,
-    deleteVehicle,
-    loading: listApi.loading || createApi.loading || updateApi.loading || deleteApi.loading,
-    error: listApi.error || createApi.error || updateApi.error || deleteApi.error,
-  };
-}
-
 export function useDrivers() {
   const listApi = useApi();
   const createApi = useApi({

@@ -16,10 +16,10 @@ export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  user: User;
+  user: AuthUser;
 }
 
-export interface User {
+export interface AuthUser {
   id: string; // UUID
   username: string;
   email: string;
@@ -30,54 +30,19 @@ export interface User {
   updated_at?: string;
 }
 
-// Vehicle Types
-export interface Vehicle {
-  id: string; // UUID from backend
-  plate_number: string; // Changed from 'plate' to match backend
-  type?: string; // Changed from model/brand/year/color to match backend schema
-  load_capacity_kg?: number;
-  registration_expiry?: string;
-  created_at: string;
-  driver?: Driver; // Populated via relationship
-  device?: Device; // Populated via relationship
-  location?: VehicleLocation;
-}
-
-export interface VehicleLocation {
-  id: number;
-  vehicle_id: number;
-  latitude: number;
-  longitude: number;
-  speed: number;
-  heading: number;
-  timestamp: string;
-}
-
-export interface CreateVehicleRequest {
-  plate_number: string;
-  type?: string;
-  load_capacity_kg?: number;
-  registration_expiry?: string;
-}
-
-export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {}
+// Vehicle Types - REMOVED as part of backend refactor
 
 // Driver Types
 export interface Driver {
   id: string; // UUID
-  full_name: string; // Changed from 'name' to match backend
-  phone_number?: string; // Changed from 'phone' to match backend
-  license_number: string;
-  card_id?: string;
+  full_name: string;
+  phone_number?: string;
   created_at: string;
-  vehicles?: Vehicle[];
 }
 
 export interface CreateDriverRequest {
   full_name: string;
   phone_number?: string;
-  license_number: string;
-  card_id?: string;
 }
 
 export interface UpdateDriverRequest extends Partial<CreateDriverRequest> {}
@@ -88,17 +53,18 @@ export interface Device {
   imei: string;
   serial_number?: string;
   firmware_version?: string;
-  vehicle_id?: string; // UUID
   installed_at: string;
-  vehicle?: Vehicle;
-  vehicle_plate_number?: string;
+
+  // Fields from former Vehicle model
+  device_name?: string; // Formerly vehicle plate_number
+  device_type?: string; // Formerly vehicle type
+  description?: string;
 }
 
 export interface CreateDeviceRequest {
   imei: string;
   serial_number?: string;
   firmware_version?: string;
-  vehicle_id?: string;
 }
 
 export interface UpdateDeviceRequest extends Partial<CreateDeviceRequest> {}
@@ -239,34 +205,12 @@ export interface DeviceRealtimeResponse {
   data: DeviceRealtimeData;
 }
 
-// Map Vehicle Types - Combined data for map display
-export interface MapVehicle {
-  id: string;
-  plate_number: string;
-  type?: string;
-  device?: Device;
-  driver?: Driver;
-  // GPS data from realtime
-  latitude?: number;
-  longitude?: number;
-  speed?: number;
-  direction?: number;
-  // Status derived from GPS and system data
-  status: 'moving' | 'stopped' | 'parked' | 'offline';
-  // Additional info from realtime
-  battery_percent?: number;
-  temperature?: number;
-  fuel_level?: number;
-  last_update?: string;
-  camera_status?: 'online' | 'offline';
-  // Error state
-  error?: string;
-}
+// Map Vehicle Types - REMOVED
 
 // Journey Session Types
 export interface JourneySession {
   id: number;
-  vehicle_id: string;
+  device_id: string;
   driver_id: string;
   start_time: string;
   end_time: string;
@@ -279,13 +223,14 @@ export interface JourneySession {
 }
 
 export interface JourneySessionWithDetails extends JourneySession {
-  vehicle_plate_number: string;
+  device_name: string; // Formerly vehicle_plate_number
   driver_name: string;
   device_imei?: string;
+  driver_phone_number?: string
 }
 
 export interface CreateJourneySessionRequest {
-  vehicle_id: string;
+  device_id: string;
   driver_id: string;
   start_time: string;
   end_time: string;

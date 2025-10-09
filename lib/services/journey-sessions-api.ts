@@ -12,6 +12,9 @@ export interface JourneySessionsListParams {
   page?: number;
   items_per_page?: number;
   status_filter?: 'pending' | 'active' | 'completed';
+  search?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface JourneySessionStatusResponse {
@@ -28,10 +31,12 @@ class JourneySessionsAPI {
   // Get paginated list of journey sessions
   async getJourneySessions(params: JourneySessionsListParams = {}): Promise<PaginatedResponse<JourneySessionWithDetails>> {
     const searchParams = new URLSearchParams();
-
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.items_per_page) searchParams.append('items_per_page', params.items_per_page.toString());
     if (params.status_filter) searchParams.append('status_filter', params.status_filter);
+    if (params.search) searchParams.append('search', params.search);
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
 
     const url = `${this.basePath}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     return apiService.get<PaginatedResponse<JourneySessionWithDetails>>(url);
@@ -78,13 +83,23 @@ class JourneySessionsAPI {
   }
 
   // Get journey session history
-  async getJourneySessionHistory(id: number): Promise<JourneySessionHistoryResponse> {
-    return apiService.get<JourneySessionHistoryResponse>(`${this.basePath}/${id}/history`);
+  async getJourneySessionHistory(id: number, startTime?: string, endTime?: string): Promise<JourneySessionHistoryResponse> {
+    const searchParams = new URLSearchParams();
+    if (startTime) searchParams.append('start_time', startTime);
+    if (endTime) searchParams.append('end_time', endTime);
+
+    const url = `${this.basePath}/${id}/history${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return apiService.get<JourneySessionHistoryResponse>(url);
   }
 
   // Get journey playlist for frontend player
-  async getJourneyPlaylist(id: number): Promise<any[]> {
-    return apiService.get<any[]>(`${this.basePath}/${id}/media`);
+  async getJourneyPlaylist(id: number, startTime?: string, endTime?: string): Promise<any[]> {
+    const searchParams = new URLSearchParams();
+    if (startTime) searchParams.append('start_time', startTime);
+    if (endTime) searchParams.append('end_time', endTime);
+
+    const url = `${this.basePath}/${id}/media${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return apiService.get<any[]>(url);
   }
 }
 

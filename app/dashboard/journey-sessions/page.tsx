@@ -7,10 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Plus, MoreHorizontal, Play, Square, Edit, Trash2, ChevronLeft, ChevronRight, MapPin } from "lucide-react"
+import { Plus, Play, Square, Edit, Trash2, ChevronLeft, ChevronRight, MapPin, Search, Filter, X } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DateTimePicker } from "@/components/ui/datetime-picker"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+
+import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { toast } from "sonner"
@@ -28,6 +36,14 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
   const [sessions, setSessions] = useState<JourneySessionWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+
+  // States for filter popover
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [tempStatus, setTempStatus] = useState<string>("all")
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined)
+
   const [deleteSession, setDeleteSession] = useState<JourneySessionWithDetails | null>(null)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [pagination, setPagination] = useState({
@@ -35,16 +51,21 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
     pageSize: 10,
     total: 0,
     pages: 0,
-    has_more: false 
+    has_more: false
   })
 
-  const fetchSessions = async (page = 1, pageSize = 10, status = statusFilter) => {
+  const fetchSessions = async (page = 1, pageSize = 10, filters: { status?: string, search?: string, startDate?: Date, endDate?: Date } = {}) => {
     try {
       setLoading(true)
+      const { status, search, startDate, endDate } = filters
+
       const response = await journeySessionsAPI.getJourneySessions({
         page,
         items_per_page: pageSize,
-        status_filter: status === "all" ? undefined : status as any
+        status_filter: status === "all" ? undefined : status as any,
+        search: search || undefined,
+        start_date: startDate?.toISOString(),
+        end_date: endDate?.toISOString(),
       })
 
       setSessions(response.data)
@@ -53,7 +74,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
         pageSize: response.items_per_page,
         total: response.total_count,
         has_more: response.has_more,
-        pages: Math.floor(response.total_count/ response.items_per_page) + 1
+        pages: Math.ceil(response.total_count / response.items_per_page)
       })
     } catch (error: any) {
       toast.error('Không thể tải danh sách ca làm việc')
@@ -64,24 +85,47 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
   }
 
   useEffect(() => {
-    fetchSessions()
-  }, [refreshTrigger])
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value)
-    fetchSessions(1, pagination.pageSize, value)
-  }
+    fetchSessions(1, pagination.pageSize, { status: statusFilter, search: searchQuery, startDate: dateRange?.from, endDate: dateRange?.to })
+  }, [refreshTrigger, statusFilter, searchQuery, dateRange])
 
   const handlePageChange = (page: number) => {
-    fetchSessions(page, pagination.pageSize, statusFilter)
+    fetchSessions(page, pagination.pageSize, { status: statusFilter, search: searchQuery, startDate: dateRange?.from, endDate: dateRange?.to })
   }
+  const handleApplyFilters = () => {
+    setStatusFilter(tempStatus)
+    setDateRange(tempDateRange)
+    setIsFilterOpen(false)
+    fetchSessions(1, pagination.pageSize, { status: tempStatus, search: searchQuery, startDate: tempDateRange?.from, endDate: tempDateRange?.to })
+  }
+
+  const handleClearFilters = () => {
+    setSearchQuery("")
+    setStatusFilter("all")
+    setDateRange(undefined)
+    setTempStatus("all")
+    setTempDateRange(undefined)
+    setIsFilterOpen(false) // Close popover on clear
+    fetchSessions(1, pagination.pageSize, { status: 'all', search: '', startDate: undefined, endDate: undefined })
+  }
+
+  const handleOpenFilter = (isOpen: boolean) => {
+    if (isOpen) {
+      // Sync temp state with main state when opening
+      setTempStatus(statusFilter)
+      setTempDateRange(dateRange)
+    }
+    setIsFilterOpen(isOpen)
+  }
+
+  const isFiltered = searchQuery !== "" || statusFilter !== "all" || !!dateRange;
+
 
   const handleStartSession = async (session: JourneySessionWithDetails) => {
     setActionLoading(session.id)
     try {
       await journeySessionsAPI.startJourneySession(session.id)
       toast.success('Bắt đầu ca làm việc thành công')
-      fetchSessions(pagination.current, pagination.pageSize, statusFilter)
+      fetchSessions(pagination.current, pagination.pageSize, { status: statusFilter, search: searchQuery, startDate: dateRange?.from, endDate: dateRange?.to })
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra')
     } finally {
@@ -94,7 +138,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
     try {
       await journeySessionsAPI.endJourneySession(session.id)
       toast.success('Kết thúc ca làm việc thành công')
-      fetchSessions(pagination.current, pagination.pageSize, statusFilter)
+      fetchSessions(pagination.current, pagination.pageSize, { status: statusFilter, search: searchQuery, startDate: dateRange?.from, endDate: dateRange?.to })
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra')
     } finally {
@@ -110,7 +154,7 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
       await journeySessionsAPI.deleteJourneySession(deleteSession.id)
       toast.success('Xóa ca làm việc thành công')
       setDeleteSession(null)
-      fetchSessions(pagination.current, pagination.pageSize, statusFilter)
+      fetchSessions(pagination.current, pagination.pageSize, { status: statusFilter, search: searchQuery, startDate: dateRange?.from, endDate: dateRange?.to })
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra')
     } finally {
@@ -139,23 +183,77 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle>Danh sách ca làm việc</CardTitle>
               <CardDescription>Tổng cộng {pagination.total} ca làm việc trong hệ thống</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Lọc trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="pending">Chờ bắt đầu</SelectItem>
-                  <SelectItem value="active">Đang hoạt động</SelectItem>
-                  <SelectItem value="completed">Đã hoàn thành</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Tìm kiếm IMEI, tài xế..."
+                  className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Popover open={isFilterOpen} onOpenChange={handleOpenFilter}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className={cn("shrink-0", isFiltered && "bg-primary/30 text-primary")}>
+                    <Filter className="h-4 w-4" />
+                    <span className="sr-only">Bộ lọc</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Bộ lọc</h4>
+                    </div>
+                    <div className="grid gap-3">
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label htmlFor="status">Trạng thái</Label>
+                        <Select value={tempStatus} onValueChange={setTempStatus}>
+                          <SelectTrigger id="status">
+                            <SelectValue placeholder="Chọn trạng thái" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            <SelectItem value="pending">Chờ bắt đầu</SelectItem>
+                            <SelectItem value="active">Đang hoạt động</SelectItem>
+                            <SelectItem value="completed">Đã hoàn thành</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label>Thời gian bắt đầu</Label>
+                        <DateTimePicker
+                          value={tempDateRange?.from}
+                          onChange={(date) => setTempDateRange((prev) => ({ from: date, to: prev?.to }))}
+                          placeholder="Chọn thời gian bắt đầu"
+                          format24Hour={true}
+                          maxDate={tempDateRange?.to}
+                        />
+                      </div>
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label>Thời gian kết thúc</Label>
+                        <DateTimePicker
+                          value={tempDateRange?.to}
+                          onChange={(date) => setTempDateRange((prev) => ({ from: prev?.from, to: date }))}
+                          placeholder="Chọn thời gian kết thúc"
+                          format24Hour={true}
+                          minDate={tempDateRange?.from}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={handleClearFilters}>Xóa bộ lọc</Button>
+                      <Button onClick={handleApplyFilters}>Áp dụng</Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               {onCreateClick && (
                 <Button onClick={onCreateClick}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -170,19 +268,19 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">ID</TableHead>
-                  <TableHead>Xe</TableHead>
-                  <TableHead>Tài xế</TableHead>
+                  <TableHead className="w-[50px]">STT</TableHead>
+                  <TableHead>Thiết bị</TableHead>
+                  <TableHead>Người sử dụng</TableHead>
                   <TableHead>Thời gian</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Ghi chú</TableHead>
-                  <TableHead className="text-right w-40">Thao tác</TableHead>
+                  <TableHead className="text-center w-40">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                         <span className="ml-2">Đang tải...</span>
@@ -191,23 +289,27 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                   </TableRow>
                 ) : sessions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                       Không có ca làm việc nào
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sessions.map((session) => (
+                  sessions.map((session, index) => (
                     <TableRow key={session.id}>
-                      <TableCell>{session.id}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium">
+                        {(pagination.current - 1) * pagination.pageSize + index + 1}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                         {session.device_imei}
+                      </TableCell>
+                      <TableCell className="font-medium">
                         <div>
-                          <div className="font-medium">{session.vehicle_plate_number}</div>
-                          {session.device_imei && (
-                            <div className="text-xs text-muted-foreground">IMEI: {session.device_imei}</div>
+                          <div className="font-medium">{session.driver_name}</div>
+                          {session?.driver_phone_number && (
+                            <div className="text-xs text-muted-foreground">SĐT: {session?.driver_phone_number}</div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{session.driver_name}</TableCell>
                       <TableCell>
                         <div className="text-sm">
                           <div>Bắt đầu: {formatDateTime(session.start_time)}</div>
@@ -223,53 +325,66 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
                       <TableCell className="max-w-32 truncate">
                         {session.notes || '-'}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0"
-                              disabled={actionLoading === session.id}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                      <TableCell className="text-center">
+                        <TooltipProvider>
+                          <div className="flex items-center justify-center gap-2">
                             {session.status === 'pending' && (
-                              <DropdownMenuItem onClick={() => handleStartSession(session)}>
-                                <Play className="mr-2 h-4 w-4" />
-                                Bắt đầu
-                              </DropdownMenuItem>
-                            )}
-                            {session.status === 'active' && (
-                              <DropdownMenuItem onClick={() => handleEndSession(session)}>
-                                <Square className="mr-2 h-4 w-4" />
-                                Kết thúc
-                              </DropdownMenuItem>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="icon" onClick={() => handleStartSession(session)} disabled={actionLoading === session.id} className="text-green-500 border-green-500 hover:bg-green-50 hover:text-green-600">
+                                    <Play className="h-4 w-4" />
+                                    <span className="sr-only">Bắt đầu</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Bắt đầu</p></TooltipContent>
+                              </Tooltip>
                             )}
                             {(session.status === 'active' || session.status === 'completed') && (
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/journey-sessions/${session.id}`)}>
-                                <MapPin className="mr-2 h-4 w-4" />
-                                Xem hành trình
-                              </DropdownMenuItem>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="icon" onClick={() => router.push(`/dashboard/journey-sessions/${session.id}`)} className="text-purple-500 border-purple-500 hover:bg-purple-50 hover:text-purple-600">
+                                    <MapPin className="h-4 w-4" />
+                                    <span className="sr-only">Xem hành trình</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Xem hành trình</p></TooltipContent>
+                              </Tooltip>
+                            )}
+                            {session.status === 'active' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="icon" onClick={() => handleEndSession(session)} disabled={actionLoading === session.id} className="text-yellow-500 border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600">
+                                    <Square className="h-4 w-4" />
+                                    <span className="sr-only">Kết thúc</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Kết thúc</p></TooltipContent>
+                              </Tooltip>
                             )}
                             {session.status !== 'active' && (
                               <>
-                                <DropdownMenuItem onClick={() => onEditClick?.(session)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Sửa
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => setDeleteSession(session)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Xóa
-                                </DropdownMenuItem>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="icon" onClick={() => onEditClick?.(session)} disabled={actionLoading === session.id} className="text-blue-500 border-blue-500 hover:bg-blue-50 hover:text-blue-600">
+                                      <Edit className="h-4 w-4" />
+                                      <span className="sr-only">Sửa</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Sửa</p></TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="icon" onClick={() => setDeleteSession(session)} disabled={actionLoading === session.id} className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600">
+                                      <Trash2 className="h-4 w-4" />
+                                      <span className="sr-only">Xóa</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Xóa</p></TooltipContent>
+                                </Tooltip>
                               </>
                             )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </div>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))
@@ -323,9 +438,9 @@ function JourneySessionList({ onCreateClick, onEditClick, refreshTrigger }: {
               Bạn có chắc chắn muốn xóa ca làm việc này không? Hành động này không thể hoàn tác.
               <br />
               <br />
-              <strong>Xe:</strong> {deleteSession?.vehicle_plate_number}
+              <strong>Thiết bị:</strong> {deleteSession?.device_imei}
               <br />
-              <strong>Tài xế:</strong> {deleteSession?.driver_name}
+              <strong>Người sử dụng:</strong> {deleteSession?.driver_name}
               <br />
               <strong>Thời gian:</strong> {deleteSession && formatDateTime(deleteSession.start_time)}
             </AlertDialogDescription>

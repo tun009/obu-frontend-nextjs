@@ -1,10 +1,9 @@
 import apiService from './api';
-import type { 
-  Device, 
-  CreateDeviceRequest, 
+import type {
+  Device,
+  CreateDeviceRequest,
   UpdateDeviceRequest,
-  Vehicle,
-  PaginatedResponse 
+  PaginatedResponse
 } from '@/lib/types/api';
 
 export interface DeviceListParams {
@@ -14,9 +13,7 @@ export interface DeviceListParams {
   include_realtime?: boolean;
 }
 
-export interface DeviceAssignment {
-  vehicle_id?: string;
-}
+
 
 class DevicesAPI {
   private readonly basePath = '/devices';
@@ -40,15 +37,7 @@ class DevicesAPI {
     return apiService.get<Device>(`${this.basePath}/${id}`);
   }
 
-  // Get unassigned devices (devices without vehicles)
-  async getUnassignedDevices(): Promise<Device[]> {
-    return apiService.get<Device[]>(`${this.basePath}/unassigned`);
-  }
 
-  // Get unassigned vehicles (vehicles without devices) - from vehicles API
-  async getUnassignedVehicles(): Promise<Vehicle[]> {
-    return apiService.get<Vehicle[]>('/vehicles/unassigned');
-  }
 
   // Create new device
   async createDevice(data: CreateDeviceRequest): Promise<Device> {
@@ -65,16 +54,7 @@ class DevicesAPI {
     return apiService.delete<void>(`${this.basePath}/${id}`);
   }
 
-  // Assign device to vehicle
-  async assignDeviceToVehicle(deviceId: string, vehicleId: string): Promise<Device> {
-    const assignmentData: DeviceAssignment = { vehicle_id: vehicleId };
-    return apiService.put<Device>(`${this.basePath}/${deviceId}/assign`, assignmentData);
-  }
 
-  // Unassign device from vehicle
-  async unassignDeviceFromVehicle(deviceId: string): Promise<Device> {
-    return apiService.put<Device>(`${this.basePath}/${deviceId}/unassign`, {});
-  }
 
   // Get device realtime info
   async getDeviceRealtimeInfo(deviceId: string): Promise<any> {

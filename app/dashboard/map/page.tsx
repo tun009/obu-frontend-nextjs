@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image"
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import DynamicMap from "@/components/map/dynamic-map"
 import L from 'leaflet'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,14 +56,14 @@ function DeviceGrid({
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-3 h-3 rounded-full ${device.online
-                        ? "bg-green-500"
-                        : device.status === "no_gps"
-                          ? "bg-orange-500"
-                          : "bg-red-500"
+                      ? "bg-green-500"
+                      : device.status === "no_gps"
+                        ? "bg-orange-500"
+                        : "bg-red-500"
                       }`}
                   />
                   <CardTitle className="text-sm">{device.driver_name}</CardTitle>
-                   {device.hasGpsData ? (
+                  {device.hasGpsData ? (
                     <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">GPS</Badge>
                   ) : (
                     <Badge variant="destructive" className="text-xs">No GPS</Badge>
@@ -83,16 +83,16 @@ function DeviceGrid({
                   <Phone className={`h-4 w-4 ${device.online ? 'text-blue-500' : 'text-gray-400'}`} />
                 </Button>
               </div>
-               <CardDescription className="text-xs font-medium">{device?.plate_number || 'Chưa gắn xe'}
-            <span className="text-xs"> ({device?.imei})</span>
-               </CardDescription>
+              <CardDescription className="text-xs font-medium">{device?.imei}
+                {/* <span className="text-xs"> ({device?.imei})</span> */}
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-0 !p-4">
               <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-3 group">
                 {playingDeviceIds.has(device.id) ? (
                   <WebRTCVideoPlayer
                     deviceId={device.imei}
-                    deviceName={device.plate_number || device.imei}
+                    deviceName={device.device_name || device.imei}
                     onStreamStop={() => {
                       setPlayingDeviceIds(prev => {
                         const newSet = new Set(prev);
@@ -138,7 +138,7 @@ function DeviceGrid({
                   </>
                 )}
               </div>
-{/* 
+              {/* 
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">IMEI:</span>
@@ -273,7 +273,7 @@ export default function MapPage() {
   const filteredDevices = combinedDevices.filter((device) => {
     const matchesSearch =
       device?.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (device?.plate_number || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (device?.device_name || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || device.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -329,7 +329,7 @@ export default function MapPage() {
     <div className="space-y-6">
       {privateCallTarget && isInTempGroup && (
         <PrivateCallOverlay
-          deviceName={privateCallTarget.plate_number || privateCallTarget.imei}
+          deviceName={privateCallTarget.device_name || privateCallTarget.imei}
           onStopCall={handleTerminatePrivateCall}
         />
       )}
@@ -343,7 +343,7 @@ export default function MapPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">Danh sách các phương tiện trong ca làm việc</CardTitle>
+                    <CardTitle className="text-lg">Danh sách các thiết bị trong ca làm việc</CardTitle>
                     {filteredDevices.length > 0 && <CardDescription className="text-xs mt-1 h-4">
                       {talkingUser.ms_code && !isInTempGroup
                         ? <Badge variant="destructive" className="animate-pulse">
@@ -411,7 +411,7 @@ export default function MapPage() {
                 {/* <CardTitle className="text-lg">Bản đồ thời gian thực</CardTitle> */}
                 <CardTitle className="text-lg">
                   {selectedCombinedDevice
-                    ? `Đang xem: ${selectedCombinedDevice.driver_name} - ${selectedCombinedDevice?.plate_number || 'Chưa gắn xe'}`
+                    ? `Đang xem: ${selectedCombinedDevice.driver_name} (Phone: ${selectedCombinedDevice?.driver_phone_number})`
                     : "Click vào thiết bị để xem vị trí hiện tại"}
                 </CardTitle>
               </CardHeader>

@@ -23,6 +23,7 @@ export interface MapDevice extends Device {
   plate_number?: string;
   thumbnail_url?: string;
   driver_name?: string;
+  driver_phone_number?: string;
   hasGpsData?: boolean; // To specifically track if GPS data is active
 }
 
@@ -55,30 +56,7 @@ export function useMapData(): UseMapDataReturn {
     return 'online';
   };
 
-  // Helper function to format timestamp
-  const formatLastUpdate = (timestamp: number): string => {
-    try {
-      const now = Date.now();
-      const diff = now - (timestamp * 1000);
-      const minutes = Math.floor(diff / (1000 * 60));
-
-      if (minutes < 1) {
-        return 'Vừa xong';
-      } else if (minutes < 60) {
-        return `${minutes} phút trước`;
-      } else {
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) {
-          return `${hours} giờ trước`;
-        } else {
-          const days = Math.floor(hours / 24);
-          return `${days} ngày trước`;
-        }
-      }
-    } catch (error) {
-      return 'Không xác định';
-    }
-  };
+  
 
   // Convert device with realtime data to MapDevice
   const convertToMapDevice = (

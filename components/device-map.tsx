@@ -17,10 +17,11 @@ const center = {
   lng: 105.8542, // Hà Nội center
 }
 
-const mockVehicles = [
+const mockDevices = [
   {
-    id: 1,
-    plate: "29A-12345",
+    id: "device-1",
+    device_name: "Xe 29A-12345",
+    imei: "867530900000001",
     lat: 21.0285,
     lng: 105.8542,
     status: "moving",
@@ -30,8 +31,9 @@ const mockVehicles = [
     lastUpdate: "2 phút trước",
   },
   {
-    id: 2,
-    plate: "30B-67890",
+    id: "device-2",
+    device_name: "Xe 30B-67890",
+    imei: "867530900000002",
     lat: 21.0245,
     lng: 105.8412,
     status: "stopped",
@@ -41,8 +43,9 @@ const mockVehicles = [
     lastUpdate: "1 phút trước",
   },
   {
-    id: 3,
-    plate: "31C-11111",
+    id: "device-3",
+    device_name: "Xe 31C-11111",
+    imei: "867530900000003",
     lat: 21.0195,
     lng: 105.8352,
     status: "moving",
@@ -52,8 +55,9 @@ const mockVehicles = [
     lastUpdate: "30 giây trước",
   },
   {
-    id: 4,
-    plate: "32D-22222",
+    id: "device-4",
+    device_name: "Xe 32D-22222",
+    imei: "867530900000004",
     lat: 21.0335,
     lng: 105.8482,
     status: "parked",
@@ -86,28 +90,28 @@ const getMarkerIcon = (status: string) => {
   }
 }
 
-export function VehicleMap() {
-  const [selectedVehicle, setSelectedVehicle] = useState<(typeof mockVehicles)[0] | null>(null)
+export function DeviceMap() {
+  const [selectedDevice, setSelectedDevice] = useState<(typeof mockDevices)[0] | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
 
   const onLoad = useCallback(() => {
     setMapLoaded(true)
   }, [])
 
-  const handleMarkerClick = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
+  const handleMarkerClick = (device: (typeof mockDevices)[0]) => {
+    setSelectedDevice(device)
   }
 
-  const handleVehicleClick = (vehicle: (typeof mockVehicles)[0]) => {
-    setSelectedVehicle(vehicle)
-    // Optional: Pan to vehicle location
+  const handleDeviceClick = (device: (typeof mockDevices)[0]) => {
+    setSelectedDevice(device)
+    // Optional: Pan to device location
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bản đồ theo dõi xe</CardTitle>
-        <CardDescription>Vị trí thời gian thực của các xe trong hệ thống</CardDescription>
+        <CardTitle>Bản đồ theo dõi thiết bị</CardTitle>
+        <CardDescription>Vị trí thời gian thực của các thiết bị trong hệ thống</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-3">
@@ -129,54 +133,54 @@ export function VehicleMap() {
                 }}
               >
                 {mapLoaded &&
-                  mockVehicles.map((vehicle) => (
+                  mockDevices.map((device) => (
                     <Marker
-                      key={vehicle.id}
-                      position={{ lat: vehicle.lat, lng: vehicle.lng }}
-                      icon={getMarkerIcon(vehicle.status)}
-                      onClick={() => handleMarkerClick(vehicle)}
-                      title={`${vehicle.plate} - ${vehicle.driver}`}
+                      key={device.id}
+                      position={{ lat: device.lat, lng: device.lng }}
+                      icon={getMarkerIcon(device.status)}
+                      onClick={() => handleMarkerClick(device)}
+                      title={`${device.device_name} - ${device.driver}`}
                     />
                   ))}
 
-                {selectedVehicle && (
+                {selectedDevice && (
                   <InfoWindow
-                    position={{ lat: selectedVehicle.lat, lng: selectedVehicle.lng }}
-                    onCloseClick={() => setSelectedVehicle(null)}
+                    position={{ lat: selectedDevice.lat, lng: selectedDevice.lng }}
+                    onCloseClick={() => setSelectedDevice(null)}
                   >
                     <div className="p-2 min-w-[200px]">
-                      <div className="font-semibold text-lg mb-2">{selectedVehicle.plate}</div>
+                      <div className="font-semibold text-lg mb-2">{selectedDevice.device_name}</div>
                       <div className="space-y-1 text-sm">
                         <div className="flex items-center gap-2">
                           <User className="h-3 w-3" />
-                          <span>{selectedVehicle.driver}</span>
+                          <span>{selectedDevice.driver}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3" />
-                          <span>{selectedVehicle.phone}</span>
+                          <span>{selectedDevice.phone}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Navigation className="h-3 w-3" />
-                          <span>{selectedVehicle.speed} km/h</span>
+                          <span>{selectedDevice.speed} km/h</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge
                             variant={
-                              selectedVehicle.status === "moving"
+                              selectedDevice.status === "moving"
                                 ? "default"
-                                : selectedVehicle.status === "stopped"
+                                : selectedDevice.status === "stopped"
                                   ? "secondary"
                                   : "outline"
                             }
                           >
-                            {selectedVehicle.status === "moving"
+                            {selectedDevice.status === "moving"
                               ? "Đang di chuyển"
-                              : selectedVehicle.status === "stopped"
+                              : selectedDevice.status === "stopped"
                                 ? "Dừng"
                                 : "Đỗ"}
                           </Badge>
                         </div>
-                        <div className="text-xs text-gray-500 mt-2">Cập nhật: {selectedVehicle.lastUpdate}</div>
+                        <div className="text-xs text-gray-500 mt-2">Cập nhật: {selectedDevice.lastUpdate}</div>
                       </div>
                     </div>
                   </InfoWindow>
@@ -185,10 +189,10 @@ export function VehicleMap() {
             </LoadScript>
           </div>
 
-          {/* Vehicle List */}
+          {/* Device List */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">Danh sách xe ({mockVehicles.length})</h4>
+              <h4 className="font-medium">Danh sách thiết bị ({mockDevices.length})</h4>
               <div className="flex gap-1">
                 <div className="w-3 h-3 bg-green-500 rounded-full" title="Đang di chuyển"></div>
                 <div className="w-3 h-3 bg-orange-500 rounded-full" title="Dừng"></div>
@@ -197,40 +201,40 @@ export function VehicleMap() {
             </div>
 
             <div className="max-h-[350px] overflow-y-auto space-y-2">
-              {mockVehicles.map((vehicle) => (
+              {mockDevices.map((device) => (
                 <div
-                  key={vehicle.id}
+                  key={device.id}
                   className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedVehicle?.id === vehicle.id ? "bg-blue-50 border-blue-200" : ""
+                    selectedDevice?.id === device.id ? "bg-blue-50 border-blue-200" : ""
                   }`}
-                  onClick={() => handleVehicleClick(vehicle)}
+                  onClick={() => handleDeviceClick(device)}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-3 h-3 rounded-full ${
-                        vehicle.status === "moving"
+                        device.status === "moving"
                           ? "bg-green-500"
-                          : vehicle.status === "stopped"
+                          : device.status === "stopped"
                             ? "bg-orange-500"
                             : "bg-gray-500"
                       }`}
                     />
                     <div>
-                      <p className="font-medium text-sm">{vehicle.plate}</p>
-                      <p className="text-xs text-muted-foreground">{vehicle.driver}</p>
-                      <p className="text-xs text-muted-foreground">{vehicle.speed} km/h</p>
+                      <p className="font-medium text-sm">{device.device_name}</p>
+                      <p className="text-xs text-muted-foreground">{device.driver}</p>
+                      <p className="text-xs text-muted-foreground">{device.speed} km/h</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <Badge
                       variant={
-                        vehicle.status === "moving" ? "default" : vehicle.status === "stopped" ? "secondary" : "outline"
+                        device.status === "moving" ? "default" : device.status === "stopped" ? "secondary" : "outline"
                       }
                       className="text-xs"
                     >
-                      {vehicle.status === "moving" ? "Di chuyển" : vehicle.status === "stopped" ? "Dừng" : "Đỗ"}
+                      {device.status === "moving" ? "Di chuyển" : device.status === "stopped" ? "Dừng" : "Đỗ"}
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">{vehicle.lastUpdate}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{device.lastUpdate}</p>
                   </div>
                 </div>
               ))}
@@ -248,3 +252,4 @@ export function VehicleMap() {
     </Card>
   )
 }
+

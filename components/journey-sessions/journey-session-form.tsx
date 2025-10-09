@@ -14,10 +14,10 @@ import { Loader2 } from "lucide-react"
 import { DateTimePicker } from "@/components/ui/datetime-picker"
 import { toast } from "sonner"
 import apiService from "@/lib/services/api"
-import type { Vehicle, Driver, CreateJourneySessionRequest, JourneySessionWithDetails } from "@/lib/types/api"
+import type { Device, Driver, CreateJourneySessionRequest, JourneySessionWithDetails, PaginatedResponse } from "@/lib/types/api"
 
 const createFormSchema = (isEditing: boolean = false) => z.object({
-  vehicle_id: z.string().min(1, "Vui lòng chọn xe"),
+  device_id: z.string().min(1, "Vui lòng chọn thiết bị"),
   driver_id: z.string().min(1, "Vui lòng chọn tài xế"),
   start_time: z.date({
     required_error: "Vui lòng chọn thời gian bắt đầu",
@@ -56,7 +56,7 @@ interface JourneySessionFormProps {
 }
 
 export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySessionFormProps) {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [devices, setDevices] = useState<Device[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
@@ -67,7 +67,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vehicle_id: session?.vehicle_id || "",
+      device_id: session?.device_id || "",
       driver_id: session?.driver_id || "",
       start_time: session?.start_time ? new Date(session.start_time) : undefined,
       end_time: session?.end_time ? new Date(session.end_time) : undefined,
@@ -75,20 +75,19 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
     },
   })
 
-  // Load vehicles and drivers
+  // Load devices and drivers
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoadingData(true)
-        const [vehiclesResponse, driversResponse] = await Promise.all([
-          apiService.get<{ data: Vehicle[] }>('/vehicles?items_per_page=100'),
-          apiService.get<{ data: Driver[] }>('/drivers?items_per_page=100')
+        const [devicesResponse, driversResponse] = await Promise.all([
+          apiService.get<PaginatedResponse<Device>>('/devices?items_per_page=100'),
+          apiService.get<PaginatedResponse<Driver>>('/drivers?items_per_page=100')
         ])
-        
-        setVehicles(vehiclesResponse.data)
+        setDevices(devicesResponse.data)
         setDrivers(driversResponse.data)
       } catch (error) {
-        toast.error('Không thể tải dữ liệu xe và tài xế')
+        toast.error('Không thể tải dữ liệu thiết bị và tài xế')
         console.error('Error loading data:', error)
       } finally {
         setLoadingData(false)
@@ -103,7 +102,7 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
       setLoading(true)
 
       const requestData: CreateJourneySessionRequest = {
-        vehicle_id: values.vehicle_id,
+        device_id: values.device_id,
         driver_id: values.driver_id,
         start_time: values.start_time.toISOString(),
         end_time: values.end_time.toISOString(),
@@ -150,23 +149,23 @@ export function JourneySessionForm({ session, onSuccess, onCancel }: JourneySess
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Vehicle Selection */}
+              {/* Device Selection */}
               <FormField
                 control={form.control}
-                name="vehicle_id"
+                name="device_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Xe</FormLabel>
+                    <FormLabel>Thiết bị</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Chọn xe" />
+                          <SelectValue placeholder="Chọn thiết bị" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {vehicles.map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id}>
-                            {vehicle.plate_number} {vehicle.type && `(${vehicle.type})`}
+                        {devices.map((device) => (
+                          <SelectItem key={device.id} value={device.id}>
+                            {device.imei}
                           </SelectItem>
                         ))}
                       </SelectContent>

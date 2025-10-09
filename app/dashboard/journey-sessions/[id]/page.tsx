@@ -8,9 +8,11 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
-import { Play, Pause, SkipBack, SkipForward, Square, Volume2, VolumeX, ArrowLeft, Clock, Gauge, Battery, MapPin } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Play, Pause, SkipBack, SkipForward, Square, Volume2, VolumeX, ArrowLeft, Clock, Gauge, Battery, MapPin, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { toast } from "sonner"
@@ -71,12 +73,19 @@ export default function JourneyHistoryPage() {
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([])
   const [loading, setLoading] = useState(true)
 
+
   // Player states
   const [activeVideo, setActiveVideo] = useState<PlaylistItem | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
   const [globalTime, setGlobalTime] = useState(0) // in seconds, represents time from the start of the whole journey
+
+  // Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [isFilterActive, setIsFilterActive] = useState(false)
+  const [timeRange, setTimeRange] = useState([0, 0]) // For the slider UI, in seconds
+  const [appliedTimeRange, setAppliedTimeRange] = useState<[number, number] | null>(null) // For applied filter, in seconds
 
   // Map and Log states
   const [currentGpsIndex, setCurrentGpsIndex] = useState(0)
@@ -86,30 +95,71 @@ export default function JourneyHistoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // --- DATA FETCHING ---
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!journeyId) return
-      try {
-        setLoading(true)
-        const [historyResponse, playlistResponse] = await Promise.all([
-          journeySessionsAPI.getJourneySessionHistory(journeyId),
-          journeySessionsAPI.getJourneyPlaylist(journeyId)
-        ])
+  const fetchData = async (startTime?: string, endTime?: string, isFiltering: boolean = false) => {
+    if (!journeyId) return;
+    try {
+      if (!isFiltering) {
+        setLoading(true);
+      }
+      const [historyResponse, playlistResponse] = await Promise.all([
+        journeySessionsAPI.getJourneySessionHistory(journeyId, startTime, endTime),
+        journeySessionsAPI.getJourneyPlaylist(journeyId, startTime, endTime)
+      ]);
 
-        // const validHistory = historyResponse.data.filter((item: JourneySessionHistoryPoint) => item.gps_valid === 1)
-        const validHistory = historyResponse.data
-        setHistoryData({ ...historyResponse, data: validHistory })
-        setPlaylist(playlistResponse)
+      const validHistory = historyResponse.data;
+      setHistoryData({ ...historyResponse, data: validHistory });
+      setPlaylist(playlistResponse);
 
-      } catch (error: any) {
-        toast.error('Không thể tải dữ liệu hành trình hoặc video.')
-        console.error('Error fetching data:', error)
-      } finally {
-        setLoading(false)
+    } catch (error: any) {
+      toast.error('Không thể tải dữ liệu hành trình hoặc video.');
+      console.error('Error fetching data:', error);
+    } finally {
+      if (!isFiltering) {
+        setLoading(false);
       }
     }
+  };
+
+  useEffect(() => {
     fetchData()
   }, [journeyId])
+
+
+
+  // --- FILTER HANDLERS ---
+  const handleApplyFilter = async () => {
+    if (!historyData?.data || historyData.data.length === 0 || !journeyStartTimeMs) return;
+
+    const startTimeMs = journeyStartTimeMs + (timeRange[0] * 1000);
+    const endTimeMs = journeyStartTimeMs + (timeRange[1] * 1000);
+
+    const startTimeISO = new Date(startTimeMs).toISOString();
+    const endTimeISO = new Date(endTimeMs).toISOString();
+
+    setAppliedTimeRange([timeRange[0], timeRange[1]]);
+    setIsFilterActive(true);
+    setGlobalTime(0); // Reset playback position
+
+    await fetchData(startTimeISO, endTimeISO, true);
+    toast.success('Đã áp dụng bộ lọc thời gian');
+  };
+
+  const handleResetFilter = async () => {
+    setAppliedTimeRange(null);
+    setIsFilterActive(false);
+    setGlobalTime(0); // Reset playback position
+
+    await fetchData(undefined, undefined, true);
+    toast.success('Đã xóa bộ lọc thời gian');
+  };
+
+
+
+  const formatTimestampFromSeconds = (seconds: number) => {
+    if (!journeyStartTimeMs || isNaN(seconds)) return "--/--/---- --:--:--";
+    const timestampMs = journeyStartTimeMs + (seconds * 1000);
+    return format(new Date(timestampMs), "dd/MM/yyyy HH:mm:ss");
+  }
 
   // --- MEMOIZED CALCULATIONS ---
   const { totalDuration, journeyStartTimeMs } = useMemo(() => {
@@ -118,19 +168,22 @@ export default function JourneyHistoryPage() {
     }
 
     const journeyStart = new Date(historyData.data[0].collected_at).getTime();
-
-    // If there's a playlist, duration is based on video lengths
-    // if (playlist.length > 0) {
-    //   const accumulatedDuration = playlist.reduce((acc, item) => acc + item.media_duration, 0);
-    //   return { totalDuration: accumulatedDuration, journeyStartTimeMs: journeyStart };
-    // }
-
-    // If no playlist, duration is based on GPS history
     const journeyEnd = new Date(historyData.data[historyData.data.length - 1].collected_at).getTime();
     const historyDuration = (journeyEnd - journeyStart) / 1000; // in seconds
-    return { totalDuration: historyDuration > 0 ? historyDuration : 0, journeyStartTimeMs: journeyStart };
 
-  }, [playlist, historyData]);
+    return {
+      totalDuration: historyDuration > 0 ? historyDuration : 0,
+      journeyStartTimeMs: journeyStart
+    };
+
+  }, [historyData]);
+
+  // Sync filter slider range with total duration
+  useEffect(() => {
+    if (!isFilterActive) {
+      setTimeRange([0, totalDuration]);
+    }
+  }, [totalDuration, isFilterActive]);
 
   // --- PLAYER LOGIC ---
 
@@ -260,7 +313,7 @@ export default function JourneyHistoryPage() {
   const rowVirtualizer = useVirtualizer({
     count: historyData?.data.length ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 76, // Approx height of one log item in pixels
+    estimateSize: () => 60, // Approx height of one log item in pixels
     overscan: 5,
   });
 
@@ -349,16 +402,137 @@ export default function JourneyHistoryPage() {
                     <p className="text-muted-foreground">Không có video cho thời điểm này</p>
                   </div>
                 )}
-                <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-2 rounded flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">Xe {historyData.plate_number}</span>
-                </div>
                 <div className="absolute top-4 right-4">
                   <Button size="sm" variant="secondary" className="bg-black/70 hover:bg-black/80 text-white border-none" onClick={() => setIsMuted(!isMuted)}>
                     {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
+
+              {/* Timeline Filter */}
+              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${isFilterActive ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                      <span className="text-sm font-medium">Bộ lọc</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-slate-300">
+                        {isFilterOpen
+                          ? `${formatTimestampFromSeconds(timeRange[0])} → ${formatTimestampFromSeconds(timeRange[1])}`
+                          : (isFilterActive && appliedTimeRange)
+                            ? `${formatTimestampFromSeconds(appliedTimeRange[0])} → ${formatTimestampFromSeconds(appliedTimeRange[1])}`
+                            : "Toàn bộ hành trình"
+                        }
+                      </span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="bg-slate-800 text-white px-4 py-4 border-t border-slate-700">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="relative h-8 w-full flex items-center">
+                          {/* Track background */}
+                          <div className="absolute h-2 w-full bg-slate-600 rounded-full" />
+                          {/* Range highlight */}
+                          <div
+                            className="absolute h-2 bg-blue-500 rounded-full"
+                            style={{
+                              left: `${(timeRange[0] / totalDuration) * 100}%`,
+                              width: `${((timeRange[1] - timeRange[0]) / totalDuration) * 100}%`,
+                            }}
+                          />
+                          {/* Start marker */}
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
+                            style={{ left: `calc(${(timeRange[0] / totalDuration) * 100}% - 12px)` }}
+                          >
+                            <ChevronLeft className="w-4 h-4 text-white" />
+                          </div>
+                          {/* End marker */}
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
+                            style={{ left: `calc(${(timeRange[1] / totalDuration) * 100}% - 12px)` }}
+                          >
+                            <ChevronRight className="w-4 h-4 text-white" />
+                          </div>
+                          {/* Invisible range inputs */}
+                          <input
+                            type="range"
+                            min={0}
+                            max={totalDuration}
+                            value={timeRange[0]}
+                            step={1}
+                            onChange={(e) => {
+                              const newStart = Number(e.target.value);
+                              if (newStart < timeRange[1]) {
+                                setTimeRange([newStart, timeRange[1]]);
+                              }
+                            }}
+                            className="absolute w-full h-full opacity-0 cursor-pointer"
+                            style={{ zIndex: 3 }}
+                          />
+                          <input
+                            type="range"
+                            min={0}
+                            max={totalDuration}
+                            value={timeRange[1]}
+                            step={1}
+                            onChange={(e) => {
+                              const newEnd = Number(e.target.value);
+                              if (newEnd > timeRange[0]) {
+                                setTimeRange([timeRange[0], newEnd]);
+                              }
+                            }}
+                            className="absolute w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+                            style={{ zIndex: 4 }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400 pt-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help">{formatTimestampFromSeconds(0)}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Thời gian bắt đầu hành trình</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help">{formatTimestampFromSeconds(totalDuration)}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Thời gian kết thúc hành trình</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+
+                      {/* Stats and buttons */}
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-slate-400">
+                          Duration: {new Date((timeRange[1] - timeRange[0]) * 1000).toISOString().slice(11, 19)}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={handleResetFilter} className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
+                            Reset
+                          </Button>
+                          <Button size="sm" onClick={handleApplyFilter} className="bg-blue-600 hover:bg-blue-700">
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Video Controls */}
               <div className="p-4 border-b flex-shrink-0">
@@ -378,6 +552,8 @@ export default function JourneyHistoryPage() {
                     </Select>
                   </div>
                 </div>
+
+
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <Button size="sm" variant="outline" onClick={() => handleSliderChange([Math.max(0, globalTime - 10)])}><SkipBack className="h-4 w-4" /></Button>
                   <Button size="sm" onClick={handlePlayPause}>{isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button>
@@ -424,7 +600,7 @@ export default function JourneyHistoryPage() {
                             }}
                             onClick={() => handleLogClick(index)}
                           >
-                            <div className={`p-3 h-full rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-200 border-blue-500 shadow-sm" : "bg-white hover:bg-gray-50"}`}>
+                            <div className={`p-2 h-full rounded-lg border cursor-pointer transition-all hover:shadow-sm ${index === currentGpsIndex ? "bg-blue-200 border-blue-500 shadow-sm" : "bg-white hover:bg-gray-50"}`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-2 h-2 rounded-full ${index === currentGpsIndex ? "bg-blue-500" : "bg-gray-300"}`} />
