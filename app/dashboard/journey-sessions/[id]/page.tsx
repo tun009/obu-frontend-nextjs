@@ -412,7 +412,7 @@ export default function JourneyHistoryPage() {
               </div>
 
               {/* Timeline Filter */}
-              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              {/* <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors">
                     <div className="flex items-center gap-3">
@@ -512,7 +512,6 @@ export default function JourneyHistoryPage() {
                         </div>
                       </div>
 
-                      {/* Stats and buttons */}
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-slate-400">
                           {t('journeySessionDetailsPage.filter.duration')}: {new Date((timeRange[1] - timeRange[0]) * 1000).toISOString().slice(11, 19)}
@@ -529,7 +528,7 @@ export default function JourneyHistoryPage() {
                     </div>
                   </div>
                 </CollapsibleContent>
-              </Collapsible>
+              </Collapsible> */}
 
               {/* Video Controls */}
               <div className="p-4 border-b flex-shrink-0">
