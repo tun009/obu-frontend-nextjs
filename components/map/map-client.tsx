@@ -157,7 +157,7 @@ export default function MapClient({
         // 1. Update existing markers and add new ones
         devices.forEach(device => {
           if (!device.latitude || !device.longitude) return;
-
+          
           const popupContent = `
             <div class="p-2 min-w-[250px]">
               <div class="font-semibold text-base mb-2">${device.driver_name} (${device?.imei})</div>
@@ -183,10 +183,9 @@ export default function MapClient({
               marker.setRotationAngle(device.direction ?? 0);
             }
 
-            // Only update popup content if it's not currently open, to avoid flicker
-            if (!marker.isPopupOpen()) {
-              marker.setPopupContent(popupContent);
-            }
+            // Always update popup content to show the latest data, even if it causes a flicker
+            
+            marker.setPopupContent(popupContent);
           } else {
             // Marker doesn't exist: Create and add it
             // Add rotationAngle option from the plugin
