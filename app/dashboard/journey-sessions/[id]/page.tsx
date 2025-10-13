@@ -348,15 +348,40 @@ export default function JourneyHistoryPage() {
 
     const progressPoints = allPoints.slice(0, currentGpsIndex + 1);
 
-    const point = historyData.data[currentGpsIndex];
-    const vehiclePos = point ? { ...convertGpsCoordinates(point), direction: point.direction ?? 0 } : undefined; // Direction is not available in history data, default to 0
+    const currentPoint = historyData.data[currentGpsIndex];
+    let vehiclePos: { lat: number; lng: number; direction: number; isValidGps: boolean; } | undefined;
+
+    if (currentPoint) {
+      const isCurrentPointValid = currentPoint.gps_valid === 1 && currentPoint.gps_enable === 1;
+      let pointToDisplay = currentPoint;
+
+      if (!isCurrentPointValid) {
+        // Find the last valid point if the current one is not valid
+        for (let i = currentGpsIndex - 1; i >= 0; i--) {
+          if (historyData.data[i].gps_valid === 1 && historyData.data[i].gps_enable === 1) {
+            pointToDisplay = historyData.data[i];
+            break;
+          }
+        }
+      }
+
+      const coords = convertGpsCoordinates(pointToDisplay);
+      if (coords) {
+        vehiclePos = {
+          ...coords,
+          direction: pointToDisplay.direction ?? 0,
+          isValidGps: isCurrentPointValid
+        };
+      }
+    }
+
     return {
       fullPathCoordinates: allPoints,
       progressPathCoordinates: progressPoints,
       vehiclePosition: vehiclePos,
       startPosition: allPoints[0],
       endPosition: allPoints[allPoints.length - 1],
-      currentPoint: point,
+      currentPoint: currentPoint,
     };
   }, [historyData, currentGpsIndex]);
 
@@ -412,7 +437,7 @@ export default function JourneyHistoryPage() {
               </div>
 
               {/* Timeline Filter */}
-              {/* <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors">
                     <div className="flex items-center gap-3">
@@ -528,7 +553,7 @@ export default function JourneyHistoryPage() {
                     </div>
                   </div>
                 </CollapsibleContent>
-              </Collapsible> */}
+              </Collapsible>
 
               {/* Video Controls */}
               <div className="p-4 border-b flex-shrink-0">
@@ -568,7 +593,33 @@ export default function JourneyHistoryPage() {
                       {historyData?.data[historyData.data.length - 1] ? format(new Date(historyData.data[historyData.data.length - 1].collected_at), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
                     </span>
                   </div>
-                  <Slider value={[globalTime]} onValueChange={handleSliderChange} max={totalDuration} step={1} className="w-full" />
+                  <div className="relative w-full h-4 flex items-center">
+                    {/* Video segments overlay */}
+                    <div className="absolute w-full h-2 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                      {playlist.map((video) => {
+                        if (!journeyStartTimeMs || !totalDuration) return null;
+
+                        const videoStartOffset = (new Date(video.taken_at).getTime() - journeyStartTimeMs) / 1000;
+                        const leftPercentage = (videoStartOffset / totalDuration) * 100;
+                        const widthPercentage = (video.media_duration / totalDuration) * 100;
+
+                        // Ensure segments are within the 0-100% bounds
+                        if (leftPercentage > 100 || leftPercentage < 0) return null;
+
+                        return (
+                          <div
+                            key={video.id}
+                            className="absolute h-full bg-blue-500/50 rounded-full"
+                            style={{
+                              left: `${leftPercentage}%`,
+                              width: `${widthPercentage}%`,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                    <Slider value={[globalTime]} onValueChange={handleSliderChange} max={totalDuration} step={1} className="w-full" />
+                  </div>
                 </div>
               </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { MapDevice } from "@/hooks/use-map-data"
 import { createDeviceIcon } from './map-icon';
+import { useTranslation } from "react-i18next";
 
 interface MapClientProps {
   devices: MapDevice[];
@@ -26,6 +27,7 @@ export default function MapClient({
   pathCoordinates,
   journeyMarkers
 }: MapClientProps) {
+  const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const journeyLayersRef = useRef<{
@@ -112,10 +114,10 @@ export default function MapClient({
 
         // Add layer control
         const baseLayers = {
-            "Tiêu chuẩn": osmLayer,
-            "Địa hình": topoLayer,
-            "Vệ tinh": satelliteLayer,
-            "Nền tối": darkLayer
+            [t('mapClient.layers.standard')]: osmLayer,
+            [t('mapClient.layers.terrain')]: topoLayer,
+            [t('mapClient.layers.satellite')]: satelliteLayer,
+            [t('mapClient.layers.dark')]: darkLayer
         };
 
         L.control.layers(baseLayers).addTo(mapInstanceRef.current);
@@ -128,7 +130,7 @@ export default function MapClient({
 
       } catch (err) {
         console.error('Error initializing map:', err)
-        setError('Failed to load map')
+        setError(t('mapClient.loadError'))
         setIsLoading(false)
       }
     }
@@ -160,12 +162,12 @@ export default function MapClient({
             <div class="p-2 min-w-[250px]">
               <div class="font-semibold text-base mb-2">${device.driver_name} (${device?.imei})</div>
               <div class="space-y-1 text-sm">
-                <div>Trạng thái: <span class="font-medium">${device.status}</span></div>
-                <div>Vị trí: ${device.latitude?.toFixed(6)}, ${device.longitude?.toFixed(6)}</div>
-                <div>Tốc độ: ${device.speed || 0} km/h</div>
-                <div>Biển số xe: ${device.plate_number || "Unknown"}</div>
+                <div>${t('mapClient.popup.status')}: <span class="font-medium">${device.status}</span></div>
+                <div>${t('mapClient.popup.location')}: ${device.latitude?.toFixed(6)}, ${device.longitude?.toFixed(6)}</div>
+                <div>${t('mapClient.popup.speed')}: ${device.speed || 0} km/h</div>
+                <div>${t('mapClient.popup.plateNumber')}: ${device.plate_number || t('mapClient.popup.unknown')}</div>
                 <div class="text-xs text-gray-500">
-                  Cập nhật lần cuối: ${device.last_update ? new Date(device.last_update).toLocaleString() : "Unknown"}
+                  ${t('mapClient.popup.lastUpdate')}: ${device.last_update ? new Date(device.last_update).toLocaleString() : t('mapClient.popup.unknown')}
                 </div>
               </div>
             </div>
@@ -286,7 +288,7 @@ export default function MapClient({
         <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10 rounded-lg">
           <div className="text-center text-muted-foreground">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Loading interactive map...</p>
+            <p>{t('mapClient.loading')}</p>
           </div>
         </div>
       )}

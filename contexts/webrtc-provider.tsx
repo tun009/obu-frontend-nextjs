@@ -3,6 +3,7 @@ import { WebRTCStreamService } from '@/lib/services/webrtc-service';
 import { mqttManager } from '@/lib/services/mqtt-manager';
 import type { StreamState, StreamInfo } from '@/lib/types/webrtc';
 import { generateSessionId } from '@/lib/constants/webrtc';
+import i18n from '@/i18n';
 
 interface ManagedStream {
   state: StreamState;
@@ -22,6 +23,7 @@ const WebRTCActionsContext = createContext<WebRTCManagerActions | null>(null);
 export const useWebRTCState = (deviceId: string) => {
   const stateMap = useContext(WebRTCStateContext);
   if (!stateMap) {
+    // This is a developer-facing error, keep it in English.
     throw new Error('useWebRTCState must be used within a WebRTCProvider');
   }
   return stateMap.get(deviceId);
@@ -30,6 +32,7 @@ export const useWebRTCState = (deviceId: string) => {
 export const useWebRTCActions = () => {
   const actions = useContext(WebRTCActionsContext);
   if (!actions) {
+    // This is a developer-facing error, keep it in English.
     throw new Error('useWebRTCActions must be used within a WebRTCProvider');
   }
   return actions;
@@ -80,7 +83,7 @@ export const WebRTCProvider = ({ children }: { children: ReactNode }) => {
       const sessionId = generateSessionId();
       await service.connect(deviceId, sessionId);
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Unknown error';
+      const error = err instanceof Error ? err.message : i18n.t('webrtc.unknownError');
       updateState({ state: 'error', error });
       streamServices.current.delete(deviceId);
     }

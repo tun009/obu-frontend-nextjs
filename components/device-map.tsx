@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -68,31 +69,34 @@ const mockDevices = [
   },
 ]
 
-const getMarkerIcon = (status: string) => {
-  const baseIcon = {
-    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-    fillOpacity: 1,
-    strokeWeight: 2,
-    strokeColor: "#ffffff",
-    scale: 1.5,
-    anchor: { x: 12, y: 24 },
-  }
-
-  switch (status) {
-    case "moving":
-      return { ...baseIcon, fillColor: "#22c55e" } // Green
-    case "stopped":
-      return { ...baseIcon, fillColor: "#f59e0b" } // Orange
-    case "parked":
-      return { ...baseIcon, fillColor: "#6b7280" } // Gray
-    default:
-      return { ...baseIcon, fillColor: "#ef4444" } // Red
-  }
-}
-
 export function DeviceMap() {
+  const { t } = useTranslation()
   const [selectedDevice, setSelectedDevice] = useState<(typeof mockDevices)[0] | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
+
+  const getMarkerIcon = (status: string) => {
+    if (typeof window === 'undefined' || !window.google) return undefined
+
+    const baseIcon = {
+      path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
+      fillOpacity: 1,
+      strokeWeight: 2,
+      strokeColor: "#ffffff",
+      scale: 1.5,
+      anchor: new window.google.maps.Point(12, 24),
+    }
+
+    switch (status) {
+      case "moving":
+        return { ...baseIcon, fillColor: "#22c55e" } // Green
+      case "stopped":
+        return { ...baseIcon, fillColor: "#f59e0b" } // Orange
+      case "parked":
+        return { ...baseIcon, fillColor: "#6b7280" } // Gray
+      default:
+        return { ...baseIcon, fillColor: "#ef4444" } // Red
+    }
+  }
 
   const onLoad = useCallback(() => {
     setMapLoaded(true)
@@ -110,8 +114,8 @@ export function DeviceMap() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bản đồ theo dõi thiết bị</CardTitle>
-        <CardDescription>Vị trí thời gian thực của các thiết bị trong hệ thống</CardDescription>
+        <CardTitle>{t('deviceMap.title')}</CardTitle>
+        <CardDescription>{t('deviceMap.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-3">
@@ -174,13 +178,13 @@ export function DeviceMap() {
                             }
                           >
                             {selectedDevice.status === "moving"
-                              ? "Đang di chuyển"
+                              ? t('deviceMap.status.moving')
                               : selectedDevice.status === "stopped"
-                                ? "Dừng"
-                                : "Đỗ"}
+                                ? t('deviceMap.status.stopped')
+                                : t('deviceMap.status.parked')}
                           </Badge>
                         </div>
-                        <div className="text-xs text-gray-500 mt-2">Cập nhật: {selectedDevice.lastUpdate}</div>
+                        <div className="text-xs text-gray-500 mt-2">{t('deviceMap.lastUpdate')}: {selectedDevice.lastUpdate}</div>
                       </div>
                     </div>
                   </InfoWindow>
@@ -192,11 +196,11 @@ export function DeviceMap() {
           {/* Device List */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">Danh sách thiết bị ({mockDevices.length})</h4>
+              <h4 className="font-medium">{t('deviceMap.deviceListTitle')} ({mockDevices.length})</h4>
               <div className="flex gap-1">
-                <div className="w-3 h-3 bg-green-500 rounded-full" title="Đang di chuyển"></div>
-                <div className="w-3 h-3 bg-orange-500 rounded-full" title="Dừng"></div>
-                <div className="w-3 h-3 bg-gray-500 rounded-full" title="Đỗ"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full" title={t('deviceMap.status.moving')}></div>
+                <div className="w-3 h-3 bg-orange-500 rounded-full" title={t('deviceMap.status.stopped')}></div>
+                <div className="w-3 h-3 bg-gray-500 rounded-full" title={t('deviceMap.status.parked')}></div>
               </div>
             </div>
 
@@ -232,7 +236,7 @@ export function DeviceMap() {
                       }
                       className="text-xs"
                     >
-                      {device.status === "moving" ? "Di chuyển" : device.status === "stopped" ? "Dừng" : "Đỗ"}
+                      {device.status === "moving" ? t('deviceMap.status.moving') : device.status === "stopped" ? t('deviceMap.status.stopped') : t('deviceMap.status.parked')}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">{device.lastUpdate}</p>
                   </div>
@@ -243,7 +247,7 @@ export function DeviceMap() {
             <div className="pt-3 border-t">
               <Button variant="outline" size="sm" className="w-full bg-transparent">
                 <MapPin className="h-4 w-4 mr-2" />
-                Xem toàn bộ bản đồ
+                {t('deviceMap.viewFullMapButton')}
               </Button>
             </div>
           </div>

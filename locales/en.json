@@ -9,7 +9,13 @@
     "previous": "Previous",
     "next": "Next",
     "none": "None",
-    "pagination": "Showing {{from}} to {{to}} of {{total}} results"
+    "pagination": "Showing {{from}} to {{to}} of {{total}} results",
+    "genericError": "An error occurred",
+    "operationSuccess": "Operation successful",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logout successful",
+    "activateShiftSuccess": "Shift activated successfully",
+    "completeShiftSuccess": "Shift completed successfully"
   },
   "header": {
     "account": "My Account",
@@ -19,7 +25,7 @@
   },
   "sidebar": {
     "title": "Patrol Management",
-    "subtitle": "OBU Tracking System",
+    "subtitle": "Camera Tracking System",
     "live": "Command Center",
     "vehicles": "Patrol Vehicles",
     "users": "Users",
@@ -311,11 +317,147 @@
     },
     "log": {
       "title": "Logs",
-      "invalidGps": "Invalid GPS"
+      "invalidGps": "No GPS"
     },
     "map": {
       "title": "Journey Map - {{imei}}",
       "currentLocation": "Current Location: {{time}} - Speed: {{speed}} km/h"
+    }
+  },
+  "auth": {
+    "contextError": "useAuthContext must be used within an AuthProvider",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed",
+    "loginGenericError": "An error occurred during login"
+  },
+  "mapData": {
+    "fetchDevicesError": "Failed to fetch devices - no data in response",
+    "loadDevicesError": "Failed to load devices"
+  },
+  "pocCall": {
+    "scriptLoadError": "Failed to load script: {{url}}",
+    "globalTimeoutError": "Timeout waiting for: {{globalName}}",
+    "initError": "PoC library initialization error:",
+    "invalidDevice": "Invalid device or missing MS code.",
+    "noOnlineDevicesForGroup": "No online devices available to create a group."
+  },
+  "callGroup": {
+    "status": {
+      "idle": "Idle",
+      "calling": "Calling",
+      "ringing": "Ringing",
+      "connected": "Connected",
+      "unknown": "Status {{status}}"
+    },
+    "loadingLibrary": "Loading communication library...",
+    "pleaseWait": "Please wait a moment.",
+    "serverStatus": "Server Status:",
+    "connectedToServer": "Connected",
+    "offline": "Offline",
+    "inTempGroup": "In Temporary Group",
+    "groupList": "Group List",
+    "exitTempGroup": "Exit Temporary Group",
+    "communicationControls": "Communication Controls",
+    "pttGroup": "Push-to-Talk (Group)",
+    "startTalk": "Start Talk",
+    "stopTalk": "Stop Talk",
+    "youAreTalking": "You are talking...",
+    "userIsTalking": "{{name}} is talking...",
+    "directCall": "Direct Call",
+    "answer": "Answer",
+    "hangUp": "Hang Up",
+    "callState": "Status:",
+    "membersOfGroup": "Members in group",
+    "membersOfTempGroup": "Members: {{groupName}}",
+    "table": {
+      "userId": "User ID",
+      "userName": "User Name",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "memberStatus": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "directCallButton": "Direct Call"
+  },
+  "deviceMap": {
+    "title": "Device Tracking Map",
+    "description": "Real-time location of devices in the system",
+    "status": {
+      "moving": "Moving",
+      "stopped": "Stopped",
+      "parked": "Parked"
+    },
+    "lastUpdate": "Updated",
+    "deviceListTitle": "Device List",
+    "viewFullMapButton": "View Full Map"
+  },
+  "languageSwitcher": {
+    "toggle": "Change language"
+  },
+  "recentActivities": {
+    "title": "Recent Activities",
+    "description": "The latest events and changes in the system"
+  },
+  "webrtcPlayer": {
+    "liveStreamTitle": "Live Stream",
+    "liveStreamTitleWithName": "{{deviceName}} - Live Stream",
+    "startStreamButton": "Start Stream",
+    "connectingMessage": "Connecting to device...",
+    "deviceIdLabel": "Device ID: {{deviceId}}",
+    "connectionErrorTitle": "Connection Error",
+    "retryButton": "Retry",
+    "closeButton": "Close",
+    "stopVideoAlt": "Stop Video",
+    "fullscreenTitle": "Fullscreen"
+  },
+  "mapClient": {
+    "layers": {
+      "standard": "Standard",
+      "terrain": "Terrain",
+      "satellite": "Satellite",
+      "dark": "Dark"
+    },
+    "loadError": "Failed to load map",
+    "popup": {
+      "status": "Status",
+      "location": "Location",
+      "speed": "Speed",
+      "plateNumber": "Plate Number",
+      "lastUpdate": "Last updated",
+      "unknown": "Unknown"
+    },
+    "loading": "Loading interactive map..."
+  },
+  "webrtc": {
+    "unknownError": "Unknown error",
+    "stateError": "useWebRTCState must be used within a WebRTCProvider",
+    "actionsError": "useWebRTCActions must be used within a WebRTCProvider"
+  },
+  "dashboardPage": {
+    "title": "Dashboard",
+    "description": "Overview of the Patrol Management system",
+    "stats": {
+      "devices": "OBU Devices",
+      "unassignedDevices": "{{count}} unassigned",
+      "drivers": "Drivers",
+      "driversTrend": "+{{count}} from last month",
+      "activeDevices": "Active Devices",
+      "activeDevicesPercentage": "{{percentage}}% of total"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "description": "Frequently used functions to manage the system",
+      "addDevice": "Add New Device",
+      "addDriver": "Add Driver",
+      "viewMap": "View Map"
+    },
+    "monthlyStats": {
+      "title": "Monthly Statistics",
+      "description": "Number of devices and active devices over the last 6 months",
+      "totalDevicesLabel": "Total Devices",
+      "activeDevicesLabel": "Active Devices"
     }
   },
   "usersPage": {

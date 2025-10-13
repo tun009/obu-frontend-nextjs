@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Car, User, Smartphone, AlertTriangle } from "lucide-react"
@@ -46,11 +47,12 @@ const activities = [
 ]
 
 export function RecentActivities() {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Hoạt động gần đây</CardTitle>
-        <CardDescription>Các sự kiện và thay đổi mới nhất trong hệ thống</CardDescription>
+        <CardTitle>{t('recentActivities.title')}</CardTitle>
+        <CardDescription>{t('recentActivities.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

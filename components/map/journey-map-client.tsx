@@ -7,7 +7,7 @@ import { createJourneyVehicleIcon } from './journey-map-icon';
 interface JourneyMapClientProps {
   fullPathCoordinates: { lat: number; lng: number }[];
   progressPathCoordinates: { lat: number; lng: number }[];
-  vehiclePosition?: { lat: number; lng: number; direction?: number };
+  vehiclePosition?: { lat: number; lng: number; direction?: number; };
   startPosition?: { lat: number; lng: number };
   endPosition?: { lat: number; lng: number };
 }
@@ -118,7 +118,7 @@ export default function JourneyMapClient({
       console.log('vehicleIcon',vehiclePosition);
       layersRef.current.vehicleMarker = L.marker([vehiclePosition.lat, vehiclePosition.lng], {
         icon: vehicleIcon,
-        rotationAngle: (vehiclePosition.direction ?? 0) - 90,
+        rotationAngle: (vehiclePosition.direction ?? 0),
         rotationOrigin: 'center center',
       }).addTo(map);
     }

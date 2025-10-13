@@ -1,10 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { Play, RotateCcw, Loader2, AlertCircle, Video, Maximize } from 'lucide-react';
 import { useWebRTCStream } from '@/hooks/use-webrtc-stream';
-import type { StreamState } from '@/lib/types/webrtc';
+
 
 interface WebRTCVideoPlayerProps {
   deviceId: string;
@@ -21,6 +22,7 @@ export function WebRTCVideoPlayer({
   onStreamStart,
   onStreamStop
 }: WebRTCVideoPlayerProps) {
+  const { t } = useTranslation();
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -97,11 +99,11 @@ export function WebRTCVideoPlayer({
               <>
                 <Video className="h-12 w-12 text-gray-400 mb-4" />
                 <p className="text-gray-300 text-sm mb-4">
-                  {deviceName ? `${deviceName} - Live Stream` : 'Live Stream'}
+                  {deviceName ? t('webrtcPlayer.liveStreamTitleWithName', { deviceName }) : t('webrtcPlayer.liveStreamTitle')}
                 </p>
                 <Button onClick={handleStartStream} size="sm" className="bg-blue-600 hover:bg-blue-700">
                   <Play className="h-4 w-4 mr-2" />
-                  Bắt đầu phát
+                  {t('webrtcPlayer.startStreamButton')}
                 </Button>
               </>
             )}
@@ -109,25 +111,25 @@ export function WebRTCVideoPlayer({
             {isConnecting && (
               <>
                 <Loader2 className="h-12 w-12 text-blue-400 animate-spin mb-4" />
-                <p className="text-gray-300 text-sm">Đang kết nối với thiết bị...</p>
-                <p className="text-gray-400 text-xs mt-2">Device ID: {deviceId}</p>
+                <p className="text-gray-300 text-sm">{t('webrtcPlayer.connectingMessage')}</p>
+                <p className="text-gray-400 text-xs mt-2">{t('webrtcPlayer.deviceIdLabel', { deviceId })}</p>
               </>
             )}
 
             {streamState === 'error' && (
               <>
                 <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
-                <p className="text-red-300 text-sm mb-2">Lỗi kết nối</p>
+                <p className="text-red-300 text-sm mb-2">{t('webrtcPlayer.connectionErrorTitle')}</p>
                 {error && (
                   <p className="text-gray-400 text-xs mb-4 text-center px-4">{error}</p>
                 )}
                 <div className="flex gap-2">
                   <Button onClick={handleRetry} size="sm" variant="outline">
                     <RotateCcw className="h-4 w-4 mr-2" />
-                    Thử lại
+                    {t('webrtcPlayer.retryButton')}
                   </Button>
                   <Button onClick={handleStopStream} size="sm" variant="destructive">
-                    Đóng
+                    {t('webrtcPlayer.closeButton')}
                   </Button>
                 </div>
               </>
@@ -148,7 +150,7 @@ export function WebRTCVideoPlayer({
           >
             <Image
               src="/images/stop.png"
-              alt="Stop Video"
+              alt={t('webrtcPlayer.stopVideoAlt')}
               width={48}
               height={48}
               className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"
@@ -165,7 +167,7 @@ export function WebRTCVideoPlayer({
                 e.stopPropagation();
                 handleFullScreen();
               }}
-              title="Toàn màn hình"
+              title={t('webrtcPlayer.fullscreenTitle')}
             >
               <Maximize className="h-5 w-5" />
             </Button>

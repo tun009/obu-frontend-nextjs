@@ -3,11 +3,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import apiService from '@/lib/services/api';
-import { User } from '@/lib/types/api';
+import { AuthUser } from '@/lib/types/api';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
@@ -20,6 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function useAuthContext() {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    // This error happens outside of the provider's t function scope
+    // We'll keep it in English as it's a developer-facing error.
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
@@ -30,7 +33,8 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const { t } = useTranslation();
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -43,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (apiService.isAuthenticated()) {
           // Chỉ cần kiểm tra có token hay không
           // Set user = {} để đánh dấu đã authenticated
-          setUser({ id: 1, username: 'user', email: '', is_active: true, created_at: '', updated_at: '' });
+          setUser({ id: '1', username: 'user', email: '', is_active: true, created_at: '', updated_at: '' });
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -69,19 +73,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (response && response.access_token) {
         // Token đã được lưu trong apiService.login()
         // Tạm thời set user = {} để đánh dấu đã authenticated
-        setUser({ id: 1, username: 'user', email: '', is_active: true, created_at: '', updated_at: '' });
-        toast.success('Đăng nhập thành công');
+        setUser({ id: '1', username: 'user', email: '', is_active: true, created_at: '', updated_at: '' });
+        toast.success(t('auth.loginSuccess'));
         router.push('/dashboard/map');
       } else {
-        const errorMessage = 'Đăng nhập thất bại';
+        const errorMessage = t('auth.loginFailed');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
     } catch (error: any) {
       console.error('Login error:', error);
       // Show error toast if not already shown
-      if (!error.message || !error.message.includes('Đăng nhập thất bại')) {
-        toast.error(error?.details?.detail || 'Có lỗi xảy ra khi đăng nhập');
+      if (!error.message || !error.message.includes(t('auth.loginFailed'))) {
+        toast.error(error?.details?.detail || t('auth.loginGenericError'));
       }
       throw error;
     } finally {

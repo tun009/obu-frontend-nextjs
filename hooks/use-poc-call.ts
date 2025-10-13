@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { POC_CREDENTIALS } from '@/lib/constants';
+import i18n from '@/i18n';
 
 // Global type declarations for external scripts
 declare global {
@@ -98,7 +99,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
       script.src = url;
       script.async = false;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load script ${url}`));
+      script.onerror = () => reject(new Error(i18n.t('pocCall.scriptLoadError', { url })));
       document.head.appendChild(script);
     });
 
@@ -111,7 +112,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
           resolve();
         } else if (Date.now() - startTime > timeout) {
           clearInterval(interval);
-          reject(new Error(`Timeout waiting for ${globalName}`));
+          reject(new Error(i18n.t('pocCall.globalTimeoutError', { globalName })));
         }
       }, 100);
     });
@@ -137,7 +138,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
         }
         setIsReady(true);
       } catch (error) {
-        console.error('Lỗi khởi tạo thư viện PoC:', error);
+        console.error(i18n.t('pocCall.initError'), error);
         // toast.error("Lỗi nghiêm trọng khi tải thư viện giao tiếp.");
       }
     };
@@ -278,7 +279,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
     if (pocClientRef.current && member.ms_code) {
       pocClientRef.current.createTempGroup([member.ms_code]);
     } else {
-      toast.error("Thiết bị không hợp lệ hoặc thiếu mã MS.");
+      toast.error(i18n.t('pocCall.invalidDevice'));
     }
   };
 
@@ -286,7 +287,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
     if (pocClientRef.current && msCodes.length > 0) {
       pocClientRef.current.createTempGroup(msCodes);
     } else {
-      toast.warning("Không có thiết bị nào đang online để tạo nhóm.");
+      toast.warning(i18n.t('pocCall.noOnlineDevicesForGroup'));
     }
   };
 
@@ -303,7 +304,7 @@ export const usePocCall = (): PocCallState & PocCallActions => {
       startTalkAfterTempGroupCreationRef.current = true;
       pocClientRef.current.createTempGroup([member.ms_code]);
     } else {
-      toast.error("Thiết bị không hợp lệ hoặc thiếu mã MS.");
+      toast.error(i18n.t('pocCall.invalidDevice'));
     }
   };
 

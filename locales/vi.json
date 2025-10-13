@@ -9,7 +9,13 @@
     "previous": "Trước",
     "next": "Sau",
     "none": "Không có",
-    "pagination": "Hiển thị {{from}} đến {{to}} trong tổng số {{total}} kết quả"
+    "pagination": "Hiển thị {{from}} đến {{to}} trong tổng số {{total}} kết quả",
+    "genericError": "Đã xảy ra lỗi",
+    "operationSuccess": "Thao tác thành công",
+    "loginSuccess": "Đăng nhập thành công",
+    "logoutSuccess": "Đăng xuất thành công",
+    "activateShiftSuccess": "Kích hoạt ca làm việc thành công",
+    "completeShiftSuccess": "Hoàn thành ca làm việc thành công"
   },
   "header": {
     "account": "Tài khoản của tôi",
@@ -19,8 +25,8 @@
   },
   "sidebar": {
     "title": "Quản lý Tuần tra",
-    "subtitle": "Hệ thống giám sát OBU",
-    "live": "TT Điều hành",
+    "subtitle": "Hệ thống tuần tra giám sát",
+    "live": "Trung tâm điều hành",
     "vehicles": "Quản lý xe tuần tra",
     "users": "Quản lý người dùng",
     "devices": "Quản lý thiết bị",
@@ -311,11 +317,147 @@
     },
     "log": {
       "title": "Nhật ký di chuyển",
-      "invalidGps": "GPS không hợp lệ"
+      "invalidGps": "No GPS"
     },
     "map": {
       "title": "Bản đồ hành trình - {{imei}}",
       "currentLocation": "Vị trí hiện tại: {{time}} - Tốc độ: {{speed}} km/h"
+    }
+  },
+  "auth": {
+    "contextError": "useAuthContext phải được sử dụng trong một AuthProvider",
+    "loginSuccess": "Đăng nhập thành công",
+    "loginFailed": "Đăng nhập thất bại",
+    "loginGenericError": "Có lỗi xảy ra khi đăng nhập"
+  },
+  "mapData": {
+    "fetchDevicesError": "Không thể tải danh sách thiết bị - không có dữ liệu trong phản hồi",
+    "loadDevicesError": "Không thể tải danh sách thiết bị"
+  },
+  "pocCall": {
+    "scriptLoadError": "Không thể tải tệp kịch bản: {{url}}",
+    "globalTimeoutError": "Hết thời gian chờ: {{globalName}}",
+    "initError": "Lỗi khởi tạo thư viện PoC:",
+    "invalidDevice": "Thiết bị không hợp lệ hoặc thiếu mã MS.",
+    "noOnlineDevicesForGroup": "Không có thiết bị nào đang online để tạo nhóm."
+  },
+  "callGroup": {
+    "status": {
+      "idle": "Rảnh rỗi",
+      "calling": "Đang gọi",
+      "ringing": "Đang đổ chuông",
+      "connected": "Đã kết nối",
+      "unknown": "Trạng thái {{status}}"
+    },
+    "loadingLibrary": "Đang tải thư viện giao tiếp...",
+    "pleaseWait": "Vui lòng chờ trong giây lát.",
+    "serverStatus": "Trạng thái máy chủ:",
+    "connectedToServer": "Đã kết nối",
+    "offline": "Ngoại tuyến",
+    "inTempGroup": "Đang trong nhóm tạm",
+    "groupList": "Danh sách Nhóm",
+    "exitTempGroup": "Thoát nhóm tạm",
+    "communicationControls": "Điều khiển Giao tiếp",
+    "pttGroup": "Push-to-Talk (Nhóm)",
+    "startTalk": "Bắt đầu nói",
+    "stopTalk": "Dừng nói",
+    "youAreTalking": "Bạn đang nói...",
+    "userIsTalking": "{{name}} đang nói...",
+    "directCall": "Cuộc gọi trực tiếp",
+    "answer": "Trả lời",
+    "hangUp": "Gác máy",
+    "callState": "Trạng thái:",
+    "membersOfGroup": "Thành viên trong nhóm",
+    "membersOfTempGroup": "Thành viên: {{groupName}}",
+    "table": {
+      "userId": "Mã người dùng",
+      "userName": "Tên người dùng",
+      "status": "Trạng thái",
+      "actions": "Hành động"
+    },
+    "memberStatus": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "directCallButton": "Gọi trực tiếp"
+  },
+  "deviceMap": {
+    "title": "Bản đồ theo dõi thiết bị",
+    "description": "Vị trí thời gian thực của các thiết bị trong hệ thống",
+    "status": {
+      "moving": "Đang di chuyển",
+      "stopped": "Dừng",
+      "parked": "Đỗ"
+    },
+    "lastUpdate": "Cập nhật",
+    "deviceListTitle": "Danh sách thiết bị",
+    "viewFullMapButton": "Xem toàn bộ bản đồ"
+  },
+  "languageSwitcher": {
+    "toggle": "Đổi ngôn ngữ"
+  },
+  "recentActivities": {
+    "title": "Hoạt động gần đây",
+    "description": "Các sự kiện và thay đổi mới nhất trong hệ thống"
+  },
+  "webrtcPlayer": {
+    "liveStreamTitle": "Live Stream",
+    "liveStreamTitleWithName": "{{deviceName}} - Live Stream",
+    "startStreamButton": "Bắt đầu phát",
+    "connectingMessage": "Đang kết nối với thiết bị...",
+    "deviceIdLabel": "Device ID: {{deviceId}}",
+    "connectionErrorTitle": "Lỗi kết nối",
+    "retryButton": "Thử lại",
+    "closeButton": "Đóng",
+    "stopVideoAlt": "Dừng Video",
+    "fullscreenTitle": "Toàn màn hình"
+  },
+  "mapClient": {
+    "layers": {
+      "standard": "Tiêu chuẩn",
+      "terrain": "Địa hình",
+      "satellite": "Vệ tinh",
+      "dark": "Nền tối"
+    },
+    "loadError": "Không thể tải bản đồ",
+    "popup": {
+      "status": "Trạng thái",
+      "location": "Vị trí",
+      "speed": "Tốc độ",
+      "plateNumber": "Biển số xe",
+      "lastUpdate": "Cập nhật lần cuối",
+      "unknown": "Không rõ"
+    },
+    "loading": "Đang tải bản đồ tương tác..."
+  },
+  "webrtc": {
+    "unknownError": "Lỗi không xác định",
+    "stateError": "useWebRTCState phải được sử dụng trong một WebRTCProvider",
+    "actionsError": "useWebRTCActions phải được sử dụng trong một WebRTCProvider"
+  },
+  "dashboardPage": {
+    "title": "Dashboard",
+    "description": "Tổng quan hệ thống quản lý tuần tra",
+    "stats": {
+      "devices": "Thiết bị OBU",
+      "unassignedDevices": "{{count}} chưa gán",
+      "drivers": "Tài xế",
+      "driversTrend": "+{{count}} từ tháng trước",
+      "activeDevices": "Thiết bị đang hoạt động",
+      "activeDevicesPercentage": "{{percentage}}% tổng số"
+    },
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "description": "Các chức năng thường dùng để quản lý hệ thống",
+      "addDevice": "Thêm thiết bị mới",
+      "addDriver": "Thêm tài xế",
+      "viewMap": "Xem bản đồ"
+    },
+    "monthlyStats": {
+      "title": "Thống kê theo tháng",
+      "description": "Số lượng thiết bị và thiết bị hoạt động trong 6 tháng qua",
+      "totalDevicesLabel": "Tổng thiết bị",
+      "activeDevicesLabel": "Thiết bị hoạt động"
     }
   },
   "usersPage": {

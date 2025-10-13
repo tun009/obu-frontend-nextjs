@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import apiService from '@/lib/services/api';
 import { Device, DeviceRealtimeResponse } from '@/lib/types/api';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 // Map Device with GPS data
 export interface MapDevice extends Device {
@@ -20,7 +21,6 @@ export interface MapDevice extends Device {
   error?: string;
   // Realtime data (full response)
   realtimeData?: DeviceRealtimeResponse;
-  plate_number?: string;
   thumbnail_url?: string;
   driver_name?: string;
   driver_phone_number?: string;
@@ -115,7 +115,7 @@ export function useMapData(): UseMapDataReturn {
       if (response && response.data) {
         return response.data;
       }
-      throw new Error('Failed to fetch devices - no data in response');
+      throw new Error(i18n.t('mapData.fetchDevicesError'));
     } catch (error: any) {
       console.error('Error fetching devices:', error);
       throw error;
@@ -156,7 +156,7 @@ export function useMapData(): UseMapDataReturn {
       setDevices(mapDevices);
 
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to load devices';
+      const errorMessage = error.message || i18n.t('mapData.loadDevicesError');
       console.error('refreshData error:', error);
       toast.error(errorMessage);
     } finally {

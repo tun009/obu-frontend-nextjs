@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 import apiService from '@/lib/services/api';
 import { ApiError } from '@/lib/types/api';
 
@@ -21,7 +22,7 @@ export function useApi<T = any>(options: UseApiOptions = {}) {
   const {
     showSuccessToast = false,
     showErrorToast = true,
-    successMessage = 'Thao tác thành công',
+    successMessage = i18n.t('common.operationSuccess'),
     onSuccess,
     onError,
   } = options;
@@ -64,7 +65,7 @@ export function useApi<T = any>(options: UseApiOptions = {}) {
         });
 
         if (showErrorToast) {
-          toast.error(apiError.message || 'Đã xảy ra lỗi');
+          toast.error(apiError.message || i18n.t('common.genericError'));
         }
 
         if (onError) {
@@ -96,12 +97,12 @@ export function useApi<T = any>(options: UseApiOptions = {}) {
 export function useAuth() {
   const loginApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Đăng nhập thành công',
+    successMessage: i18n.t('common.loginSuccess'),
   });
 
   const logoutApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Đăng xuất thành công',
+    successMessage: i18n.t('common.logoutSuccess'),
   });
 
   const login = useCallback(
@@ -140,15 +141,15 @@ export function useDrivers() {
   const listApi = useApi();
   const createApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Tạo người dùng thành công',
+    successMessage: i18n.t('usersPage.toasts.create_success'),
   });
   const updateApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Cập nhật người dùng thành công',
+    successMessage: i18n.t('usersPage.toasts.update_success'),
   });
   const deleteApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Xóa người dùng thành công',
+    successMessage: i18n.t('usersPage.toasts.delete_success'),
   });
 
   const getDrivers = useCallback(
@@ -167,14 +168,14 @@ export function useDrivers() {
 
   const updateDriver = useCallback(
     async (id: number, data: any) => {
-      return updateApi.execute(() => apiService.updateDriver(id, data));
+      return updateApi.execute(() => apiService.updateDriver(id.toString(), data));
     },
     [updateApi]
   );
 
   const deleteDriver = useCallback(
     async (id: number) => {
-      return deleteApi.execute(() => apiService.deleteDriver(id));
+      return deleteApi.execute(() => apiService.deleteDriver(id.toString()));
     },
     [deleteApi]
   );
@@ -194,15 +195,15 @@ export function useDevices() {
   const listApi = useApi();
   const createApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Tạo thiết bị thành công',
+    successMessage: i18n.t('devicesPage.toasts.create_success'),
   });
   const updateApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Cập nhật thiết bị thành công',
+    successMessage: i18n.t('devicesPage.toasts.update_success'),
   });
   const deleteApi = useApi({
     showSuccessToast: true,
-    successMessage: 'Xóa thiết bị thành công',
+    successMessage: i18n.t('devicesPage.toasts.delete_success'),
   });
 
   const getDevices = useCallback(
@@ -221,14 +222,14 @@ export function useDevices() {
 
   const updateDevice = useCallback(
     async (id: number, data: any) => {
-      return updateApi.execute(() => apiService.updateDevice(id, data));
+      return updateApi.execute(() => apiService.updateDevice(id.toString(), data));
     },
     [updateApi]
   );
 
   const deleteDevice = useCallback(
     async (id: number) => {
-      return deleteApi.execute(() => apiService.deleteDevice(id));
+      return deleteApi.execute(() => apiService.deleteDevice(id.toString()));
     },
     [deleteApi]
   );
@@ -244,80 +245,80 @@ export function useDevices() {
   };
 }
 
-export function useJourneySessions() {
-  const listApi = useApi();
-  const createApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Tạo ca làm việc thành công',
-  });
-  const updateApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Cập nhật ca làm việc thành công',
-  });
-  const deleteApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Xóa ca làm việc thành công',
-  });
-  const activateApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Kích hoạt ca làm việc thành công',
-  });
-  const completeApi = useApi({
-    showSuccessToast: true,
-    successMessage: 'Hoàn thành ca làm việc thành công',
-  });
+// export function useJourneySessions() {
+//   const listApi = useApi();
+//   const createApi = useApi({
+//     showSuccessToast: true,
+//     successMessage: i18n.t('journeySessionForm.toasts.createSuccess'),
+//   });
+//   const updateApi = useApi({
+//     showSuccessToast: true,
+//     successMessage: i18n.t('journeySessionForm.toasts.updateSuccess'),
+//   });
+//   const deleteApi = useApi({
+//     showSuccessToast: true,
+//     successMessage: i18n.t('journeySessionsPage.toasts.delete_success'),
+//   });
+//   const activateApi = useApi({
+//     showSuccessToast: true,
+//     successMessage: i18n.t('common.activateShiftSuccess'),
+//   });
+//   const completeApi = useApi({
+//     showSuccessToast: true,
+//     successMessage: i18n.t('common.completeShiftSuccess'),
+//   });
 
-  const getJourneySessions = useCallback(
-    async (params?: any) => {
-      return listApi.execute(() => apiService.getJourneySessions(params));
-    },
-    [listApi]
-  );
+//   const getJourneySessions = useCallback(
+//     async (params?: any) => {
+//       return listApi.execute(() => apiService.getJourneySessions(params));
+//     },
+//     [listApi]
+//   );
 
-  const createJourneySession = useCallback(
-    async (data: any) => {
-      return createApi.execute(() => apiService.createJourneySession(data));
-    },
-    [createApi]
-  );
+//   const createJourneySession = useCallback(
+//     async (data: any) => {
+//       return createApi.execute(() => apiService.createJourneySession(data));
+//     },
+//     [createApi]
+//   );
 
-  const updateJourneySession = useCallback(
-    async (id: number, data: any) => {
-      return updateApi.execute(() => apiService.updateJourneySession(id, data));
-    },
-    [updateApi]
-  );
+//   const updateJourneySession = useCallback(
+//     async (id: number, data: any) => {
+//       return updateApi.execute(() => apiService.updateJourneySession(id.toString(), data));
+//     },
+//     [updateApi]
+//   );
 
-  const deleteJourneySession = useCallback(
-    async (id: number) => {
-      return deleteApi.execute(() => apiService.deleteJourneySession(id));
-    },
-    [deleteApi]
-  );
+//   const deleteJourneySession = useCallback(
+//     async (id: number) => {
+//       return deleteApi.execute(() => apiService.deleteJourneySession(id.toString()));
+//     },
+//     [deleteApi]
+//   );
 
-  const activateJourneySession = useCallback(
-    async (id: number) => {
-      return activateApi.execute(() => apiService.activateJourneySession(id));
-    },
-    [activateApi]
-  );
+//   const activateJourneySession = useCallback(
+//     async (id: number) => {
+//       return activateApi.execute(() => apiService.activateJourneySession(id.toString()));
+//     },
+//     [activateApi]
+//   );
 
-  const completeJourneySession = useCallback(
-    async (id: number) => {
-      return completeApi.execute(() => apiService.completeJourneySession(id));
-    },
-    [completeApi]
-  );
+//   const completeJourneySession = useCallback(
+//     async (id: number) => {
+//       return completeApi.execute(() => apiService.completeJourneySession(id.toString()));
+//     },
+//     [completeApi]
+//   );
 
-  return {
-    journeySessions: listApi.data,
-    getJourneySessions,
-    createJourneySession,
-    updateJourneySession,
-    deleteJourneySession,
-    activateJourneySession,
-    completeJourneySession,
-    loading: listApi.loading || createApi.loading || updateApi.loading || deleteApi.loading || activateApi.loading || completeApi.loading,
-    error: listApi.error || createApi.error || updateApi.error || deleteApi.error || activateApi.error || completeApi.error,
-  };
-}
+//   return {
+//     journeySessions: listApi.data,
+//     getJourneySessions,
+//     createJourneySession,
+//     updateJourneySession,
+//     deleteJourneySession,
+//     activateJourneySession,
+//     completeJourneySession,
+//     loading: listApi.loading || createApi.loading || updateApi.loading || deleteApi.loading || activateApi.loading || completeApi.loading,
+//     error: listApi.error || createApi.error || updateApi.error || deleteApi.error || activateApi.error || completeApi.error,
+//   };
+// }
