@@ -8,11 +8,13 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Play, Pause, SkipBack, SkipForward, Square, Volume2, VolumeX, ArrowLeft, Clock, Gauge, Battery, MapPin, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateRange } from "react-day-picker";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { Filter, Play, Pause, SkipBack, SkipForward, Square, Volume2, VolumeX, ArrowLeft, Clock, Gauge, Battery, MapPin } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { toast } from "sonner"
@@ -22,7 +24,8 @@ import Link from "next/link"
 import JourneyMap from "@/components/map/journey-map";
 import { convertGpsCoordinates } from "@/lib/utils"
 import { getMediaUrl } from "@/lib/proxy-service"
-import { useTranslation } from "react-i18next"
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
 // Define the type for a playlist item from our new API
 interface PlaylistItem {
@@ -56,6 +59,18 @@ interface PlaylistItem {
 
 
 
+const createFilterSchema = (journeyStart: Date, journeyEnd: Date, t: (key: string) => string) => z.object({
+  from: z.date({ required_error: t('journeySessionDetailsPage.filter.validation.required') })
+    .min(journeyStart, { message: t('journeySessionDetailsPage.filter.validation.out_of_bounds') })
+    .max(journeyEnd, { message: t('journeySessionDetailsPage.filter.validation.out_of_bounds') }),
+  to: z.date({ required_error: t('journeySessionDetailsPage.filter.validation.required') })
+    .min(journeyStart, { message: t('journeySessionDetailsPage.filter.validation.out_of_bounds') })
+    .max(journeyEnd, { message: t('journeySessionDetailsPage.filter.validation.out_of_bounds') }),
+}).refine(data => !data.from || !data.to || data.to >= data.from, {
+  message: t('journeySessionDetailsPage.filter.validation.end_after_start'),
+  path: ["to"],
+});
+
 const PLAYBACK_SPEED_OPTIONS = [
   { value: 0.5, label: '0.5x' },
   { value: 1, label: '1x' },
@@ -67,34 +82,34 @@ const PLAYBACK_SPEED_OPTIONS = [
 
 
 export default function JourneyHistoryPage() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const params = useParams()
-  const journeyId = parseInt(params.id as string)
+  const journeyId = parseInt(params.id as string);
   // Data states
-  const [historyData, setHistoryData] = useState<JourneySessionHistoryResponse | null>(null)
-  const [playlist, setPlaylist] = useState<PlaylistItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [historyData, setHistoryData] = useState<JourneySessionHistoryResponse | null>(null);
+  const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
 
   // Player states
-  const [activeVideo, setActiveVideo] = useState<PlaylistItem | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [isMuted, setIsMuted] = useState(false)
-  const [globalTime, setGlobalTime] = useState(0) // in seconds, represents time from the start of the whole journey
+  const [activeVideo, setActiveVideo] = useState<PlaylistItem | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [globalTime, setGlobalTime] = useState(0); // in seconds, represents time from the start of the whole journey
 
   // Filter states
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [isFilterActive, setIsFilterActive] = useState(false)
-  const [timeRange, setTimeRange] = useState([0, 0]) // For the slider UI, in seconds
-  const [appliedTimeRange, setAppliedTimeRange] = useState<[number, number] | null>(null) // For applied filter, in seconds
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
+  const [appliedDateRange, setAppliedDateRange] = useState<DateRange | undefined>(undefined);
+  const [errors, setErrors] = useState<z.ZodFormattedError<{ from: Date; to: Date; }> | null>(null);
 
   // Map and Log states
-  const [currentGpsIndex, setCurrentGpsIndex] = useState(0)
+  const [currentGpsIndex, setCurrentGpsIndex] = useState(0);
 
 
 
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // --- DATA FETCHING ---
   const fetchData = async (startTime?: string, endTime?: string, isFiltering: boolean = false) => {
@@ -128,49 +143,40 @@ export default function JourneyHistoryPage() {
 
 
 
-  // --- FILTER HANDLERS ---
-  const handleApplyFilter = async () => {
-    if (!historyData?.data || historyData.data.length === 0 || !journeyStartTimeMs) return;
+  // --- FILTERED DATA ---
+  const { filteredData, filteredPlaylist } = useMemo(() => {
+    if (!appliedDateRange?.from || !appliedDateRange?.to) {
+      return { filteredData: historyData?.data || [], filteredPlaylist: playlist };
+    }
 
-    const startTimeMs = journeyStartTimeMs + (timeRange[0] * 1000);
-    const endTimeMs = journeyStartTimeMs + (timeRange[1] * 1000);
+    const fromTime = appliedDateRange.from.getTime();
+    const toTime = appliedDateRange.to.getTime();
 
-    const startTimeISO = new Date(startTimeMs).toISOString();
-    const endTimeISO = new Date(endTimeMs).toISOString();
+    const newFilteredData = (historyData?.data || []).filter(p => {
+      const pointTime = new Date(p.collected_at).getTime();
+      return pointTime >= fromTime && pointTime <= toTime;
+    });
 
-    setAppliedTimeRange([timeRange[0], timeRange[1]]);
-    setIsFilterActive(true);
-    setGlobalTime(0); // Reset playback position
+    const newFilteredPlaylist = playlist.filter(v => {
+      const videoTime = new Date(v.taken_at).getTime();
+      return videoTime >= fromTime && videoTime <= toTime;
+    });
 
-    await fetchData(startTimeISO, endTimeISO, true);
-    toast.success(t('journeySessionDetailsPage.filterApplied'));
-  };
-
-  const handleResetFilter = async () => {
-    setAppliedTimeRange(null);
-    setIsFilterActive(false);
-    setGlobalTime(0); // Reset playback position
-
-    await fetchData(undefined, undefined, true);
-    toast.success(t('journeySessionDetailsPage.filterReset'));
-  };
+    return { filteredData: newFilteredData, filteredPlaylist: newFilteredPlaylist };
+  }, [appliedDateRange, historyData?.data, playlist]);
 
 
 
-  const formatTimestampFromSeconds = (seconds: number) => {
-    if (!journeyStartTimeMs || isNaN(seconds)) return "--/--/---- --:--:--";
-    const timestampMs = journeyStartTimeMs + (seconds * 1000);
-    return format(new Date(timestampMs), "dd/MM/yyyy HH:mm:ss");
-  }
+
 
   // --- MEMOIZED CALCULATIONS ---
   const { totalDuration, journeyStartTimeMs } = useMemo(() => {
-    if (!historyData?.data || historyData.data.length === 0) {
+    if (!filteredData || filteredData.length === 0) {
       return { totalDuration: 0, journeyStartTimeMs: 0 };
     }
 
-    const journeyStart = new Date(historyData.data[0].collected_at).getTime();
-    const journeyEnd = new Date(historyData.data[historyData.data.length - 1].collected_at).getTime();
+    const journeyStart = new Date(filteredData[0].collected_at).getTime();
+    const journeyEnd = new Date(filteredData[filteredData.length - 1].collected_at).getTime();
     const historyDuration = (journeyEnd - journeyStart) / 1000; // in seconds
 
     return {
@@ -178,32 +184,30 @@ export default function JourneyHistoryPage() {
       journeyStartTimeMs: journeyStart
     };
 
-  }, [historyData]);
+  }, [filteredData]);
 
-  // Sync filter slider range with total duration
-  useEffect(() => {
-    if (!isFilterActive) {
-      setTimeRange([0, totalDuration]);
-    }
-  }, [totalDuration, isFilterActive]);
+
 
   // --- PLAYER LOGIC ---
 
   // Find the active video based on globalTime
   useEffect(() => {
-    if (!journeyStartTimeMs || !playlist.length) return;
+    if (!journeyStartTimeMs || !filteredPlaylist.length) {
+      setActiveVideo(null);
+      return;
+    }
 
     const currentJourneyTimeMs = journeyStartTimeMs + (globalTime * 1000);
 
-    const foundVideo = playlist.find(video => {
+    const foundVideo = filteredPlaylist.find(video => {
       const videoStartTimeMs = new Date(video.taken_at).getTime();
       const videoEndTimeMs = videoStartTimeMs + (video.media_duration * 1000);
       return currentJourneyTimeMs >= videoStartTimeMs && currentJourneyTimeMs < videoEndTimeMs;
     });
-    console.log(foundVideo, 'foundVideo');
+
     setActiveVideo(foundVideo || null);
 
-  }, [globalTime, playlist, journeyStartTimeMs]);
+  }, [globalTime, filteredPlaylist, journeyStartTimeMs]);
 
   // Effect to control video element properties (play, pause, speed, mute, and seeking)
   useEffect(() => {
@@ -270,7 +274,7 @@ export default function JourneyHistoryPage() {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isPlaying, playlist, totalDuration, playbackSpeed]);
+  }, [isPlaying, filteredPlaylist, totalDuration, playbackSpeed]);
 
 
   const handlePlayPause = () => setIsPlaying(!isPlaying);
@@ -286,34 +290,34 @@ export default function JourneyHistoryPage() {
   };
 
   useEffect(() => {
-    if (!historyData?.data.length || !journeyStartTimeMs) return
+    if (!filteredData.length || !journeyStartTimeMs) return;
 
-    const currentElapsedTimeMs = globalTime * 1000
-    const targetTimeMs = journeyStartTimeMs + currentElapsedTimeMs
+    const currentElapsedTimeMs = globalTime * 1000;
+    const targetTimeMs = journeyStartTimeMs + currentElapsedTimeMs;
 
-    const closestGpsIndex = historyData.data.reduce((closest, point, index) => {
-      const pointTime = new Date(point.collected_at).getTime()
-      const closestTime = new Date(historyData.data[closest].collected_at).getTime()
-      return Math.abs(pointTime - targetTimeMs) < Math.abs(closestTime - targetTimeMs) ? index : closest
-    }, 0)
+    const closestGpsIndex = filteredData.reduce((closest, point, index) => {
+      const pointTime = new Date(point.collected_at).getTime();
+      const closestTime = new Date(filteredData[closest].collected_at).getTime();
+      return Math.abs(pointTime - targetTimeMs) < Math.abs(closestTime - targetTimeMs) ? index : closest;
+    }, 0);
 
-    setCurrentGpsIndex(closestGpsIndex)
-  }, [globalTime, historyData, journeyStartTimeMs])
+    setCurrentGpsIndex(closestGpsIndex);
+  }, [globalTime, filteredData, journeyStartTimeMs]);
 
   const handleLogClick = (index: number) => {
-    if (!historyData?.data.length || !journeyStartTimeMs) return
+    if (!filteredData.length || !journeyStartTimeMs) return;
 
-    const pointTimeMs = new Date(historyData.data[index].collected_at).getTime()
-    const newGlobalTime = (pointTimeMs - journeyStartTimeMs) / 1000
-    handleSliderChange([Math.max(0, newGlobalTime)])
+    const pointTimeMs = new Date(filteredData[index].collected_at).getTime();
+    const newGlobalTime = (pointTimeMs - journeyStartTimeMs) / 1000;
+    handleSliderChange([Math.max(0, newGlobalTime)]);
 
     // The new map component will handle panning automatically based on vehicle position.
-  }
+  };
 
-  const parentRef = useRef<HTMLDivElement>(null)
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
-    count: historyData?.data.length ?? 0,
+    count: filteredData.length ?? 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 60, // Approx height of one log item in pixels
     overscan: 5,
@@ -338,17 +342,17 @@ export default function JourneyHistoryPage() {
     endPosition,
     currentPoint
   } = useMemo(() => {
-    if (!historyData?.data || historyData.data.length === 0) {
+    if (!filteredData || filteredData.length === 0) {
       return { fullPathCoordinates: [], progressPathCoordinates: [], currentPoint: undefined };
     }
 
-    const allPoints = historyData.data
+    const allPoints = filteredData
       .map(p => convertGpsCoordinates(p))
       .filter(Boolean) as { lat: number; lng: number }[];
 
     const progressPoints = allPoints.slice(0, currentGpsIndex + 1);
 
-    const currentPoint = historyData.data[currentGpsIndex];
+    const currentPoint = filteredData[currentGpsIndex];
     let vehiclePos: { lat: number; lng: number; direction: number; isValidGps: boolean; } | undefined;
 
     if (currentPoint) {
@@ -358,8 +362,8 @@ export default function JourneyHistoryPage() {
       if (!isCurrentPointValid) {
         // Find the last valid point if the current one is not valid
         for (let i = currentGpsIndex - 1; i >= 0; i--) {
-          if (historyData.data[i].gps_valid === 1 && historyData.data[i].gps_enable === 1) {
-            pointToDisplay = historyData.data[i];
+          if (filteredData[i].gps_valid === 1 && filteredData[i].gps_enable === 1) {
+            pointToDisplay = filteredData[i];
             break;
           }
         }
@@ -383,7 +387,26 @@ export default function JourneyHistoryPage() {
       endPosition: allPoints[allPoints.length - 1],
       currentPoint: currentPoint,
     };
-  }, [historyData, currentGpsIndex]);
+  }, [filteredData, currentGpsIndex]);
+
+  useEffect(() => {
+    // Don't validate if the popover is closed (tempDateRange is undefined)
+    if (!historyData?.data || historyData.data.length < 2 || !tempDateRange) {
+      setErrors(null);
+      return;
+    }
+
+    const journeyStart = new Date(historyData.data[0].collected_at);
+    const journeyEnd = new Date(historyData.data[historyData.data.length - 1].collected_at);
+    const schema = createFilterSchema(journeyStart, journeyEnd, t);
+    const result = schema.safeParse(tempDateRange);
+
+    if (!result.success) {
+      setErrors(result.error.format());
+    } else {
+      setErrors(null);
+    }
+  }, [tempDateRange, historyData?.data]);
 
   if (loading) {
     return (
@@ -436,131 +459,88 @@ export default function JourneyHistoryPage() {
                 </div>
               </div>
 
-              {/* Timeline Filter */}
-              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${isFilterActive ? 'bg-green-500' : 'bg-blue-500'}`}></div>
-                      <span className="text-sm font-medium">{t('journeySessionDetailsPage.filter.title')}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-slate-300">
-                        {isFilterOpen
-                          ? `${formatTimestampFromSeconds(timeRange[0])} → ${formatTimestampFromSeconds(timeRange[1])}`
-                          : (isFilterActive && appliedTimeRange)
-                            ? `${formatTimestampFromSeconds(appliedTimeRange[0])} → ${formatTimestampFromSeconds(appliedTimeRange[1])}`
-                            : t('journeySessionDetailsPage.filter.fullJourney')
-                        }
-                      </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="bg-slate-800 text-white px-4 py-4 border-t border-slate-700">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="relative h-8 w-full flex items-center">
-                          <div className="absolute h-2 w-full bg-slate-600 rounded-full" />
-                          <div
-                            className="absolute h-2 bg-blue-500 rounded-full"
-                            style={{
-                              left: `${(timeRange[0] / totalDuration) * 100}%`,
-                              width: `${((timeRange[1] - timeRange[0]) / totalDuration) * 100}%`,
-                            }}
-                          />
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
-                            style={{ left: `calc(${(timeRange[0] / totalDuration) * 100}% - 12px)` }}
-                          >
-                            <ChevronLeft className="w-4 h-4 text-white" />
-                          </div>
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer border-2 border-white"
-                            style={{ left: `calc(${(timeRange[1] / totalDuration) * 100}% - 12px)` }}
-                          >
-                            <ChevronRight className="w-4 h-4 text-white" />
-                          </div>
-                          <input
-                            type="range"
-                            min={0}
-                            max={totalDuration}
-                            value={timeRange[0]}
-                            step={1}
-                            onChange={(e) => {
-                              const newStart = Number(e.target.value);
-                              if (newStart < timeRange[1]) {
-                                setTimeRange([newStart, timeRange[1]]);
-                              }
-                            }}
-                            className="absolute w-full h-full opacity-0 cursor-pointer"
-                            style={{ zIndex: 3 }}
-                          />
-                          <input
-                            type="range"
-                            min={0}
-                            max={totalDuration}
-                            value={timeRange[1]}
-                            step={1}
-                            onChange={(e) => {
-                              const newEnd = Number(e.target.value);
-                              if (newEnd > timeRange[0]) {
-                                setTimeRange([timeRange[0], newEnd]);
-                              }
-                            }}
-                            className="absolute w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-                            style={{ zIndex: 4 }}
-                          />
-                        </div>
-                        <div className="flex justify-between text-xs text-slate-400 pt-1">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help">{formatTimestampFromSeconds(0)}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{t('journeySessionDetailsPage.filter.startTooltip')}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help">{formatTimestampFromSeconds(totalDuration)}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{t('journeySessionDetailsPage.filter.endTooltip')}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-slate-400">
-                          {t('journeySessionDetailsPage.filter.duration')}: {new Date((timeRange[1] - timeRange[0]) * 1000).toISOString().slice(11, 19)}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={handleResetFilter} className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600">
-                            {t('journeySessionDetailsPage.filter.resetButton')}
-                          </Button>
-                          <Button size="sm" onClick={handleApplyFilter} className="bg-blue-600 hover:bg-blue-700">
-                            {t('journeySessionDetailsPage.filter.applyButton')}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
               {/* Video Controls */}
               <div className="p-4 border-b flex-shrink-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">
-                    {t('journeySessionDetailsPage.player.videoProgress', { current: activeVideo ? playlist.findIndex(v => v.id === activeVideo.id) + 1 : '-', total: playlist.length })}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {/* <span className="text-sm text-muted-foreground">
+                      {t('journeySessionDetailsPage.player.videoProgress', { current: activeVideo ? filteredPlaylist.findIndex(v => v.id === activeVideo.id) + 1 : '-', total: filteredPlaylist.length })}
+                    </span> */}
+                    <Popover
+                      open={isFilterOpen}
+                      onOpenChange={(isOpen) => {
+                        setIsFilterOpen(isOpen);
+                        if (isOpen && historyData?.data && historyData.data.length > 0) {
+                          // Initialize temp range when opening
+                          setTempDateRange({
+                            from: appliedDateRange?.from ?? new Date(historyData.data[0].collected_at),
+                            to: appliedDateRange?.to ?? new Date(historyData.data[historyData.data.length - 1].collected_at),
+                          });
+                        } else if (!isOpen) {
+                          // Clear temp range and errors when closing
+                          setTempDateRange(undefined);
+                          setErrors(null);
+                        }
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className={`h-8 border-dashed ${appliedDateRange ? 'bg-muted text-primary' : ''}`}>
+                          <Filter className="mr-2 h-4 w-4" />
+                          {t('journeySessionDetailsPage.filter.title')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-4" align="start">
+                        <div className="space-y-4">
+                          <div className="font-semibold">{t('journeySessionDetailsPage.filter.popoverTitle')}</div>
+                          <div className="flex items-start gap-4">
+                            <div className="grid gap-1 text-sm">
+                              <label className="font-medium">{t('journeySessionDetailsPage.filter.fromLabel')}</label>
+                              <DateTimePicker
+                                value={tempDateRange?.from}
+                                onChange={(date) => setTempDateRange(prev => ({ from: date, to: prev?.to }))}
+                                maxDate={tempDateRange?.to}
+                                minDate={historyData?.data && historyData.data.length > 0 ? new Date(historyData.data[0].collected_at) : undefined}
+                              />
+                              {errors?.from && <p className="text-red-500 text-xs mt-1">{errors.from._errors[0]}</p>}
+                            </div>
+                            <div className="grid gap-1 text-sm">
+                              <label className="font-medium">{t('journeySessionDetailsPage.filter.toLabel')}</label>
+                              <DateTimePicker
+                                value={tempDateRange?.to}
+                                onChange={(date) => setTempDateRange(prev => ({ from: prev?.from, to: date }))}
+                                minDate={tempDateRange?.from}
+                                maxDate={historyData?.data && historyData.data.length > 0 ? new Date(historyData.data[historyData.data.length - 1].collected_at) : undefined}
+                              />
+                              {errors?.to && <p className="text-red-500 text-xs mt-1">{errors.to._errors[0]}</p>}
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setAppliedDateRange(undefined);
+                                setTempDateRange(undefined);
+                                setIsFilterOpen(false);
+                                setGlobalTime(0);
+                              }}
+                            >
+                              {t('journeySessionDetailsPage.filter.resetButton')}
+                            </Button>
+                            <Button
+                              disabled={!!errors}
+                              onClick={() => {
+                                setAppliedDateRange(tempDateRange);
+                                setIsFilterOpen(false);
+                                setGlobalTime(0);
+                              }}
+                            >
+                              {t('journeySessionDetailsPage.filter.applyButton')}
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">{t('journeySessionDetailsPage.player.speed')}:</span>
                     <Select value={playbackSpeed.toString()} onValueChange={(value) => setPlaybackSpeed(Number(value))}>
@@ -584,19 +564,19 @@ export default function JourneyHistoryPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
-                      {historyData?.data[0] ? format(new Date(historyData.data[0].collected_at), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
+                      {filteredData[0] ? format(new Date(filteredData[0].collected_at), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
                     </span>
                     <span className="font-semibold text-primary">
                       {journeyStartTimeMs ? format(new Date(journeyStartTimeMs + globalTime * 1000), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
                     </span>
                     <span>
-                      {historyData?.data[historyData.data.length - 1] ? format(new Date(historyData.data[historyData.data.length - 1].collected_at), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
+                      {filteredData[filteredData.length - 1] ? format(new Date(filteredData[filteredData.length - 1].collected_at), "dd/MM/yyyy HH:mm:ss", { locale: vi }) : "--:--:--"}
                     </span>
                   </div>
                   <div className="relative w-full h-4 flex items-center">
                     {/* Video segments overlay */}
                     <div className="absolute w-full h-2 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                      {playlist.map((video) => {
+                      {filteredPlaylist.map((video) => {
                         if (!journeyStartTimeMs || !totalDuration) return null;
 
                         const videoStartOffset = (new Date(video.taken_at).getTime() - journeyStartTimeMs) / 1000;
@@ -631,7 +611,7 @@ export default function JourneyHistoryPage() {
                     <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
                         const index = virtualItem.index;
-                        const point = historyData.data[index];
+                        const point = filteredData[index];
                         return (
                           <div
                             key={point.id}

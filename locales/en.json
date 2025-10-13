@@ -309,7 +309,15 @@
       "endTooltip": "Journey End Time",
       "duration": "Duration",
       "resetButton": "Reset",
-      "applyButton": "Apply"
+      "applyButton": "Apply",
+      "popoverTitle": "Filter by time range",
+      "fromLabel": "From",
+      "toLabel": "To",
+      "validation": {
+        "required": "Date is required.",
+        "out_of_bounds": "Date is out of journey bounds.",
+        "end_after_start": "End date must be after or the same as start date."
+      }
     },
     "player": {
       "videoProgress": "Video {{current}} / {{total}}",

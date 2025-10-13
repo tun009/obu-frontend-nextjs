@@ -309,7 +309,15 @@
       "endTooltip": "Thời gian kết thúc hành trình",
       "duration": "Thời lượng",
       "resetButton": "Reset",
-      "applyButton": "Áp dụng"
+      "applyButton": "Áp dụng",
+      "popoverTitle": "Lọc theo khoảng thời gian",
+      "fromLabel": "Từ",
+      "toLabel": "Đến",
+      "validation": {
+        "required": "Ngày là bắt buộc.",
+        "out_of_bounds": "Ngày nằm ngoài khoảng thời gian của hành trình.",
+        "end_after_start": "Ngày kết thúc phải sau hoặc trùng với ngày bắt đầu."
+      }
     },
     "player": {
       "videoProgress": "Video {{current}} / {{total}}",
