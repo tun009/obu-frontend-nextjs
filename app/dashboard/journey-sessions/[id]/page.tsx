@@ -346,11 +346,25 @@ export default function JourneyHistoryPage() {
       return { fullPathCoordinates: [], progressPathCoordinates: [], currentPoint: undefined };
     }
 
-    const allPoints = filteredData
-      .map(p => convertGpsCoordinates(p))
-      .filter(Boolean) as { lat: number; lng: number }[];
+    // Pre-process coordinates to fill in gaps from invalid GPS points.
+    // This ensures the path array has the same length as the data array.
+    let lastValidCoords: { lat: number; lng: number } | null = null;
+    const processedPathCoordinates = filteredData.map(point => {
+      const coords = convertGpsCoordinates(point);
+      if (coords) {
+        lastValidCoords = coords; // Update last known valid coordinate
+        return coords;
+      }
+      return lastValidCoords; // Use last valid, or null if none found yet
+    });
 
-    const progressPoints = allPoints.slice(0, currentGpsIndex + 1);
+    // Find the first valid coordinate to fill any initial nulls
+    const firstValidCoord = processedPathCoordinates.find(p => p !== null) as { lat: number; lng: number } | null;
+
+    // Create the final path, filling initial nulls with the first valid coordinate
+    const fullPathCoordinates = processedPathCoordinates.map(p => p ?? firstValidCoord).filter(Boolean) as { lat: number; lng: number }[];
+
+    const progressPathCoordinates = fullPathCoordinates.slice(0, currentGpsIndex + 1);
 
     const currentPoint = filteredData[currentGpsIndex];
     let vehiclePos: { lat: number; lng: number; direction: number; isValidGps: boolean; } | undefined;
@@ -380,11 +394,11 @@ export default function JourneyHistoryPage() {
     }
 
     return {
-      fullPathCoordinates: allPoints,
-      progressPathCoordinates: progressPoints,
+      fullPathCoordinates: fullPathCoordinates,
+      progressPathCoordinates: progressPathCoordinates,
       vehiclePosition: vehiclePos,
-      startPosition: allPoints[0],
-      endPosition: allPoints[allPoints.length - 1],
+      startPosition: fullPathCoordinates[0],
+      endPosition: fullPathCoordinates[fullPathCoordinates.length - 1],
       currentPoint: currentPoint,
     };
   }, [filteredData, currentGpsIndex]);
