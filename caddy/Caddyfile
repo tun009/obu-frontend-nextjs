@@ -4,7 +4,7 @@ web.tomotech.io.vn {
     handle_path /proxy-media/* {
         # Chuyển tiếp tới media server và xóa tiền tố /proxy-media/
         # Ví dụ: /proxy-media/file.mp4 -> http://103.56.160.96/file.mp4
-        reverse_proxy http://103.56.160.96/*
+        reverse_proxy http://103.56.160.96
     }
 
     # --- PROXY CHO MQTT BROKER (WEBSOCKET) ---
