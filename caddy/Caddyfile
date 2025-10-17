@@ -1,0 +1,22 @@
+web.tomotech.io.vn {
+    # --- PROXY CHO MEDIA SERVER ---
+    # Bất kỳ request nào tới /proxy-media/* sẽ được xử lý ở đây
+    handle_path /proxy-media/* {
+        # Chuyển tiếp tới media server và xóa tiền tố /proxy-media/
+        # Ví dụ: /proxy-media/file.mp4 -> http://103.56.160.96/file.mp4
+        reverse_proxy http://103.56.160.96/*
+    }
+
+    # --- PROXY CHO MQTT BROKER (WEBSOCKET) ---
+    # Bất kỳ request nào tới /proxy-mqtt/* sẽ được xử lý ở đây
+    handle_path /proxy-mqtt* {
+        # Chuyển tiếp tới MQTT broker
+        # Caddy tự động xử lý nâng cấp kết nối WebSocket
+        reverse_proxy http://zxs-cs.netbodycamera.com:8083
+    }
+
+    # --- PROXY CHO ỨNG DỤNG FRONTEND (Mặc định) ---
+    # Các request còn lại sẽ được chuyển tiếp tới Next.js
+    reverse_proxy obu-frontend:3000
+}
+
