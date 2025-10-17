@@ -14,17 +14,17 @@ const isProduction = process.env.NODE_ENV === 'production';
  * - Development: Trả về URL WebSocket (ws) trực tiếp.
  */
 export const getMqttHost = (): string => {
-  // if (isProduction) {
-  //   // Chỉ chạy ở phía trình duyệt để có thể truy cập window.location
-  //   if (typeof window !== 'undefined') {
-  //     const origin = window.location.origin; // e.g., https://202.92.6.85:8444
-  //     // Chuyển http/https thành ws/wss
-  //     const wsProtocol = origin.startsWith('https') ? 'wss://' : 'ws://';
-  //     const host = origin.split('//')[1];
-  //     return `${wsProtocol}${host}${PROD_MQTT_PROXY_PREFIX}`;
-  //   }
-  //   return '';
-  // }
+  if (isProduction) {
+    // Chỉ chạy ở phía trình duyệt để có thể truy cập window.location
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin; // e.g., https://202.92.6.85:8444
+      // Chuyển http/https thành ws/wss
+      const wsProtocol = origin.startsWith('https') ? 'wss://' : 'ws://';
+      const host = origin.split('//')[1];
+      return `${wsProtocol}${host}${PROD_MQTT_PROXY_PREFIX}`;
+    }
+    return '';
+  }
   return DEV_MQTT_HOST;
 };
 
