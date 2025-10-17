@@ -10,7 +10,8 @@ web.tomotech.io.vn {
     # --- PROXY CHO MQTT BROKER (WEBSOCKET) ---
     # Bất kỳ request nào tới /proxy-mqtt/* sẽ được xử lý ở đây
     handle_path /proxy-mqtt* {
-        reverse_proxy http://zxs-cs.netbodycamera.com:8083/mqtt
+        rewrite * /mqtt
+        reverse_proxy http://zxs-cs.netbodycamera.com:8083
     }
 
     # --- PROXY CHO ỨNG DỤNG FRONTEND (Mặc định) ---
