@@ -6,8 +6,7 @@ const DEV_MQTT_HOST = 'ws://zxs-cs.netbodycamera.com:8083/mqtt';
 const PROD_MEDIA_PROXY_PREFIX = '/proxy-media';
 const PROD_MQTT_PROXY_PREFIX = '/proxy-mqtt';
 
-// const isProduction = process.env.NODE_ENV === 'production';
-const isProduction = false;
+const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * Lấy URL HOST cho MQTT Broker một cách tự động.
