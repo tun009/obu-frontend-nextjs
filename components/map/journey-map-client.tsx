@@ -115,7 +115,6 @@ export default function JourneyMapClient({
     // 5. Draw Vehicle Marker
     if (vehiclePosition?.lat && vehiclePosition?.lng) {
       const vehicleIcon = createJourneyVehicleIcon();
-      console.log('vehicleIcon',vehiclePosition);
       layersRef.current.vehicleMarker = L.marker([vehiclePosition.lat, vehiclePosition.lng], {
         icon: vehicleIcon,
         rotationAngle: (vehiclePosition.direction ?? 0),
