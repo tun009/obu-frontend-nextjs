@@ -1,4 +1,4 @@
-web.tomotech.io.vn, 202.92.6.85:8444 {
+web.tomotech.io.vn {
     # --- PROXY CHO MEDIA SERVER ---
     # Bất kỳ request nào tới /proxy-media/* sẽ được xử lý ở đây
     handle_path /proxy-media/* {
