@@ -515,5 +515,90 @@
       "delete_error_notfound": "Không tìm thấy người dùng",
       "delete_error_generic": "Có lỗi xảy ra khi xóa người dùng"
     }
+  },
+  "helpPanel": {
+    "title": "Trung tâm Trợ giúp",
+    "description": "Tìm kiếm hướng dẫn và giải đáp thắc mắc về các tính năng của hệ thống.",
+    "overview": {
+      "title": "Tổng quan hệ thống",
+      "description": "Hệ thống Fleet Management cung cấp một nền tảng hợp nhất để quản lý, giám sát và điều hành đội xe hiệu quả.",
+      "workflowTitle": "Luồng hoạt động chuẩn:",
+      "step1Title": "Bước 1: Khởi tạo dữ liệu nền",
+      "step1Description": "Quản lý viên cần nhập thông tin ban đầu vào các module `Quản lý xe`, `Quản lý tài xế`, và `Quản lý thiết bị`.",
+      "step2Title": "Bước 2: Phân công công việc",
+      "step2Description": "Sử dụng module `Ca làm việc` để tạo các phiên làm việc, gán tài xế và xe cho một khung thời gian cụ thể.",
+      "step3Title": "Bước 3: Giám sát thời gian thực",
+      "step3Description": "Truy cập module `Live` để theo dõi vị trí, trạng thái, xem video và giao tiếp trực tiếp với tài xế đang trong ca làm việc."
+    },
+    "vehicle": {
+      "title": "Quản lý xe",
+      "description": "Quản lý toàn bộ thông tin về các phương tiện trong đội xe của bạn.",
+      "featuresTitle": "Các chức năng chính:",
+      "featureAdd": "Thêm xe mới: Nhập các thông tin cần thiết như biển số, loại xe, tải trọng.",
+      "featureUpdate": "Cập nhật thông tin: Chỉnh sửa thông tin của xe hiện có.",
+      "featureDelete": "Xóa xe: Loại bỏ xe khỏi hệ thống (lưu ý các dữ liệu lịch sử có thể bị ảnh hưởng)."
+    },
+    "driver": {
+      "title": "Quản lý tài xế",
+      "description": "Quản lý thông tin cá nhân và liên lạc của các tài xế.",
+      "featuresTitle": "Các chức năng chính:",
+      "featureAdd": "Thêm tài xế mới: Nhập họ tên, số điện thoại, giấy phép lái xe.",
+      "featureUpdate": "Cập nhật thông tin: Chỉnh sửa thông tin cá nhân của tài xế.",
+      "featureDeactivate": "Vô hiệu hóa tài khoản: Tạm khóa tài khoản khi tài xế nghỉ việc."
+    },
+    "device": {
+      "title": "Quản lý thiết bị",
+      "description": "Quản lý thông tin về các thiết bị phần cứng được sử dụng trong hệ thống.",
+      "featuresTitle": "Các chức năng chính:",
+      "featureAdd": "Thêm thiết bị mới: Nhập thông tin cho thiết bị. Lưu ý, trường <strong>Device No</strong> là mã số định danh duy nhất được in trên thân của mỗi thiết bị body cam.",
+      "featureUpdate": "Cập nhật thông tin: Chỉnh sửa thông tin của một thiết bị đã có.",
+      "featureDelete": "Xóa thiết bị: Loại bỏ một thiết bị khỏi hệ thống.",
+      "featureAssign": "Gán và hủy gán thiết bị: Mặc định, một thiết bị mới tạo sẽ ở trạng thái 'Chưa gán'. Để gán, bạn vào menu Thao tác và chọn 'Gán xe'. Một danh sách các xe chưa được gán thiết bị sẽ hiện ra để bạn lựa chọn. Tương tự, bạn cũng có thể chọn 'Hủy gán' để gỡ thiết bị khỏi xe hiện tại."
+    },
+    "shift": {
+      "title": "Ca làm việc",
+      "description": "Tính năng 'Ca làm việc' là công cụ trung tâm để ghi lại và quản lý toàn bộ hành trình của một xe trong một phiên làm việc, bao gồm lộ trình GPS chi tiết và video được ghi lại từ camera.",
+      "listTitle": "Danh sách ca làm việc",
+      "listDescription": "Đây là nơi bạn quản lý toàn bộ các phiên làm việc. Từ đây bạn có thể tạo, bắt đầu, kết thúc và xem lại hành trình của một ca.",
+      "createTitle": "Tạo ca làm việc mới:",
+      "createDescription": "Nhấn nút 'Tạo ca làm việc' để mở form. Bạn cần điền các thông tin sau:",
+      "itemVehicleDriver": "Xe & Tài xế: Chọn xe và tài xế có sẵn (hệ thống sẽ tự động lọc những xe/tài xế đang bận).",
+      "itemTime": "Thời gian bắt đầu & kết thúc: Chọn khung thời gian dự kiến cho ca làm việc.",
+      "itemNotes": "Ghi chú: Thêm ghi chú nếu cần thiết.",
+      "statusTitle": "Các trạng thái của ca:",
+      "statusPending": "Chờ bắt đầu: Là trạng thái mặc định sau khi tạo. Để bắt đầu, bạn hãy nhấn vào menu Thao tác (biểu tượng 3 chấm) và chọn 'Bắt đầu'.",
+      "statusActive": "Đang hoạt động: Hệ thống đang ghi lại GPS và video. Để kết thúc sớm, bạn chọn 'Kết thúc' trong menu Thao tác. Mặc định khi quá thời gian, hệ thống sẽ thúc ca làm việc.",
+      "statusActiveNoteTitle": "Lưu ý quan trọng:",
+      "statusActiveNoteContent": "Để video hành trình được ghi lại và đồng bộ lên hệ thống, khi bắt đầu ca làm việc vui lòng <strong>nhấn nút màu đỏ</strong> ở phía trên của thiết bị.",
+      "statusCompleted": "Đã hoàn thành: Là trạng thái cuối cùng sau khi ca làm việc kết thúc. Khi hành trình ở trạng thái này, dữ liệu GPS và video không còn được lưu nữa.",
+      "playbackTitle": "Xem lại hành trình (Playback)",
+      "playbackDescription": "Bạn có thể xem lại hành trình khi ca ở trạng thái 'Đang hoạt động' hoặc 'Đã hoàn thành'. Từ menu Thao tác, chọn 'Xem hành trình' để truy cập màn hình phát lại. Màn hình này cho phép bạn tái hiện lại toàn bộ chuyến đi với các chức năng:",
+      "playbackFeatureSync": "Đồng bộ hóa Dữ liệu: Video, vị trí trên bản đồ, và nhật ký di chuyển được đồng bộ hóa chính xác theo thời gian.",
+      "playbackFeatureSlider": "Thanh trượt thời gian: Kéo để tua đến một thời điểm bất kỳ trong hành trình.",
+      "playbackFeatureSpeed": "Điều khiển tốc độ: Thay đổi tốc độ phát lại (tua nhanh, phát chậm).",
+      "playbackFeatureMap": "Bản đồ tương tác: Vị trí xe di chuyển tương ứng trên bản đồ khi xem lại."
+    },
+    "live": {
+      "title": "Live",
+      "description": "Màn hình Live là trung tâm chỉ huy, cho phép giám sát và tương tác với đội xe theo thời gian thực. Các chức năng được tích hợp chặt chẽ giữa danh sách phương tiện bên trái và bản đồ bên phải.",
+      "featuresTitle": "Các chức năng chính:",
+      "featureGps": "Theo dõi vị trí (GPS Tracking):",
+      "featureGpsItem1": "Bản đồ bên phải hiển thị vị trí của tất cả các xe đang hoạt động.",
+      "featureGpsItem2": "Khi bạn chọn một xe từ danh sách bên trái, bản đồ sẽ tự động di chuyển và phóng to vào vị trí của xe đó.",
+      "featureStream": "Xem Video trực tiếp (Live Stream):",
+      "featureStreamItem1": "Trên thẻ thông tin của mỗi xe ở danh sách bên trái, nhấn vào khu vực ảnh thumbnail để bắt đầu xem video trực tiếp từ camera.",
+      "featureStreamItem2": "Trình xem video có các nút điều khiển để dừng hoặc xem toàn màn hình.",
+      "featureAudio": "Đàm thoại hai chiều (Two-way Audio):",
+      "featureAudioNoteTitle": "Lưu ý quan trọng:",
+      "featureAudioNoteContent": "Để giao tiếp được, bạn cần vào <strong>Cài đặt > Gọi nhóm > chọn nhóm là 'Elcom Group'</strong> trên thiết bị bodycamera.",
+      "featureAudioDescription": "Hệ thống hỗ trợ hai chế độ đàm thoại:",
+      "featureAudioPrivate": "Gọi riêng: Nhấn vào biểu tượng <Phone class='inline h-4 w-4 text-blue-500' /> trên thẻ xe để bắt đầu cuộc gọi thoại riêng tư với tài xế đó.",
+      "featureAudioGroup": "Giao tiếp nhóm (Talkgroup): Sử dụng các nút",
+      "featureAudioGroupTalk": "Nói",
+      "featureAudioGroupStop": "Dừng",
+      "featureAudioGroupEnd": "ở đầu danh sách để nói chuyện với tất cả tài xế trong ca làm việc cùng một lúc.",
+      "featureAudioDeviceNoteTitle": "Đàm thoại trên thiết bị:",
+      "featureAudioDeviceNoteContent": "Để nói chuyện trực tiếp từ bodycam, vui lòng <strong>nhấn và giữ nút màu vàng</strong> ở cạnh bên phải của thiết bị."
+    }
   }
 }

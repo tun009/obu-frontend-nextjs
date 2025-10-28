@@ -101,14 +101,14 @@ export function AppSidebar() {
                 <span>{t('sidebar.help')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+            {/* <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/dashboard/settings">
                   <Settings className="h-4 w-4" />
                   <span>{t('sidebar.settings')}</span>
                 </Link>
               </SidebarMenuButton>
-            </SidebarMenuItem>
+            </SidebarMenuItem> */}
             <SidebarMenuItem>
               <Button variant="ghost" className="w-full justify-start p-2 h-8" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />

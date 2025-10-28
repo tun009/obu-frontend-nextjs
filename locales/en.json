@@ -515,5 +515,90 @@
       "delete_error_notfound": "User not found",
       "delete_error_generic": "An error occurred while deleting the user"
     }
+  },
+  "helpPanel": {
+    "title": "Help Center",
+    "description": "Find guides and answers to your questions about the system's features.",
+    "overview": {
+      "title": "System Overview",
+      "description": "The Fleet Management system provides a unified platform to efficiently manage, monitor, and operate your vehicle fleet.",
+      "workflowTitle": "Standard Workflow:",
+      "step1Title": "Step 1: Initialize Base Data",
+      "step1Description": "The administrator needs to enter initial information into the `Vehicle Management`, `Driver Management`, and `Device Management` modules.",
+      "step2Title": "Step 2: Assign Tasks",
+      "step2Description": "Use the `Shifts` module to create work sessions, assigning drivers and vehicles to a specific time frame.",
+      "step3Title": "Step 3: Real-time Monitoring",
+      "step3Description": "Access the `Live` module to track location, status, watch videos, and communicate directly with drivers on duty."
+    },
+    "vehicle": {
+      "title": "Vehicle Management",
+      "description": "Manage all information about the vehicles in your fleet.",
+      "featuresTitle": "Key Features:",
+      "featureAdd": "Add new vehicle: Enter necessary information such as license plate, vehicle type, and load capacity.",
+      "featureUpdate": "Update information: Edit the details of an existing vehicle.",
+      "featureDelete": "Delete vehicle: Remove a vehicle from the system (note that historical data may be affected)."
+    },
+    "driver": {
+      "title": "Driver Management",
+      "description": "Manage personal and contact information for drivers.",
+      "featuresTitle": "Key Features:",
+      "featureAdd": "Add new driver: Enter full name, phone number, and driver's license.",
+      "featureUpdate": "Update information: Edit the personal details of a driver.",
+      "featureDeactivate": "Deactivate account: Temporarily lock an account when a driver leaves."
+    },
+    "device": {
+      "title": "Device Management",
+      "description": "Manage information about the hardware devices used in the system.",
+      "featuresTitle": "Key Features:",
+      "featureAdd": "Add new device: Enter information for the device. Note, the <strong>Device No</strong> field is the unique identifier printed on each body cam.",
+      "featureUpdate": "Update information: Edit the details of an existing device.",
+      "featureDelete": "Delete device: Remove a device from the system.",
+      "featureAssign": "Assign and unassign device: By default, a new device is 'Unassigned'. To assign, go to the Actions menu and select 'Assign Vehicle'. A list of unassigned vehicles will appear. Similarly, you can select 'Unassign' to remove the device from its current vehicle."
+    },
+    "shift": {
+      "title": "Shifts",
+      "description": "The 'Shifts' feature is the central tool for recording and managing a vehicle's entire journey during a work session, including detailed GPS routes and video recorded from the camera.",
+      "listTitle": "Shift List",
+      "listDescription": "This is where you manage all work sessions. From here, you can create, start, end, and review a shift's journey.",
+      "createTitle": "Create a new shift:",
+      "createDescription": "Click the 'Create Shift' button to open the form. You need to fill in the following information:",
+      "itemVehicleDriver": "Vehicle & Driver: Select an available vehicle and driver (the system will automatically filter out busy ones).",
+      "itemTime": "Start & End Time: Select the expected time frame for the shift.",
+      "itemNotes": "Notes: Add notes if necessary.",
+      "statusTitle": "Shift Statuses:",
+      "statusPending": "Pending: The default status after creation. To start, click the Actions menu (3-dot icon) and select 'Start'.",
+      "statusActive": "Active: The system is recording GPS and video. To end early, select 'End' from the Actions menu. By default, the system will end the shift when the time is up.",
+      "statusActiveNoteTitle": "Important Note:",
+      "statusActiveNoteContent": "To ensure journey video is recorded and synced to the system, please <strong>press the red button</strong> on the top of the device when starting a shift.",
+      "statusCompleted": "Completed: The final status after a shift ends. GPS and video data are no longer saved in this state.",
+      "playbackTitle": "Journey Playback",
+      "playbackDescription": "You can review a journey when the shift is 'Active' or 'Completed'. From the Actions menu, select 'View Journey' to access the playback screen. This screen allows you to replay the entire trip with features like:",
+      "playbackFeatureSync": "Data Synchronization: Video, map location, and movement logs are precisely synchronized over time.",
+      "playbackFeatureSlider": "Time Slider: Drag to scrub to any point in the journey.",
+      "playbackFeatureSpeed": "Speed Control: Change the playback speed (fast forward, slow motion).",
+      "playbackFeatureMap": "Interactive Map: The vehicle's position moves on the map accordingly during playback."
+    },
+    "live": {
+      "title": "Live",
+      "description": "The Live screen is the command center, allowing real-time monitoring and interaction with the fleet. Features are tightly integrated between the vehicle list on the left and the map on the right.",
+      "featuresTitle": "Key Features:",
+      "featureGps": "GPS Tracking:",
+      "featureGpsItem1": "The map on the right displays the location of all active vehicles.",
+      "featureGpsItem2": "When you select a vehicle from the list on the left, the map will automatically pan and zoom to that vehicle's location.",
+      "featureStream": "Live Stream:",
+      "featureStreamItem1": "On each vehicle's info card in the list on the left, click the thumbnail area to start a live video stream from the camera.",
+      "featureStreamItem2": "The video player has controls to stop or view in fullscreen.",
+      "featureAudio": "Two-way Audio:",
+      "featureAudioNoteTitle": "Important Note:",
+      "featureAudioNoteContent": "To communicate, you need to go to <strong>Settings > Group Call > select 'Elcom Group'</strong> on the body camera device.",
+      "featureAudioDescription": "The system supports two communication modes:",
+      "featureAudioPrivate": "Private Call: Click the <Phone class='inline h-4 w-4 text-blue-500' /> icon on the vehicle card to start a private voice call with that driver.",
+      "featureAudioGroup": "Group Communication (Talkgroup): Use the",
+      "featureAudioGroupTalk": "Talk",
+      "featureAudioGroupStop": "Stop",
+      "featureAudioGroupEnd": "buttons at the top of the list to talk to all drivers in the shift simultaneously.",
+      "featureAudioDeviceNoteTitle": "On-device Communication:",
+      "featureAudioDeviceNoteContent": "To talk directly from the bodycam, please <strong>press and hold the yellow button</strong> on the right side of the device."
+    }
   }
 }
